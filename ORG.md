@@ -47,15 +47,34 @@ is the occupancy index.
 5. **Lessons** go to `lessons/`. A friction that would change a governed file
    becomes a **Proposal** — never applied without a Founder ruling.
 
+**Concurrent operators.** Before mutating, a session takes a lease in
+`work/_active/` (see its `_kind.md`): operator, task, claimed scopes (e.g.
+`{system}:mutate`, `org:now`), heartbeat ≤15 min. Stale at 30 min — breakable
+with a record. Re-read your own lease before every mutation batch; gone means
+halt. The Now section is append-per-session (correct another session's entry
+with a new entry, never a rewrite). One mutator per external system at a time;
+scheduled runs check leases first and defer once. Every scheduled process has a
+date-stamped expected report — a missing one is a flag, never silence. Leases
+are advisory: crash-safety comes from the write discipline
+([docs/write-discipline.md](docs/write-discipline.md)), which makes recovery
+"just run the process again".
+
 ## What is conserved / what is free
 
 Like an organism: a small conserved genome, everything else free to vary.
 
-**Conserved** — change requires an approved Proposal:
+**Conserved** — change requires a Founder ruling, on one of two tracks:
 
 - this file's Purpose and Roles sections, and this section itself
 - [AUTHORITY.md](AUTHORITY.md)
 - everything in `processes/` and `roles/`
+
+**Full Proposal** for anything that expands power or creates organs (new Roles,
+new or widened grants, new processes, scheduling, security/legal boundaries).
+**Fast-track** for conserved changes that expand nothing (flags, checks,
+thresholds, steps, wording): state the diff → the Founder's verbatim yes → one
+commit + a line in `decisions/fast-track.md` — batch-reviewed at the weekly
+review. In doubt → full form; the Founder may always demand it.
 
 **Free** — changes through ordinary work:
 

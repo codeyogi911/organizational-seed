@@ -135,3 +135,28 @@ The canonical entry file of an Instance. The single file a new human or agent op
 to understand the organization, current goal, authority, active work, and next
 action. Deliberately not README.md, which is reserved for describing the repo as a
 project.
+
+**Lease**:
+A session's advisory claim on mutation scopes, held as a file in
+`work/_active/`. Heartbeat-kept, stale-breakable, fenced by self-re-read.
+Collision *avoidance*; the write discipline is collision *safety*.
+_Avoid_: distributed lock, mutex (implies enforcement that files cannot give)
+
+**Fast-track**:
+The light governance tier: a conserved change that expands no authority,
+applied on the Founder's verbatim in-session yes + one commit + a ledger line.
+_Avoid_: rubber stamp (it is still a ruling, still reviewed weekly)
+
+**Steward**:
+A chartered Role occupied by agents: narrow enumerated grants, hard never-
+boundaries, probation with per-mutation review. The unit of "hiring" in an
+agent-driven organization.
+
+**Deadman check**:
+Every scheduled process has a date-stamped expected report; the next run (and
+the weekly review) verifies the previous one exists. Silence is never success.
+
+**Correction**:
+A dated section appended to a report that retracts and supersedes an earlier
+conclusion in place. History is append-only; being wrong is recoverable,
+rewriting is not.

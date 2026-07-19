@@ -11,8 +11,18 @@ git repo, and treats every agent, model, script, and scheduler as replaceable
 machinery.
 
 **Origin:** extracted from a living instance that runs a real e-commerce business —
-its purchase orders, support desk, and governance all flow through this exact
-structure daily. The pattern is published; the business stays private.
+its purchase orders, support desk, books reconciliation, and governance all flow
+through this exact structure daily. The pattern is published; the business stays
+private.
+
+**v0.2** folds back what sustained live operation taught: chartered agent Roles
+(`roles/_charter-template.md` — narrow grants, hard boundaries, probation), the
+concurrency convention (session leases + fencing + deadman checks; `work/_active/`),
+two-tier governance (full Proposals only where power grows; `decisions/fast-track.md`
+for everything else), and the write discipline that makes crashed or colliding agents
+recoverable by design ([docs/write-discipline.md](docs/write-discipline.md)). All of
+it was forced by real failures — concurrent agents in one ledger, mid-write crashes,
+silent schedule deaths — not designed in advance.
 
 ## The stencil
 
