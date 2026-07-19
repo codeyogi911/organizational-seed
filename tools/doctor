@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""seed doctor — immune surveillance for an instance.
+
+Lints an Organizational Seed instance: links resolve, kinds' required
+frontmatter present, fast-track ledger valid, leases fresh, applied
+proposals carry rulings. Stdlib only. Exit 0 = clean, 1 = findings.
+
+Usage: tools/doctor [path-to-instance-root]
+"""
+import os, re, sys, time
+
+ROOT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else ".")
+findings = []
+
+def finding(check, path, msg):
+    findings.append(f"[{check}] {os.path.relpath(path, ROOT)}: {msg}")
+
+def md_files():
+    for dirpath, dirnames, filenames in os.walk(ROOT):
+        dirnames[:] = [d for d in dirnames if d not in
+                       (".git", "node_modules", ".claude", "__pycache__")]
+        for f in filenames:
+            if f.endswith(".md"):
+                yield os.path.join(dirpath, f)
+
+def frontmatter(path):
+    try:
+        lines = open(path, encoding="utf-8").read().splitlines()
+    except Exception:
+        return None
+    if not lines or lines[0].strip() != "---":
+        return None
+    fm = {}
+    for ln in lines[1:80]:
+        if ln.strip() == "---":
+            return fm
+        m = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", ln)
+        if m:
+            fm[m.group(1)] = m.group(2).strip()
+    return None
+
+# D1 — relative links resolve. Exempt: blockquoted lines, and everything in
+# proposals/ — the mutation queue quotes text for other destinations, whose
+# links resolve at application time, not in place.
+LINK = re.compile(r"\]\(([^)#\s][^)]*)\)")
+for path in md_files():
+    if os.sep + "proposals" + os.sep in path:
+        continue
+    base = os.path.dirname(path)
+    for ln in open(path, encoding="utf-8").read().splitlines():
+        if ln.lstrip().startswith(">"):
+            continue
+        for target in LINK.findall(ln):
+            if target.startswith(("http://", "https://", "mailto:")) or "{" in target:
+                continue
+            t = target.split("#")[0]
+            if t and not os.path.exists(os.path.normpath(os.path.join(base, t))):
+                finding("links", path, f"dead relative link: {target}")
+
+# D2 — kind-required frontmatter present on siblings
+REQ = re.compile(r"`([a-z0-9_-]+)`")
+for dirpath, dirnames, filenames in os.walk(ROOT):
+    dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules", ".claude")]
+    if "_kind.md" not in filenames:
+        continue
+    kind = open(os.path.join(dirpath, "_kind.md"), encoding="utf-8").read()
+    m = re.search(r"\*\*Required frontmatter[^*]*\*\*:?(.{0,600}?)(\n\n|\Z)", kind, re.S)
+    required = [f for f in (REQ.findall(m.group(1)) if m else []) if f not in ("YYYY-MM-DD", "yyyy")]
+    for f in filenames:
+        if f == "_kind.md" or not f.endswith(".md"):
+            continue
+        p = os.path.join(dirpath, f)
+        fm = frontmatter(p)
+        if fm is None:
+            finding("kinds", p, "no YAML frontmatter (kind requires one)")
+            continue
+        missing = [r for r in required if r not in fm]
+        if missing:
+            finding("kinds", p, f"missing required frontmatter: {', '.join(missing)}")
+
+# D3 — fast-track ledger rows carry a verbatim ruling
+ledger = os.path.join(ROOT, "decisions", "fast-track.md")
+if os.path.exists(ledger):
+    for i, ln in enumerate(open(ledger, encoding="utf-8"), 1):
+        if not ln.startswith("|") or set(ln.strip()) <= {"|", "-", " "}:
+            continue
+        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+        if cells and cells[0].lower() in ("date",):
+            continue
+        if len(cells) < 4 or not cells[3] or '"' not in cells[3]:
+            finding("ledger", ledger, f"row {i}: no verbatim ruling — entry invalid")
+
+# D4 — leases fresh (heartbeat within 30 min)
+active = os.path.join(ROOT, "work", "_active")
+if os.path.isdir(active):
+    for f in os.listdir(active):
+        if f.startswith("_") or not f.endswith(".md"):
+            continue
+        p = os.path.join(active, f)
+        fm = frontmatter(p) or {}
+        hb = fm.get("heartbeat", "")
+        try:
+            ts = time.mktime(time.strptime(hb[:19], "%Y-%m-%dT%H:%M:%S"))
+            if time.time() - ts > 1800:
+                finding("leases", p, f"stale lease (heartbeat {hb}) — breakable, or a crashed session to recover")
+        except Exception:
+            finding("leases", p, "lease without a parseable heartbeat")
+
+# D5 — applied proposals carry a real Ruling
+props = os.path.join(ROOT, "proposals")
+if os.path.isdir(props):
+    for f in os.listdir(props):
+        if not f.endswith(".md") or f.startswith(("_", "0000")):
+            continue
+        p = os.path.join(props, f)
+        fm = frontmatter(p) or {}
+        if fm.get("status") == "applied":
+            body = open(p, encoding="utf-8").read()
+            m = re.search(r"##\s*Ruling(.+)\Z", body, re.S)
+            if not m or "pending" in m.group(1)[:200].lower():
+                finding("rulings", p, "status: applied but Ruling section missing or pending")
+
+# D6 — mechanical conserved-file gate present?
+if not any(os.path.exists(os.path.join(ROOT, p)) for p in
+           ("CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS")):
+    finding("enforce", ROOT, "no CODEOWNERS — conserved files have no mechanical gate (see docs/enforcement.md)")
+
+if findings:
+    print(f"seed doctor: {len(findings)} finding(s)\n" + "\n".join("  " + f for f in findings))
+    sys.exit(1)
+print("seed doctor: clean")
+sys.exit(0)

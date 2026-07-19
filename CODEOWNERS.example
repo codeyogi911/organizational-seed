@@ -1,0 +1,7 @@
+# Copy to .github/CODEOWNERS and set the Founder's handle.
+# The conserved genome — changes require the Founder's review.
+/ORG.md            @founder-handle
+/AUTHORITY.md      @founder-handle
+/processes/        @founder-handle
+/roles/            @founder-handle
+/CODEOWNERS        @founder-handle
