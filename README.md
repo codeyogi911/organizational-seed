@@ -10,6 +10,28 @@ evidence, decisions, and lessons. This seed keeps all of that as Markdown + YAML
 git repo, and treats every agent, model, script, and scheduler as replaceable
 machinery.
 
+## The pitch
+
+**Your business, as a folder any AI agent can run — and none can run away
+with.** Software used to freeze your workflows into apps; now agents can
+generate software, so the durable asset is your organization itself: purpose,
+authority, processes, evidence, decisions. The seed keeps all of it in plain
+files under git. Agents are hired like staff — chartered roles with narrow
+grants, hard boundaries, probation — and fired by deleting a file. You stay
+the judge: nothing spends, sends, signs, or files without you. Start with one
+painful recurring process, not a migration; your existing tools keep running.
+It's proven, not theoretical: a real eight-figure (INR) business runs on it
+today — books reconciled to the paisa, every marketplace refund provably
+credit-noted from the right account, support drafted every morning before the
+owner wakes up. Fork the seed. Keep the judgment. Delegate the rest.
+
+**The thesis:** the seed is the genotype; everything else is phenotype.
+Harnesses, models, and SaaS systems are expression machinery — they improve
+every quarter, and because the organization's identity lives in files and not
+in any of them, every improvement anywhere in the stack is captured as a free
+upgrade. The org rides every curve and is owned by none. Roadmap:
+[docs/ROADMAP.md](docs/ROADMAP.md).
+
 **Origin:** extracted from a living instance that runs a real e-commerce business —
 its purchase orders, support desk, books reconciliation, and governance all flow
 through this exact structure daily. The pattern is published; the business stays
