@@ -41,3 +41,14 @@ These rules are what make the concurrency convention's leases safely
    conclusion is retracted by a dated `## Correction` section that names what
    it supersedes. The org may be publicly wrong and self-repair — that is a
    feature, and it is only possible if history is never edited.
+
+9. **A confident-looking signal is not verification.** An empty search
+   result, a validation error's literal wording, a document's own stated
+   cadence, another system's ledger — each can be mistaken for ground truth
+   because it *looks* authoritative. When a check is meant to establish
+   presence, absence, cause, or schedule, trace it to the source that
+   actually knows, not a description or proxy of it. Rules 4, 6, and 7 above
+   are this principle applied specifically to writes; it holds just as well
+   for reads, diagnosis, and doctrine — a process's own documentation
+   describing its intended cadence is a claim about intent, not evidence of
+   what actually runs.
