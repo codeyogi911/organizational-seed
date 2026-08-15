@@ -1,7 +1,26 @@
 # Copy to .github/CODEOWNERS and set the Founder's handle.
-# The conserved genome — changes require the Founder's review.
+# The conserved core — changes require the Founder's review.
+
+# Constitution and standing rules
 /ORG.md            @founder-handle
 /AUTHORITY.md      @founder-handle
+/EXECUTION.md      @founder-handle
+/AUTHORING.md      @founder-handle
+/MOUNTING.md       @founder-handle
+/voice.md          @founder-handle
+
+# Active Processes, doctrines and Role charters
 /processes/        @founder-handle
 /roles/            @founder-handle
+
+# Rulings. A Decision file asserts that the Founder said something —
+# forging one is the failure this line exists to prevent.
+/decisions/        @founder-handle
+
 /CODEOWNERS        @founder-handle
+/.github/CODEOWNERS @founder-handle
+
+# Drafts are deliberately NOT conserved: a draft grants no reusable Authority,
+# and requiring review to write one would defeat its purpose. Listing the path
+# last with no owner clears the inherited /processes/ ownership.
+/processes/draft/

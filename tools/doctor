@@ -1,33 +1,85 @@
 #!/usr/bin/env python3
-"""seed doctor — immune surveillance for an instance.
+"""seed doctor — mechanical checks over an Organizational Seed instance.
 
-Lints an Organizational Seed instance: links resolve, kinds' required
-frontmatter present, fast-track ledger valid, leases fresh, applied
-proposals carry rulings. Stdlib only. Exit 0 = clean, 1 = findings.
+Six checks: relative links resolve, Kind-required frontmatter is present, the
+conserved core has a mechanical gate, the boot path fits the budget `ORG.md`
+sets for it, mutable state stays out of `ORG.md`, and nothing has aged past
+the freshness its Kind declares. Stdlib only.
+
+A finding is a FAIL — something is wrong — or a WARN — something is missing
+that an instance may not have chosen yet. Exit 1 if anything failed; warnings
+alone exit 0. A NOTE is neither: it is a next step for a tree that is still
+the template, and it never makes a run unclean.
 
 Usage: tools/doctor [path-to-instance-root]
 """
-import os, re, sys, time
+import datetime, os, re, sys
 
 ROOT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else ".")
-findings = []
+TODAY = datetime.date.today()
+failures, warnings, notes = [], [], []
 
-def finding(check, path, msg):
-    findings.append(f"[{check}] {os.path.relpath(path, ROOT)}: {msg}")
+def fail(check, path, msg):
+    failures.append(f"FAIL [{check}] {os.path.relpath(path, ROOT)}: {msg}")
 
-def md_files():
+def warn(check, path, msg):
+    warnings.append(f"WARN [{check}] {os.path.relpath(path, ROOT)}: {msg}")
+
+def note(check, path, msg):
+    """Not a finding: something true about this tree that is not a defect."""
+    notes.append(f"NOTE [{check}] {os.path.relpath(path, ROOT)}: {msg}")
+
+def text(path):
+    """The file's contents, or "" when there is nothing readable there."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    except OSError:
+        return ""
+
+# --- Walking one instance, and only one ------------------------------------
+
+# Pruned by name: machinery and generated trees. `.claude/` is a harness
+# binding — a disposable adapter that owns no durable knowledge
+# (ORG.md § For harnesses) — so this lints an instance, not its mounts.
+PRUNE = (".git", ".claude", "node_modules", "__pycache__", ".venv")
+
+def another_work_tree(path):
+    """True when `path` is the root of a checkout that is not this one.
+
+    A directory holding a `.git` entry is a work tree: a directory for a
+    clone, a file for a linked worktree or a submodule. Whatever it is
+    named, its files belong to that tree and are that tree's to answer for.
+    """
+    return os.path.exists(os.path.join(path, ".git"))
+
+def walk():
+    """Yield (dirpath, filenames) under ROOT, pruning other work trees.
+
+    Pruning by name cannot work here. EXECUTION.md tells every writer to use
+    a change-specific worktree, so sibling checkouts appear inside the tree
+    under whatever this week's change is called — no name list enumerates
+    them. Measured on the origin instance: one commit of this tool reported
+    32 failures from a checkout holding three nested worktrees and 10 from a
+    clean one. Every one of the 22 extra findings was true, and every one of
+    them was about somebody else's unfinished work.
+    """
     for dirpath, dirnames, filenames in os.walk(ROOT):
-        dirnames[:] = [d for d in dirnames if d not in
-                       (".git", "node_modules", ".claude", "__pycache__")]
-        for f in filenames:
-            if f.endswith(".md"):
-                yield os.path.join(dirpath, f)
+        dirnames[:] = sorted(
+            d for d in dirnames if d not in PRUNE
+            and not another_work_tree(os.path.join(dirpath, d)))
+        yield dirpath, sorted(filenames)
+
+TREE = list(walk())
+MD = [os.path.join(d, f) for d, fs in TREE for f in fs if f.endswith(".md")]
+KIND_DIRS = [(d, fs) for d, fs in TREE if "_kind.md" in fs]
+
+ORG = os.path.join(ROOT, "ORG.md")
+org = text(ORG)                       # three checks read it; read it once
 
 def frontmatter(path):
-    try:
-        lines = open(path, encoding="utf-8").read().splitlines()
-    except Exception:
-        return None
+    """The file's YAML frontmatter as a flat dict, or None if it has none."""
+    lines = text(path).splitlines()
     if not lines or lines[0].strip() != "---":
         return None
     fm = {}
@@ -39,15 +91,14 @@ def frontmatter(path):
             fm[m.group(1)] = m.group(2).strip()
     return None
 
-# D1 — relative links resolve. Exempt: blockquoted lines, and everything in
-# proposals/ — the mutation queue quotes text for other destinations, whose
-# links resolve at application time, not in place.
+# --- D1 — relative links resolve -------------------------------------------
+# Blockquoted lines are exempt: template notes and quoted excerpts carry the
+# links of the file they are talking about, not of the file they sit in.
+
 LINK = re.compile(r"\]\(([^)#\s][^)]*)\)")
-for path in md_files():
-    if os.sep + "proposals" + os.sep in path:
-        continue
+for path in MD:
     base = os.path.dirname(path)
-    for ln in open(path, encoding="utf-8").read().splitlines():
+    for ln in text(path).splitlines():
         if ln.lstrip().startswith(">"):
             continue
         for target in LINK.findall(ln):
@@ -55,78 +106,212 @@ for path in md_files():
                 continue
             t = target.split("#")[0]
             if t and not os.path.exists(os.path.normpath(os.path.join(base, t))):
-                finding("links", path, f"dead relative link: {target}")
+                fail("links", path, f"dead relative link: {target}")
 
-# D2 — kind-required frontmatter present on siblings
-REQ = re.compile(r"`([a-z0-9_-]+)`")
-for dirpath, dirnames, filenames in os.walk(ROOT):
-    dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules", ".claude")]
-    if "_kind.md" not in filenames:
-        continue
-    kind = open(os.path.join(dirpath, "_kind.md"), encoding="utf-8").read()
-    m = re.search(r"\*\*Required frontmatter[^*]*\*\*:?(.{0,600}?)(\n\n|\Z)", kind, re.S)
-    required = [f for f in (REQ.findall(m.group(1)) if m else []) if f not in ("YYYY-MM-DD", "yyyy")]
+# --- D2 — every Kind's required frontmatter is present on its siblings ------
+
+FIELD = re.compile(r"`([a-z0-9_-]+)`")
+CONDITIONAL = ("required once", "required when", "required if", "optional")
+
+def required_fields(kind_text):
+    """Field names a `_kind.md` declares under its "Required frontmatter" label.
+
+    The label is followed by a bullet list, one or more fields per bullet,
+    named in backticks ahead of the prose that explains them. Only that head
+    is read: the explanation is full of backticked *values* (`open`,
+    `codified`, `declined`) that are not field names. Bullets that mark
+    themselves conditional are skipped — a flat list cannot express "required
+    once status leaves `open`", so claiming it always is would be a lie the
+    operator has to argue with.
+    """
+    m = re.search(r"^[^\n]*Required frontmatter[^\n]*$", kind_text, re.M)
+    if not m:
+        return []
+    fields, started = [], False
+    for ln in kind_text[m.end():].splitlines()[1:]:
+        if not ln.strip():
+            if started:
+                break
+            continue
+        if not ln.lstrip().startswith(("-", "*")):
+            if started and ln.startswith((" ", "\t")):
+                continue                        # wrapped explanation
+            break
+        started = True
+        if any(phrase in ln.lower() for phrase in CONDITIONAL):
+            continue
+        head = re.split(r"—|–", ln, maxsplit=1)[0]   # names, then the prose
+        fields += FIELD.findall(re.sub(r"\([^)]*\)", "", head))
+    return fields
+
+for dirpath, filenames in KIND_DIRS:
+    required = required_fields(text(os.path.join(dirpath, "_kind.md")))
     for f in filenames:
         if f == "_kind.md" or not f.endswith(".md"):
             continue
         p = os.path.join(dirpath, f)
         fm = frontmatter(p)
         if fm is None:
-            finding("kinds", p, "no YAML frontmatter (kind requires one)")
+            fail("kinds", p, "no YAML frontmatter (kind requires one)")
             continue
         missing = [r for r in required if r not in fm]
         if missing:
-            finding("kinds", p, f"missing required frontmatter: {', '.join(missing)}")
+            fail("kinds", p, f"missing required frontmatter: {', '.join(missing)}")
 
-# D3 — fast-track ledger rows carry a verbatim ruling
-ledger = os.path.join(ROOT, "decisions", "fast-track.md")
-if os.path.exists(ledger):
-    for i, ln in enumerate(open(ledger, encoding="utf-8"), 1):
-        if not ln.startswith("|") or set(ln.strip()) <= {"|", "-", " "}:
-            continue
-        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
-        if cells and cells[0].lower() in ("date",):
-            continue
-        if len(cells) < 4 or not cells[3] or '"' not in cells[3]:
-            finding("ledger", ledger, f"row {i}: no verbatim ruling — entry invalid")
+# --- D3 — the conserved core has a mechanical gate -------------------------
+# Absence is a warning in an organization, and only a note in the template —
+# which ships no CODEOWNERS on purpose, because a checked-in gate naming
+# nobody's handle is worse than none. Without that distinction the seed's own
+# doctor would warn about the seed on every run, and a checker that reports on
+# every run has been converted into noise (docs/enforcement.md).
+#
+# A CODEOWNERS that exists but leaves a conserved path out is a failure in
+# either state: it reads as covered and is not, which is worse than having none.
 
-# D4 — leases fresh (heartbeat within 30 min)
-active = os.path.join(ROOT, "work", "_active")
-if os.path.isdir(active):
-    for f in os.listdir(active):
-        if f.startswith("_") or not f.endswith(".md"):
+OWNERS_FILES = ("CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS")
+CONSERVED = ("/ORG.md", "/AUTHORITY.md", "/EXECUTION.md", "/AUTHORING.md",
+             "/MOUNTING.md", "/voice.md", "/processes/", "/roles/",
+             "/decisions/")
+FENCED = re.compile(r"^```.*?^```", re.M | re.S)
+SPAN = re.compile(r"`[^`\n]*`")
+# `{Organization Name}`, `{Steward}` — a brace, a letter, then prose, on one
+# line. Narrow on purpose: `${VAR}`, `{{mustache}}`, `map[string]any{}` and
+# JSON are all excluded by shape before code fences and spans are even removed.
+PLACEHOLDER = re.compile(r"(?<![${])\{[A-Za-z][^{}\n]{2,}\}")
+
+def still_the_template(markdown):
+    """True when the text still carries the template's own {placeholders}.
+
+    This is the honest discriminator between a template nobody has filled in
+    and an organization that forgot its gate. Forking replaces these; nothing
+    else does, so a tree that still has them has not been adopted yet.
+    """
+    return bool(PLACEHOLDER.search(SPAN.sub("", FENCED.sub("", markdown))))
+
+def owner_key(pattern):
+    """Compare patterns without arguing about leading or trailing slashes."""
+    return "/" + pattern.strip("/")
+
+owners_file = next((os.path.join(ROOT, p) for p in OWNERS_FILES
+                    if os.path.exists(os.path.join(ROOT, p))), None)
+if owners_file is None and still_the_template(org):
+    note("owners", ROOT,
+         "ORG.md still has its {placeholders}, so this is the template rather "
+         "than an organization. When you adopt it: fill ORG.md in, then copy "
+         "CODEOWNERS.example to .github/CODEOWNERS with your own handle and "
+         "protect `main` (docs/enforcement.md)")
+elif owners_file is None:
+    warn("owners", ROOT,
+         "no CODEOWNERS at " + " or ".join(OWNERS_FILES) + " — the conserved "
+         "core has no mechanical gate; copy CODEOWNERS.example, set the "
+         "Founder's handle, and protect `main` (docs/enforcement.md)")
+else:
+    owned = set()
+    for ln in text(owners_file).splitlines():
+        parts = ln.split("#")[0].split()
+        if len(parts) >= 2:          # a pattern with no owner *clears* owners
+            owned.add(owner_key(parts[0]))
+    missing = [p for p in CONSERVED if owner_key(p) not in owned]
+    if missing:
+        fail("owners", owners_file,
+             f"conserved path(s) with no owner: {', '.join(missing)} — a "
+             "conserved change there can land without the Founder seeing the "
+             "diff (docs/enforcement.md)")
+
+# --- D4 — the boot path fits the budget ORG.md sets ------------------------
+# The caps are read from ORG.md's own table, never from this file. A budget
+# a tool keeps privately is a budget the organization cannot amend.
+
+ROW = re.compile(r"^\|(.+)\|\s*$", re.M)
+
+section = ""
+m = re.search(r"^##\s+.*boot path.*$", org, re.M | re.I)
+if m:
+    nxt = re.search(r"^##\s", org[m.end():], re.M)
+    section = org[m.end():m.end() + (nxt.start() if nxt else len(org))]
+
+caps, combined = [], None
+for row in ROW.findall(section):
+    cells = [c.strip() for c in row.split("|")]
+    if len(cells) < 2 or set(cells[0]) <= set("-: "):
+        continue                                       # separator row
+    name, want = cells[0].strip("`* "), cells[1].strip("`* ").replace(",", "")
+    if not want.isdigit():
+        continue                                       # header row
+    if name.lower() == "combined":
+        combined = int(want)
+    else:
+        caps.append((name, int(want)))
+
+if not caps or combined is None:
+    fail("boot", ORG,
+         "no readable budget table under a '## The boot path is size-capped' "
+         "heading — every session pays for the boot path, so its cap is "
+         "stated in the organization's own file or it is not stated at all")
+else:
+    total = 0
+    for name, cap in caps:
+        p = os.path.join(ROOT, name)
+        n = len(text(p).splitlines()) if os.path.exists(p) else 0
+        total += n
+        if n > cap:
+            fail("boot", p, f"{n} lines, cap {cap} — move conditional detail "
+                            "to its owning file; never raise a cap to fit prose")
+    if total > combined:
+        fail("boot", ORG, f"boot path totals {total} lines, combined cap "
+                          f"{combined} — every session reads all of it, every "
+                          "time; cut, do not raise")
+
+# --- D5 — mutable state stays out of the law -------------------------------
+
+if re.search(r"^#+\s+Now\b", org, re.M):
+    fail("now", ORG,
+         "a 'Now' section — current work belongs in Records, work notes and "
+         "Git history, never in the organization's most-read governance file, "
+         "where every session pays to read it and no session can tell how "
+         "stale it is")
+
+# --- D6 — nothing has aged past the freshness its Kind declares ------------
+# A Kind opts in with `max-age-days`, and narrows with `freshness-applies-to`
+# (a status, or several); without it every sibling is checked. That is how
+# `records/gaps/_kind.md` gets open gaps reported instead of forgotten.
+
+for dirpath, filenames in KIND_DIRS:
+    kind_path = os.path.join(dirpath, "_kind.md")
+    kind_fm = frontmatter(kind_path) or {}
+    max_age = kind_fm.get("max-age-days", "")
+    if not max_age.isdigit():
+        continue
+    max_age = int(max_age)
+    applies = [s.strip() for s in
+               kind_fm.get("freshness-applies-to", "").split(",") if s.strip()]
+    for f in filenames:
+        if f == "_kind.md" or not f.endswith(".md"):
             continue
-        p = os.path.join(active, f)
+        p = os.path.join(dirpath, f)
         fm = frontmatter(p) or {}
-        hb = fm.get("heartbeat", "")
+        status = fm.get("status", "")
+        if applies and status not in applies:
+            continue
+        raw = fm.get("date", "")
+        if not raw:
+            continue                     # a missing required field is D2's
         try:
-            ts = time.mktime(time.strptime(hb[:19], "%Y-%m-%dT%H:%M:%S"))
-            if time.time() - ts > 1800:
-                finding("leases", p, f"stale lease (heartbeat {hb}) — breakable, or a crashed session to recover")
-        except Exception:
-            finding("leases", p, "lease without a parseable heartbeat")
-
-# D5 — applied proposals carry a real Ruling
-props = os.path.join(ROOT, "proposals")
-if os.path.isdir(props):
-    for f in os.listdir(props):
-        if not f.endswith(".md") or f.startswith(("_", "0000")):
+            age = (TODAY - datetime.date.fromisoformat(raw[:10])).days
+        except ValueError:
+            warn("freshness", p, f"date: {raw} is not a YYYY-MM-DD date — "
+                                 "freshness cannot be checked")
             continue
-        p = os.path.join(props, f)
-        fm = frontmatter(p) or {}
-        if fm.get("status") == "applied":
-            body = open(p, encoding="utf-8").read()
-            m = re.search(r"##\s*Ruling(.+)\Z", body, re.S)
-            if not m or "pending" in m.group(1)[:200].lower():
-                finding("rulings", p, "status: applied but Ruling section missing or pending")
+        if age > max_age:
+            warn("freshness", p,
+                 f"status: {status or '(none)'} for {age} days, and "
+                 f"{os.path.relpath(kind_path, ROOT)} caps that at {max_age} "
+                 "— resolve it, or amend the Kind that set the cap")
 
-# D6 — mechanical conserved-file gate present?
-if not any(os.path.exists(os.path.join(ROOT, p)) for p in
-           ("CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS")):
-    finding("enforce", ROOT, "no CODEOWNERS — conserved files have no mechanical gate (see docs/enforcement.md)")
-
-if findings:
-    print(f"seed doctor: {len(findings)} finding(s)\n" + "\n".join("  " + f for f in findings))
-    sys.exit(1)
-print("seed doctor: clean")
-sys.exit(0)
+if failures or warnings:
+    print(f"seed doctor: {len(failures)} failure(s), {len(warnings)} warning(s)")
+else:
+    print("seed doctor: clean")
+if failures or warnings or notes:
+    print("\n".join("  " + ln for ln in failures + warnings + notes))
+sys.exit(1 if failures else 0)

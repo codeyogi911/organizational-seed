@@ -1,8 +1,14 @@
 # The write discipline — how external mutations survive crashes and collisions
 
 Distilled from live operation (concurrent agents working the same books).
-These rules are what make the concurrency convention's leases safely
-*advisory* rather than load-bearing.
+
+**These rules are why repository leases could be removed.** Git protects the
+repository ([ADR 0003](adr/0003-git-owns-repository-concurrency.md)), but no
+version-control system protects a payment, an email, or another company's
+database. Everything outside this repository is guarded here instead — by
+idempotency and verification rather than by locking. One mutator per external
+effect at a time remains the standing advisory rule; these nine make a
+collision survivable when it happens anyway.
 
 1. **Deterministic references.** Every external write carries an identity
    derived from its cause (e.g. a hash of the source transaction id). The same
@@ -33,6 +39,26 @@ These rules are what make the concurrency convention's leases safely
    re-verified with a targeted direct lookup before it becomes a flag or
    (worse) a create.
 
+   Four distinct ways a read lies about absence, each found the hard way:
+
+   - **A misspelled key and a genuine absence return the same thing.** Before
+     reporting absence, list the keys the object actually has and prove the
+     field exists on a known-positive case. Absence is the one finding a typo
+     can manufacture out of nothing.
+   - **The absence of a link is not the absence of the thing.** Prove absence
+     against the population that would contain it, not against the object's
+     own back-reference.
+   - **A field written along only one path measures which path was taken**, not
+     whether the thing was done. Ask what writes a field before trusting its
+     emptiness.
+   - **A source can be fully functional, correctly queried, and still have a
+     hard ceiling below the window you asked for** — returned as no error at
+     all. Probe the boundary (the oldest record visible under any filter)
+     before trusting any "nothing happened before this date".
+
+   Always name the field that established a finding, and scale your doubt to
+   the size of the claim.
+
 7. **Derive state from the owning side.** A document's state lives on the
    document (match by id and deterministic reference), not on whatever
    happens to name it from the other side of a link.
@@ -52,3 +78,36 @@ These rules are what make the concurrency convention's leases safely
    for reads, diagnosis, and doctrine — a process's own documentation
    describing its intended cadence is a claim about intent, not evidence of
    what actually runs.
+
+10. **A claim is only as wide as the check you actually ran.** A passing narrow
+    check and a true broad claim look identical from outside — both are
+    silence. If you assert *only*, *once*, *all*, *every* or *the last one*,
+    run the search first and say what you searched. If you did not search,
+    narrow the claim to what you verified.
+
+    The failure mode is specific and worth naming: after fixing several copies
+    of something you have a vivid memory of fixing them, and that memory feels
+    like knowledge. It is a record of what you touched, never of what exists.
+    One instance made four completeness claims in a single piece of work, each
+    checkable in seconds, none checked — and three successive adversarial
+    reviewers each found one more copy than the last.
+
+    For a constraint, the same rule reads: the detection predicate must cover
+    the whole statement, or the statement shrinks to what the predicate covers.
+    A constraint whose check is narrower than its wording reports healthy while
+    being breached — worse than having no constraint, because an absent
+    constraint is visibly absent.
+
+11. **A two-sided invariant needs both directions run.** An invariant written
+    *"every A has exactly one B"* is two claims, and they fail differently.
+    A→B catches the **missing** B. B→A catches the **spurious** B.
+
+    Running B→A alone is seductive, because B is usually the side you own: it
+    is easy to enumerate, and it all comes back correct. But **you cannot find
+    a missing record by reading the records you have — the absence lives in the
+    other system.**
+
+    Name both directions before running either, and state which direction
+    produced each conclusion. Never net two populations' totals to decide
+    whether to look closer: netting cancels out exactly the pairs of errors
+    that were worth finding.

@@ -1,8 +1,15 @@
 ---
 status: accepted
+mechanism-superseded-by: 0004-one-governance-route.md
 ---
 
 # Directed evolution, not random
+
+> The **principle** below stands unchanged. Its **mechanism** does not: the
+> Proposal queue was retired in favour of a single route — a branch, a reviewed
+> diff, and a Decision. See
+> [ADR 0004](0004-one-governance-route.md). Read `proposals/` and `Checks`
+> below as "the branch" and "the diff review".
 
 The Instance must adapt — mutate, within the framework. Two models were considered.
 Darwinian: agents freely rewrite governed files and problems are culled after the
