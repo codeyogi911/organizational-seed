@@ -56,6 +56,9 @@ Working State. Machinery sits outside Knowledge and may only read, check,
 project, or present it. See the
 [architecture at a glance](knowledge/KNOWLEDGE.md#architecture-at-a-glance);
 [knowledge/KNOWLEDGE.md](knowledge/KNOWLEDGE.md) is the canonical map.
+For the delivery view, see how
+[intent and sessions route through the architecture](knowledge/docs/context-routing-and-role-scale.md)
+and how one substrate produces bounded views for different Roles.
 
 ## The loop
 
