@@ -16,13 +16,41 @@ class CanonicalSeedTest(unittest.TestCase):
     def test_mount_routes_to_the_canonical_bundle(self):
         mount = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("knowledge/ORG.md", mount)
+        self.assertIn("knowledge/KNOWLEDGE.md", mount)
         self.assertIn("knowledge/AUTHORITY.md", mount)
 
     def test_root_has_no_second_canonical_entry(self):
         self.assertFalse((ROOT / "ORG.md").exists())
+        self.assertFalse((ROOT / "KNOWLEDGE.md").exists())
+        self.assertFalse((ROOT / "NOW.md").exists())
         self.assertFalse((ROOT / "AUTHORITY.md").exists())
         self.assertTrue((ROOT / "knowledge" / "ORG.md").is_file())
+        self.assertTrue((ROOT / "knowledge" / "KNOWLEDGE.md").is_file())
+        self.assertTrue((ROOT / "knowledge" / "NOW.md").is_file())
         self.assertTrue((ROOT / "knowledge" / "AUTHORITY.md").is_file())
+
+    def test_pr1_knowledge_model_and_processes_live_in_the_bundle(self):
+        for relative in (
+            "AUTHORING.md",
+            "CONTEXT.md",
+            "processes/_contract.md",
+            "processes/change-standing-knowledge.md",
+            "processes/handle-uncovered-work.md",
+            "processes/review-lessons.md",
+            "lessons/_kind.md",
+        ):
+            with self.subTest(relative=relative):
+                self.assertTrue((ROOT / "knowledge" / relative).is_file())
+                self.assertFalse((ROOT / relative).exists())
+
+    def test_seed_doctor_accepts_the_canonical_boundary(self):
+        result = subprocess.run(
+            [str(ROOT / "tools" / "doctor"), str(ROOT)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_canonical_bundle_validates_through_the_public_cli(self):
         result = subprocess.run(

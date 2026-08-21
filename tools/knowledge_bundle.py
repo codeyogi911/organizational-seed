@@ -1245,8 +1245,18 @@ def compile_bundle(root: Path, output: Path, profile: dict[str, Any]) -> dict[st
                         frontmatter_mismatches.append(relative.as_posix())
                 continue
             else:
-                rendered_concept = render_concept(
-                    relative.as_posix(), document, profile
+                resolved_source = resolved_frontmatter(document)
+                canonical_source = (
+                    "kind" not in document.fields
+                    and isinstance(resolved_source, dict)
+                    and isinstance(resolved_source.get("type"), str)
+                    and bool(resolved_source["type"].strip())
+                    and resolved_source.get("status") in OKF_STATUSES
+                )
+                rendered_concept = (
+                    RenderedConcept(text, 0, ())
+                    if canonical_source
+                    else render_concept(relative.as_posix(), document, profile)
                 )
                 rendered = rendered_concept.text
                 normalized_scalar_lines += rendered_concept.normalized_scalar_lines
@@ -1264,25 +1274,36 @@ def compile_bundle(root: Path, output: Path, profile: dict[str, Any]) -> dict[st
             if not type_name:
                 raise KnowledgeBundleError(f"{relative}: {reason}")
             okf_status = lifecycle_status(type_name, document.fields.get("status"), profile)
-            resolved_expected = expected_resolved_fields(
-                document, type_name, okf_status, relative.as_posix(), profile
-            )
             resolved_actual = resolved_frontmatter(target_document)
-            if (
-                resolved_expected is not None
-                and resolved_actual != resolved_expected
-            ) or (
-                resolved_expected is None
-                and target_document.fields
-                != expected_fields(
-                    document,
-                    type_name,
-                    okf_status,
-                    relative.as_posix(),
-                    profile,
+            if canonical_source:
+                resolved_expected = resolved_frontmatter(document)
+                if (
+                    resolved_expected is not None
+                    and resolved_actual != resolved_expected
+                ) or (
+                    resolved_expected is None
+                    and target_document.fields != document.fields
+                ):
+                    frontmatter_mismatches.append(relative.as_posix())
+            else:
+                resolved_expected = expected_resolved_fields(
+                    document, type_name, okf_status, relative.as_posix(), profile
                 )
-            ):
-                frontmatter_mismatches.append(relative.as_posix())
+                if (
+                    resolved_expected is not None
+                    and resolved_actual != resolved_expected
+                ) or (
+                    resolved_expected is None
+                    and target_document.fields
+                    != expected_fields(
+                        document,
+                        type_name,
+                        okf_status,
+                        relative.as_posix(),
+                        profile,
+                    )
+                ):
+                    frontmatter_mismatches.append(relative.as_posix())
 
         write_utf8_exact(staging / "index.md", root_index(profile, files, base))
         if body_mismatches or resource_mismatches or frontmatter_mismatches:
