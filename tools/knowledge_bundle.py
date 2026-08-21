@@ -63,6 +63,16 @@ class KnowledgeBundleError(RuntimeError):
     """A profile, source, output, or bundle violates the public contract."""
 
 
+@dataclass(frozen=True)
+class ParsedConcept:
+    """Resolved frontmatter and source positions for compiled-result consumers."""
+
+    fields: dict[str, str] | None
+    field_lines: dict[str, int]
+    body_start: int
+    body: str
+
+
 def read_utf8_exact(path: Path) -> str:
     """Read UTF-8 without universal-newline translation."""
 
@@ -522,6 +532,64 @@ def resolved_frontmatter(document: MarkdownDocument) -> dict[Any, Any] | None:
     except yaml.YAMLError:
         return None
     return parsed if isinstance(parsed, dict) else None
+
+
+def _consumer_value(value: Any) -> str:
+    """Render resolved YAML values for existing scalar-oriented consumers."""
+
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return ", ".join(_consumer_value(item) for item in value)
+    if isinstance(value, (int, float)):
+        return str(value)
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+
+
+def parse_concept(text: str) -> ParsedConcept:
+    """Resolve one canonical concept through the bundle's full YAML parser.
+
+    Doctor, graph and index machinery consume this seam instead of maintaining
+    their own interpretations of quoted, nested or typed YAML values.
+    """
+
+    document = parse_markdown(text)
+    if document.frontmatter_lines is None:
+        return ParsedConcept(None, {}, 0, document.body)
+    resolved = resolved_frontmatter(document)
+    if resolved is None:
+        raise KnowledgeBundleError("invalid YAML frontmatter")
+    yaml = yaml_parser()
+    node = yaml.compose("".join(document.frontmatter_lines), Loader=yaml.SafeLoader)
+    scalar_values: dict[str, str] = {}
+    if isinstance(node, yaml.MappingNode):
+        for key_node, value_node in node.value:
+            if isinstance(key_node, yaml.ScalarNode) and isinstance(
+                value_node, yaml.ScalarNode
+            ):
+                scalar_values[key_node.value] = value_node.value
+    fields = {
+        str(key): scalar_values.get(str(key), _consumer_value(value))
+        for key, value in resolved.items()
+        if isinstance(key, str)
+    }
+    field_lines: dict[str, int] = {}
+    lines = text.splitlines()
+    close_at = 0
+    for index, line in enumerate(lines[1:], start=2):
+        if line == "---":
+            close_at = index
+            break
+        match = TOP_LEVEL_FIELD.match(line)
+        if match:
+            field_lines[match.group(1)] = index
+    return ParsedConcept(fields, field_lines, close_at, document.body)
 
 
 def resolved_repaired_frontmatter(

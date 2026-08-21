@@ -3,11 +3,13 @@
 
 Lints an Organizational Seed instance: links resolve, kinds' required
 frontmatter present, fast-track ledger valid, leases fresh, applied
-proposals carry rulings. Stdlib only. Exit 0 = clean, 1 = findings.
+proposals carry rulings. Exit 0 = clean, 1 = findings.
 
 Usage: tools/doctor [path-to-instance-root]
 """
 import os, re, sys, time
+
+from knowledge_bundle import KnowledgeBundleError, parse_concept
 
 REPO_ROOT = os.path.realpath(sys.argv[1] if len(sys.argv) > 1 else ".")
 canonical_root = os.path.join(REPO_ROOT, "knowledge")
@@ -30,19 +32,14 @@ def md_files():
 
 def frontmatter(path):
     try:
-        lines = open(path, encoding="utf-8").read().splitlines()
+        text = open(path, encoding="utf-8").read()
     except Exception:
         return None
-    if not lines or lines[0].strip() != "---":
+    try:
+        parsed = parse_concept(text)
+    except KnowledgeBundleError:
         return None
-    fm = {}
-    for ln in lines[1:80]:
-        if ln.strip() == "---":
-            return fm
-        m = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", ln)
-        if m:
-            fm[m.group(1)] = m.group(2).strip()
-    return None
+    return dict(parsed.fields) if parsed.fields is not None else None
 
 def operational_state(fm):
     """Read the domain lifecycle without confusing it with OKF status."""
@@ -107,7 +104,7 @@ def standing_knowledge_home(path):
     process_home = bool(
         inside(os.path.join(ROOT, "processes"), path)
         and os.path.basename(path) != "index.md"
-        and (frontmatter(path) or {}).get("status") == "active"
+        and operational_state(frontmatter(path) or {}) == "active"
     )
     role_home = inside(os.path.join(ROOT, "roles"), path)
     definition_home = os.path.basename(path) == "_kind.md"
@@ -121,7 +118,7 @@ def historical_standing_knowledge_home(path):
         path
         and os.path.isfile(path)
         and inside(os.path.join(ROOT, "processes"), path)
-        and (frontmatter(path) or {}).get("status") == "retired"
+        and operational_state(frontmatter(path) or {}) == "retired"
     )
 
 def retired_process_received_before_retirement(path, receipt_date):

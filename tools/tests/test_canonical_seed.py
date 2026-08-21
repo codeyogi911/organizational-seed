@@ -4,15 +4,32 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
 COMMAND = ROOT / "tools" / "knowledge-bundle"
+sys.path.insert(0, str(ROOT / "tools"))
+from knowledge_bundle import parse_concept  # noqa: E402
 
 
 class CanonicalSeedTest(unittest.TestCase):
+    def test_shared_parser_resolves_canonical_yaml_for_consumers(self):
+        parsed = parse_concept(
+            "---\n"
+            'type: "Process"\n'
+            'state: "active"\n'
+            "tags: [seed, okf]\n"
+            "---\n\n# Process\n"
+        )
+
+        self.assertEqual(parsed.fields["type"], "Process")
+        self.assertEqual(parsed.fields["state"], "active")
+        self.assertEqual(parsed.fields["tags"], "seed, okf")
+        self.assertEqual(parsed.body, "\n# Process\n")
+
     def test_mount_routes_to_the_canonical_bundle(self):
         mount = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("knowledge/ORG.md", mount)
