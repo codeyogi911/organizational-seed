@@ -15,6 +15,12 @@ _Avoid_: template, framework, platform, stencil
 One organization living in one repo, grown from the Seed.
 _Avoid_: deployment, installation
 
+**Knowledge**:
+Organizational meaning, evidence, or current state that a human or agent may
+use to understand, decide, or perform work. It is Standing Knowledge,
+Organizational Memory, or Working State; Machinery is outside it.
+_Avoid_: files, content, machinery
+
 **Standing Knowledge**:
 Durable knowledge that future work must follow or interpret consistently:
 identity, Authority, Roles, vocabulary, Kind definitions, Processes, and the
@@ -34,8 +40,8 @@ existing.
 _Avoid_: temporary knowledge, mutable layer
 
 **Machinery**:
-Replaceable tools, projections, indexes, and harness bindings that check or
-expose durable knowledge without owning its meaning or Authority.
+Replaceable infrastructure that reads, checks, projects, or presents Knowledge
+without owning organizational meaning or Authority. Machinery is not Knowledge.
 _Avoid_: source of truth, governance layer
 
 **Seed Process**:
@@ -167,7 +173,7 @@ biological reading of the same thing)
 **Conserved**:
 A change rule applied to Standing Knowledge: its current form changes only
 through the Instance's Founder-approved full Proposal or fast-track path.
-Conserved is not a folder or a separate kind of knowledge.
+Conserved is not a folder or a separate Knowledge class.
 _Avoid_: conserved core, locked files, protected configuration
 
 **ORG.md**:

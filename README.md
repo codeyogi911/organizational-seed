@@ -48,12 +48,12 @@ silent schedule deaths — not designed in advance.
 
 ## The knowledge model
 
-Every artifact answers two independent questions: where it came from, and how
-it behaves. The Seed supplies a reusable baseline; an Instance owns its current
-copy and may add business-specific knowledge. Origin never creates continuing
-upstream Authority. [KNOWLEDGE.md](KNOWLEDGE.md) is the canonical map of
-Standing Knowledge, Organizational Memory, Working State, and Machinery,
-including how each changes.
+Every artifact answers where it came from and whether it is Knowledge or
+Machinery. The Seed supplies a reusable baseline; an Instance owns its current
+copy and may add business-specific Knowledge. Origin never creates continuing
+upstream Authority. Knowledge is Standing Knowledge, Organizational Memory, or
+Working State. Machinery sits outside Knowledge and may only read, check,
+project, or present it. [KNOWLEDGE.md](KNOWLEDGE.md) is the canonical map.
 
 ## The loop
 
@@ -149,7 +149,7 @@ the gaps you find. The conserved home outlives every tool that visits it.
 ```
 ORG.md                      ← your canonical entry (template)
 NOW.md                      ← current Working State (template)
-KNOWLEDGE.md                ← the four knowledge classes and evolution map
+KNOWLEDGE.md                ← three Knowledge classes, Machinery boundary, evolution map
 AUTHORITY.md                ← the rulebook (template; reserved powers ready)
 CONTEXT.md                  ← the glossary of seed terms (keep it)
 AGENTS.md / CLAUDE.md       ← thin mounts for any coding agent

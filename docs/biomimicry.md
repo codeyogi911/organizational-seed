@@ -12,7 +12,7 @@ it a deliberate design tool: when a new organizational problem appears, ask
 | Immune memory | `lessons/` — the org remembers what a Process performance taught and the Standing Knowledge it may affect | current model |
 | Immune tolerance (don't attack self) | probation: new roles act under per-mutation review until trusted | v0.2 |
 | **Immune surveillance** | **`tools/doctor` — continuous self-inspection for malformed cells** (dead links, kind violations, invalid ledger rows, stale leases, unruled "applied" proposals) | **v0.3** |
-| Self/non-self recognition | the four knowledge classes separate governed meaning, memory, current work, and replaceable machinery; Kind definitions (`_kind.md`) are Standing Knowledge | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |
+| Self/non-self recognition | three Knowledge classes separate governed meaning, memory, and current work; Machinery sits outside Knowledge as replaceable infrastructure | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |
 | Apoptosis (programmed cell death) | stale-lease self-termination: a superseded session must never write again; broken leases are recycled with a record | v0.2 |
 | Senescence | retired Processes leave their stable historical definition while disappearing from active discovery | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |
 | Homeostasis | deadman expected-report checks; drift checks with "growth is the flag, not existence" | v0.2 |

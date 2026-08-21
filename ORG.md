@@ -58,11 +58,12 @@ are advisory: crash-safety comes from the write discipline
 ([docs/write-discipline.md](docs/write-discipline.md)), which makes recovery
 "just run the process again".
 
-## How knowledge changes
+## How Knowledge and Machinery change
 
-[KNOWLEDGE.md](KNOWLEDGE.md) defines four classes: Standing Knowledge,
-Organizational Memory, Working State, and Machinery. **Conserved** is the
-change rule applied to Standing Knowledge, not a fifth class or a folder name.
+[KNOWLEDGE.md](KNOWLEDGE.md) separates Knowledge from Machinery. Knowledge has
+three classes: Standing Knowledge, Organizational Memory, and Working State.
+**Conserved** is the change rule applied to Standing Knowledge, not a fourth
+class or a folder name.
 
 **Standing Knowledge** changes only with a Founder ruling, on one of two
 tracks. It includes:
@@ -92,9 +93,9 @@ approval.
 priorities, draft Processes, and pending Proposals. A draft or Proposal grants
 no standing Authority.
 
-**Machinery** is replaceable through repository maintenance: tools, generated
-indexes, and Mounts. It may check or expose knowledge but cannot own meaning or
-Authority.
+**Machinery is not Knowledge.** It is replaceable through repository
+maintenance: tools, generated indexes, and Mounts. It may read, check, project,
+or present Knowledge but cannot own organizational meaning or Authority.
 
 Ordinary work may therefore:
 
@@ -112,7 +113,7 @@ Ordinary work may therefore:
 |---|---|
 | `ORG.md` | this file — canonical entry |
 | `NOW.md` | current goal, active work, decision queue, and next action — Working State |
-| `KNOWLEDGE.md` | knowledge classes, ownership boundary, and evolution map |
+| `KNOWLEDGE.md` | Knowledge classes, Machinery boundary, ownership, and evolution map |
 | `AUTHORITY.md` | the rulebook |
 | `CONTEXT.md` | glossary of seed terms |
 | `processes/` | how kinds of work are done; active definitions are Standing Knowledge |

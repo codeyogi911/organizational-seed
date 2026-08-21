@@ -12,11 +12,13 @@ differently: Kind definitions govern meaning, historical Decisions must not be
 rewritten, open work must remain easy to update, and tools must remain
 replaceable.
 
-We therefore classify every artifact on two independent axes. Seed versus
-Instance records origin and current ownership. Standing Knowledge,
-Organizational Memory, Working State, and Machinery determine change behavior.
-Conserved now names the approval rule applied to Standing Knowledge rather than
-a separate knowledge category.
+We therefore classify every artifact by origin and responsibility. Seed versus
+Instance records origin and current ownership. An artifact is either Knowledge
+or Machinery. Knowledge is Standing Knowledge, Organizational Memory, or
+Working State. Machinery sits outside Knowledge: it may read, check, project,
+or present Knowledge but cannot own organizational meaning or Authority.
+Conserved names the approval rule applied to Standing Knowledge rather than a
+separate Knowledge class.
 
 Three Seed Processes divide evolution without overlapping ownership:
 `handle-uncovered-work` reaches the smallest safe result when no Process fits;
