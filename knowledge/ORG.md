@@ -16,7 +16,8 @@ links from here. The glossary of terms is [CONTEXT.md](CONTEXT.md).
 
 {What this organization exists to do, in 2–4 sentences. Real, not aspirational.}
 
-Current goals, active work, and the next action live in [NOW.md](NOW.md).
+Optional [Goals](goals/_kind.md) make durable organizational direction explicit
+when Purpose alone is too broad to coordinate current work.
 
 ## Roles
 
@@ -24,7 +25,7 @@ Authority attaches to Roles, never to named people. Occupancy today:
 
 | Role | Holds | Occupied by |
 |---|---|---|
-| **Founder** | Judgment on all Processes; the six reserved powers ([AUTHORITY.md](AUTHORITY.md)) | {name} |
+| **Founder** | Judgment on all Processes; the reserved powers ([AUTHORITY.md](AUTHORITY.md)) | {name} |
 | **Operator** | Performs Tasks within granted authority | any human or agent working this repo |
 
 Chartered roles (created via Proposal) live in `roles/`, one file each; this table
@@ -32,12 +33,13 @@ is the occupancy index.
 
 ## How work happens
 
-1. The Founder expresses intent — ephemeral, spoken or typed, quoted verbatim into
-   the Task.
-2. The Operator instantiates a **Task** in `work/` from a **Process** in
+1. A human expresses bounded intent — ephemeral, spoken or typed, quoted
+   verbatim into the Task.
+2. The Operator instantiates a **Task** in `work/` under one **Process** from
    [the Process index](processes/index.md). If no Process fits, use
    [handle uncovered work](processes/handle-uncovered-work.md); absence is a
-   growth signal, not permission to invent standing Authority.
+   growth signal, not permission to invent standing Authority. Link one Goal
+   only when the Task advances durable organizational direction.
 3. The Task is performed. Every claim in the output cites **Records** — that is
    what evidence means here.
 4. Mechanical **Checks** run (defined in the Process; no LLM required). Then the
@@ -51,11 +53,9 @@ is the occupancy index.
 
 **Concurrent operators.** Before mutating, a session takes a lease in
 `work/_active/` (see its `_kind.md`): operator, task, claimed scopes (e.g.
-`{system}:mutate`, `org:now`), heartbeat ≤15 min. Stale at 30 min — breakable
-with a record. Re-read your own lease before every mutation batch; gone means
-halt. Updating `NOW.md` requires the `org:now` lease: re-read it, replace the
-four current fields, and commit; a conflicting change means refresh and retry,
-never append a second competing current view. One mutator per external system at a time;
+`{system}:mutate`, `repo:knowledge/goals/<id>.md`), heartbeat ≤15 min. Stale at
+30 min — breakable with a record. Re-read your own lease before every mutation
+batch; gone means halt. One mutator per external system at a time;
 scheduled runs check leases first and defer once. Every scheduled process has a
 date-stamped expected report — a missing one is a flag, never silence. Leases
 are advisory: crash-safety comes from the write discipline
@@ -93,9 +93,9 @@ change history: Records, resolved Decisions, Lessons, terminal Tasks, and Git
 history. Corrections supersede earlier claims; deletion requires Founder
 approval.
 
-**Working State** changes through its performing Process: open Tasks, current
-priorities, draft Processes, and pending Proposals. A draft or Proposal grants
-no standing Authority.
+**Working State** changes through the deciding Role or Process that owns it:
+active Goals, open Tasks, draft Processes, and pending Proposals. A Goal, draft,
+or Proposal grants no standing Authority.
 
 **Machinery is not Knowledge.** It is replaceable through repository
 maintenance: tools, generated indexes, and Mounts. It may read, check, project,
@@ -109,22 +109,23 @@ Ordinary work may therefore:
 - append lifecycle receipts or superseding corrections to Organizational
   Memory, never rewrite an established historical claim;
 - create and revise draft Processes that grant no Authority;
-- update `NOW.md`.
+- record authorized Goals and append linked progress without changing their
+  outcome or lifecycle ruling.
 
 ## Map
 
 | Path | What lives there |
 |---|---|
 | `ORG.md` | this file — canonical entry |
-| `NOW.md` | current goal, active work, decision queue, and next action — Working State |
 | `KNOWLEDGE.md` | Knowledge classes, Machinery boundary, ownership, and evolution map |
 | `AUTHORITY.md` | the rulebook |
 | `CONTEXT.md` | glossary of seed terms |
+| `goals/` | Founder-set outcomes; active Goals are Working State, terminal Goals are Organizational Memory |
 | `processes/` | how kinds of work are done; active definitions are Standing Knowledge |
 | `processes/index.md` | replaceable Process discovery projection, verified against each Process definition |
 | `processes/_contract.md` | how Processes are named and written |
 | `roles/` | chartered Roles — Standing Knowledge |
-| `work/` | open Tasks are Working State; terminal Tasks are Organizational Memory |
+| `work/` | Tasks use one Process and may link one Goal; open Tasks are Working State, terminal Tasks are Organizational Memory |
 | `records/` | Organizational Memory; each Kind's `_kind.md` is Standing Knowledge |
 | `decisions/` | Organizational Memory of rulings on the organization itself |
 | `lessons/` | Organizational Memory naming its source Process and proposed Standing Knowledge home |
