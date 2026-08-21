@@ -16,21 +16,37 @@ After instantiation, the Instance owns every current file, including files
 that began in the Seed. A later Seed change is only a candidate for local
 review and never carries upstream Authority.
 
+## Architecture at a glance
+
+The organization is defined on top of OKF, not inside a particular agent,
+database, or service. OKF supplies the portable file format. The Seed's local
+profile supplies the organizational meaning, governance, and learning system.
+A Seed is copied into a sovereign Instance; from then on, that Instance owns
+its Knowledge and its evolution.
+
 ```mermaid
 flowchart TB
-    Seed[Seed baseline] -->|copied; no continuing Authority| Instance[Instance-owned repository]
-    Instance --> Knowledge[Knowledge]
-    Instance --> Machinery[Machinery]
-    Knowledge --> Standing[Standing Knowledge]
-    Knowledge --> Memory[Organizational Memory]
-    Knowledge --> Working[Working State]
-    Machinery -. reads, checks, and projects .-> Knowledge
-    Standing --> Identity[Purpose and identity]
-    Standing --> Authority[Authority and Roles]
-    Standing --> Language[Vocabulary and Kind definitions]
-    Standing --> Behavior[Processes and recurring rules]
-    Standing --> Evolution[Authoring and change rules]
+    OKF["OKF v0.2<br/>portable Markdown and YAML"] --> Profile["Seed profile<br/>organizational meaning, governance, and evolution"]
+    Profile --> Seed["Seed baseline<br/>reusable meta-knowledge"]
+    Seed -->|copied once; no continuing Authority| Instance["Sovereign Instance<br/>organization-specific Knowledge"]
+
+    subgraph Repository["Instance-owned repository"]
+        subgraph Bundle["knowledge/ — canonical OKF bundle"]
+            Standing["Standing Knowledge<br/>purpose, Authority, Roles, vocabulary,<br/>Processes, and change rules"]
+            Memory["Organizational Memory<br/>Records, Decisions, Lessons,<br/>terminal Tasks, and history"]
+            Working["Working State<br/>current priorities, open Tasks,<br/>drafts, and proposed changes"]
+        end
+        Machinery["Machinery<br/>tools, Mounts, checks, indexes,<br/>graphs, search, and agents"]
+    end
+
+    Instance --> Bundle
+    Instance --> Machinery
+    Machinery -. reads, checks, projects, and presents .-> Bundle
 ```
+
+The boundary is deliberate: Machinery can be replaced without moving the
+organization's meaning or Authority. Git owns versions, review, integration,
+rollback, and history for the bundle at an exact commit.
 
 ## Knowledge and Machinery
 
@@ -87,3 +103,34 @@ it does not need a ceremonial Lesson. A Lesson changes no behavior until an
 approved Change Standing Knowledge performance integrates the receiving diff.
 Creating a Process is not a separate mutation system: uncovered work may leave
 a draft, and Change Standing Knowledge may later create the active Process.
+
+```mermaid
+flowchart LR
+    Intent["Human intent"] --> Fit{"Active Process fits?"}
+    Fit -->|yes| Task["Bounded Task"]
+    Fit -->|no| Uncovered["Handle uncovered work"]
+    Uncovered --> Task
+    Uncovered -. repeatable gap .-> Draft["Draft Process or other candidate"]
+
+    Task --> Perform["Perform work<br/>cite Records"]
+    Perform --> Checks["Mechanical Checks"]
+    Checks --> Judgment["Human Judgment"]
+    Judgment --> Outcome["Outcome and receipt"]
+    Outcome --> Lesson["Lesson"]
+
+    Lesson --> Review["Review Lessons"]
+    Review -->|keep or reroute| Lesson
+    Review -->|close with reason| Memory["Organizational Memory"]
+    Review -->|absorb| Change["Change Standing Knowledge"]
+    Draft --> Change
+    Error["Directly evidenced error<br/>or changed intent"] --> Change
+
+    Change -->|approved and integrated| Standing["Standing Knowledge"]
+    Change -->|rejected with reason| Memory
+    Standing -. improves future .-> Fit
+```
+
+This is the compounding loop: performed work can create evidence, evidence can
+create a Lesson, and governed change can improve what future work follows.
+Keeping, rerouting, closing, or rejecting is also a valid outcome; the system
+does not force every observation into Standing Knowledge.

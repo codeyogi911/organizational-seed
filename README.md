@@ -53,7 +53,9 @@ Machinery. The Seed supplies a reusable baseline; an Instance owns its current
 copy and may add business-specific Knowledge. Origin never creates continuing
 upstream Authority. Knowledge is Standing Knowledge, Organizational Memory, or
 Working State. Machinery sits outside Knowledge and may only read, check,
-project, or present it. [knowledge/KNOWLEDGE.md](knowledge/KNOWLEDGE.md) is the canonical map.
+project, or present it. See the
+[architecture at a glance](knowledge/KNOWLEDGE.md#architecture-at-a-glance);
+[knowledge/KNOWLEDGE.md](knowledge/KNOWLEDGE.md) is the canonical map.
 
 ## The loop
 
