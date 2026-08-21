@@ -16,12 +16,22 @@ class DoctorTests(unittest.TestCase):
         (root / ".github").mkdir()
         (root / ".github" / "CODEOWNERS").write_text(
             "/ORG.md @founder\n"
+            "/KNOWLEDGE.md @founder\n"
+            "/CONTEXT.md @founder\n"
             "/AUTHORITY.md @founder\n"
             "/AUTHORING.md @founder\n"
             "/processes/ @founder\n"
             "/roles/ @founder\n"
+            "/**/_kind.md @founder\n"
+            "/proposals/0000-proposal-template.md @founder\n"
+            "/decisions/fast-track.md @founder\n"
+            "/docs/write-discipline.md @founder\n"
+            "/.github/CODEOWNERS @founder\n"
         )
         (root / "processes").mkdir()
+        (root / "processes" / "index.md").write_text(
+            "# Processes\n\n| Process | Use it when |\n|---|---|\n"
+        )
         (root / "lessons").mkdir()
         (root / "decisions").mkdir()
         (root / "proposals").mkdir()
@@ -31,7 +41,7 @@ class DoctorTests(unittest.TestCase):
             """
             # Kind: Lesson
 
-            **Required frontmatter:** `id`, `kind`, `date`, `process`, and `status`.
+            **Required frontmatter:** `id`, `kind`, `date`, `source-process`, `applies-to`, and `status`.
             """,
         )
         return tmp, root
@@ -50,22 +60,35 @@ class DoctorTests(unittest.TestCase):
             check=False,
         )
 
-    def add_process(self, root, filename="improve-a-process.md", process_id="improve-a-process", title="improve a Process"):
-        self.write(
+    def add_process(
+        self,
+        root,
+        filename="review-lessons.md",
+        process_id="review-lessons",
+        title="review Lessons",
+        status="active",
+        description="Lessons receive an honest outcome.",
+    ):
+        folder = "work/process-drafts" if status == "draft" else "processes"
+        retirement = (
+            "retired-on: 2026-08-21\n            " if status == "retired" else ""
+        )
+        path = self.write(
             root,
-            f"processes/{filename}",
+            f"{folder}/{filename}",
             f"""
             ---
             id: {process_id}
             kind: process
-            status: active
+            status: {status}
+            {retirement}description: {description}
             ---
 
             # Process: {title}
 
             ## Outcome
 
-            One Process improves from experience.
+            Lessons receive an honest outcome.
 
             ## When to use
 
@@ -81,7 +104,7 @@ class DoctorTests(unittest.TestCase):
 
             ## Steps
 
-            1. Improve it.
+            1. Review them.
 
             ## Done when
 
@@ -92,6 +115,14 @@ class DoctorTests(unittest.TestCase):
             Retry from the branch diff.
             """,
         )
+        if status in ("active", "example"):
+            index = root / "processes" / "index.md"
+            row = (
+                f"| [{title}]({path.relative_to(root / 'processes')}) | "
+                f"{description} |\n"
+            )
+            if row not in index.read_text():
+                index.write_text(index.read_text() + row)
 
     def add_lesson(self, root, frontmatter, body="Teaching remains visible."):
         content = (
@@ -110,7 +141,7 @@ class DoctorTests(unittest.TestCase):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         self.add_process(root)
-        self.add_lesson(root, "process: improve-a-process\nstatus: pending")
+        self.add_lesson(root, "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: pending")
 
         result = self.run_doctor(root)
 
@@ -157,6 +188,9 @@ class DoctorTests(unittest.TestCase):
             Something becomes complete.
             """,
         )
+        (root / "processes" / "index.md").write_text(
+            "# Processes\n- [incomplete](incomplete.md)\n"
+        )
 
         result = self.run_doctor(root)
 
@@ -167,7 +201,11 @@ class DoctorTests(unittest.TestCase):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         (root / ".github" / "CODEOWNERS").write_text(
-            "/ORG.md @founder\n/AUTHORITY.md @founder\n/processes/ @founder\n/roles/ @founder\n"
+            "/ORG.md @founder\n/KNOWLEDGE.md @founder\n/CONTEXT.md @founder\n"
+            "/AUTHORITY.md @founder\n/processes/ @founder\n/roles/ @founder\n"
+            "/**/_kind.md @founder\n/proposals/0000-proposal-template.md @founder\n"
+            "/decisions/fast-track.md @founder\n/docs/write-discipline.md @founder\n"
+            "/.github/CODEOWNERS @founder\n"
         )
 
         result = self.run_doctor(root)
@@ -176,21 +214,99 @@ class DoctorTests(unittest.TestCase):
         self.assertIn("[enforce]", result.stdout)
         self.assertIn("/AUTHORING.md", result.stdout)
 
-    def test_lesson_must_route_to_an_active_process(self):
+    def test_codeowners_must_cover_the_knowledge_model_and_kind_definitions(self):
+        for missing_path in ("/KNOWLEDGE.md", "/**/_kind.md"):
+            with self.subTest(missing_path=missing_path):
+                tmp, root = self.make_instance()
+                self.addCleanup(tmp.cleanup)
+                codeowners = root / ".github" / "CODEOWNERS"
+                codeowners.write_text(
+                    codeowners.read_text().replace(
+                        f"{missing_path} @founder\n", ""
+                    )
+                )
+
+                result = self.run_doctor(root)
+
+                self.assertEqual(1, result.returncode)
+                self.assertIn("[enforce]", result.stdout)
+                self.assertIn(missing_path, result.stdout)
+
+    def test_lesson_must_name_an_active_source_process(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
-        self.add_lesson(root, "process: missing-process\nstatus: pending")
+        self.add_lesson(
+            root,
+            "source-process: missing-process\napplies-to: unresolved\nstatus: pending",
+        )
 
         result = self.run_doctor(root)
 
         self.assertEqual(1, result.returncode)
         self.assertIn("[lesson-route]", result.stdout)
 
+    def test_pending_lesson_may_have_an_unresolved_home(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: unresolved\nstatus: pending",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("1 pending", result.stdout)
+
+    def test_lesson_may_name_a_retired_source_process(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root, status="retired")
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: unresolved\nstatus: pending",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("1 pending", result.stdout)
+
+    def test_pending_lesson_rejects_a_non_standing_home(self):
+        for target, setup in (
+            ("tools/helper", lambda root: self.write(root, "tools/helper", "replaceable machinery\n")),
+            (
+                "work/process-drafts/candidate.md",
+                lambda root: self.add_process(
+                    root,
+                    filename="candidate.md",
+                    process_id="candidate",
+                    title="candidate",
+                    status="draft",
+                ),
+            ),
+        ):
+            with self.subTest(target=target):
+                tmp, root = self.make_instance()
+                self.addCleanup(tmp.cleanup)
+                self.add_process(root)
+                setup(root)
+                self.add_lesson(
+                    root,
+                    f"source-process: review-lessons\napplies-to: {target}\nstatus: pending",
+                )
+
+                result = self.run_doctor(root)
+
+                self.assertEqual(1, result.returncode)
+                self.assertIn("[lesson-route]", result.stdout)
+
     def test_absorption_requires_receipts(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         self.add_process(root)
-        self.add_lesson(root, "process: improve-a-process\nstatus: absorbed")
+        self.add_lesson(root, "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed")
 
         result = self.run_doctor(root)
 
@@ -217,13 +333,13 @@ class DoctorTests(unittest.TestCase):
             # Decision
 
             Approve [this Lesson](../lessons/2026-08-21-visible-teaching.md)
-            into [the Process](../processes/improve-a-process.md).
+            into [the Process](../processes/review-lessons.md).
             """,
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: decisions/0001-absorb.md",
-            "Absorbed into [the Process](../processes/improve-a-process.md) by [Decision 0001](../decisions/0001-absorb.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: decisions/0001-absorb.md",
+            "Absorbed into [the Process](../processes/review-lessons.md) by [Decision 0001](../decisions/0001-absorb.md).",
         )
 
         result = self.run_doctor(root)
@@ -237,7 +353,7 @@ class DoctorTests(unittest.TestCase):
         self.add_process(root)
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: retired\nclosed-by: decisions/missing.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/missing.md",
         )
 
         result = self.run_doctor(root)
@@ -260,7 +376,7 @@ class DoctorTests(unittest.TestCase):
             # Proposal
 
             Absorb [this Lesson](../lessons/2026-08-21-visible-teaching.md)
-            into [the Process](../processes/improve-a-process.md).
+            into [the Process](../processes/review-lessons.md).
 
             ## Ruling
 
@@ -277,13 +393,68 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: proposals/0001-absorb.md",
-            "Absorbed into [the Process](../processes/improve-a-process.md) by [Proposal 0001](../proposals/0001-absorb.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: proposals/0001-absorb.md",
+            "Absorbed into [the Process](../processes/review-lessons.md) by [Proposal 0001](../proposals/0001-absorb.md).",
         )
 
         result = self.run_doctor(root)
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_absorbed_lesson_keeps_a_retired_process_as_historical_receiver(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        process = root / "processes" / "review-lessons.md"
+        process.write_text(process.read_text().replace(
+            "status: active\n",
+            "status: retired\nretired-on: 2026-08-21\n",
+        ))
+        (root / "processes" / "index.md").write_text(
+            "# Processes\n\n| Process | Use it when |\n|---|---|\n"
+        )
+        self.write(
+            root,
+            "proposals/0001-absorb.md",
+            """
+            ---
+            status: applied
+            ---
+
+            # Proposal
+
+            Absorb [this Lesson](../lessons/2026-08-21-visible-teaching.md)
+            into [the Process](../processes/review-lessons.md).
+
+            ## Ruling
+
+            **Outcome:** approved
+
+            **Ruled by:** Founder
+
+            **Date:** 2026-08-20
+
+            **Lesson outcome:** absorb
+
+            **Reason:** The teaching belonged in the Process before retirement.
+            """,
+        )
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: proposals/0001-absorb.md",
+            "Absorbed into [the Process](../processes/review-lessons.md) by [Proposal 0001](../proposals/0001-absorb.md).",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+        proposal = root / "proposals" / "0001-absorb.md"
+        proposal.write_text(proposal.read_text().replace("2026-08-20", "2026-08-22"))
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[lesson-outcome]", result.stdout)
 
     def test_not_approved_words_do_not_count_as_approval(self):
         tmp, root = self.make_instance()
@@ -300,7 +471,7 @@ class DoctorTests(unittest.TestCase):
             # Proposal
 
             [Lesson](../lessons/2026-08-21-visible-teaching.md) and
-            [Process](../processes/improve-a-process.md).
+            [Process](../processes/review-lessons.md).
 
             ## Ruling
 
@@ -309,8 +480,8 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: proposals/0001-not-approved.md",
-            "Claimed by [the Process](../processes/improve-a-process.md) and [Proposal](../proposals/0001-not-approved.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: proposals/0001-not-approved.md",
+            "Claimed by [the Process](../processes/review-lessons.md) and [Proposal](../proposals/0001-not-approved.md).",
         )
 
         result = self.run_doctor(root)
@@ -333,13 +504,13 @@ class DoctorTests(unittest.TestCase):
             # Decision
 
             Reject [this Lesson](../lessons/2026-08-21-visible-teaching.md)
-            for [the Process](../processes/improve-a-process.md).
+            for [the Process](../processes/review-lessons.md).
             """,
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: decisions/0001-reject.md",
-            "Claimed by [the Process](../processes/improve-a-process.md) and [Decision](../decisions/0001-reject.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: decisions/0001-reject.md",
+            "Claimed by [the Process](../processes/review-lessons.md) and [Decision](../decisions/0001-reject.md).",
         )
 
         result = self.run_doctor(root)
@@ -378,8 +549,8 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: proposals/0001-incomplete.md",
-            "Claimed by [the Process](../processes/improve-a-process.md) and [Proposal](../proposals/0001-incomplete.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: proposals/0001-incomplete.md",
+            "Claimed by [the Process](../processes/review-lessons.md) and [Proposal](../proposals/0001-incomplete.md).",
         )
 
         result = self.run_doctor(root)
@@ -411,7 +582,7 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: retired\nclosed-by: decisions/0002-close.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/0002-close.md",
             "See [Decision](../decisions/0002-close.md).\n\n## Closure reason\n\nThe teaching no longer applies.",
         )
 
@@ -443,7 +614,7 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: retired\nclosed-by: decisions/0005-no-reason.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/0005-no-reason.md",
             "See [Decision](../decisions/0005-no-reason.md).\n\n## Closure reason\n\nThe teaching no longer applies.",
         )
 
@@ -472,7 +643,7 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: retired\nclosed-by: decisions/0003-unruled.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/0003-unruled.md",
             "See [Decision](../decisions/0003-unruled.md).\n\n## Closure reason\n\nThe teaching no longer applies.",
         )
 
@@ -505,7 +676,7 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: retired\nclosed-by: decisions/0004-keep.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/0004-keep.md",
             "See [Decision](../decisions/0004-keep.md).\n\n## Closure reason\n\nThe teaching no longer applies.",
         )
 
@@ -529,7 +700,7 @@ class DoctorTests(unittest.TestCase):
             # Proposal
 
             [Lesson](../lessons/2026-08-21-visible-teaching.md) and
-            [Process](../processes/improve-a-process.md).
+            [Process](../processes/review-lessons.md).
 
             ## Ruling
 
@@ -546,8 +717,8 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: proposals/0002-reroute.md",
-            "Claimed by [the Process](../processes/improve-a-process.md) and [Proposal](../proposals/0002-reroute.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: proposals/0002-reroute.md",
+            "Claimed by [the Process](../processes/review-lessons.md) and [Proposal](../proposals/0002-reroute.md).",
         )
 
         result = self.run_doctor(root)
@@ -567,13 +738,13 @@ class DoctorTests(unittest.TestCase):
 
             | Date | File(s) | Change | Outcome | Ruling |
             |---|---|---|---|---|
-            | 2026-08-21 | [Process](../processes/improve-a-process.md) | Lesson outcome: absorb [Lesson](../lessons/2026-08-21-visible-teaching.md) into [Process](../processes/improve-a-process.md) | approved | "yes" |
+            | 2026-08-21 | [Process](../processes/review-lessons.md) | Lesson outcome: absorb [Lesson](../lessons/2026-08-21-visible-teaching.md) into [Process](../processes/review-lessons.md) | approved | "yes" |
             """,
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: decisions/fast-track.md",
-            "Absorbed into [the Process](../processes/improve-a-process.md) by the [fast-track ruling](../decisions/fast-track.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: decisions/fast-track.md",
+            "Absorbed into [the Process](../processes/review-lessons.md) by the [fast-track ruling](../decisions/fast-track.md).",
         )
 
         result = self.run_doctor(root)
@@ -592,13 +763,13 @@ class DoctorTests(unittest.TestCase):
 
             | Date | File(s) | Change | Outcome | Ruling |
             |---|---|---|---|---|
-            | 2026-08-21 | [Process](../processes/improve-a-process.md) | Lesson outcome: absorb [Lesson](../lessons/2026-08-21-visible-teaching.md) into [Process](../processes/improve-a-process.md) | approved | "no" |
+            | 2026-08-21 | [Process](../processes/review-lessons.md) | Lesson outcome: absorb [Lesson](../lessons/2026-08-21-visible-teaching.md) into [Process](../processes/review-lessons.md) | approved | "no" |
             """,
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: decisions/fast-track.md",
-            "Claimed by [the Process](../processes/improve-a-process.md) and [fast-track](../decisions/fast-track.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: decisions/fast-track.md",
+            "Claimed by [the Process](../processes/review-lessons.md) and [fast-track](../decisions/fast-track.md).",
         )
 
         result = self.run_doctor(root)
@@ -618,13 +789,13 @@ class DoctorTests(unittest.TestCase):
 
             | Date | File(s) | Change | Outcome | Ruling |
             |---|---|---|---|---|
-            | {YYYY-MM-DD} | [Process](../processes/improve-a-process.md) | Lesson outcome: absorb [Lesson](../lessons/2026-08-21-visible-teaching.md) into [Process](../processes/improve-a-process.md) | approved | "yes" |
+            | {YYYY-MM-DD} | [Process](../processes/review-lessons.md) | Lesson outcome: absorb [Lesson](../lessons/2026-08-21-visible-teaching.md) into [Process](../processes/review-lessons.md) | approved | "yes" |
             """,
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: processes/improve-a-process.md\ndecided-by: decisions/fast-track.md",
-            "Claimed by [the Process](../processes/improve-a-process.md) and [fast-track](../decisions/fast-track.md).",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: decisions/fast-track.md",
+            "Claimed by [the Process](../processes/review-lessons.md) and [fast-track](../decisions/fast-track.md).",
         )
 
         result = self.run_doctor(root)
@@ -650,7 +821,7 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: retired\nclosed-by: decisions/fast-track.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/fast-track.md",
             "Claimed closed by [fast-track](../decisions/fast-track.md).",
         )
 
@@ -683,7 +854,7 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: retired\nclosed-by: decisions/0006-placeholder-date.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/0006-placeholder-date.md",
             "See [Decision](../decisions/0006-placeholder-date.md).\n\n## Closure reason\n\nThe teaching no longer applies.",
         )
 
@@ -718,7 +889,7 @@ class DoctorTests(unittest.TestCase):
                 )
                 self.add_lesson(
                     root,
-                    "process: improve-a-process\nstatus: retired\nclosed-by: decisions/0007-placeholder-reason.md",
+                    "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/0007-placeholder-reason.md",
                     f"See [Decision](../decisions/0007-placeholder-reason.md).\n\n## Closure reason\n\n{placeholder}",
                 )
 
@@ -732,7 +903,7 @@ class DoctorTests(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         self.write(root, "ORG.md", "# {Organization Name} — the Organization\n")
         self.add_process(root)
-        self.add_lesson(root, "process: improve-a-process\nstatus: pending")
+        self.add_lesson(root, "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: pending")
 
         result = self.run_doctor(root)
 
@@ -780,6 +951,29 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("[seed-boundary]", result.stdout)
 
+    def test_seed_source_rejects_populated_now_state(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(root, "ORG.md", "# {Organization Name} — the Organization\n")
+        self.write(
+            root,
+            "NOW.md",
+            """
+            # Now
+
+            - **Current goal:** Ship a live customer order
+            - **Active work:** work/real-task.md
+            - **Founder decision queue:** empty
+            - **Next action:** Send the order
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[seed-boundary]", result.stdout)
+        self.assertIn("NOW.md", result.stdout)
+
     def test_process_file_cannot_evade_shape_with_wrong_kind(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
@@ -802,11 +996,86 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("[process-shape]", result.stdout)
 
+    def test_draft_process_uses_the_reviewable_seven_section_shape(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "work/process-drafts/incomplete.md",
+            """
+            ---
+            id: incomplete
+            kind: process
+            status: draft
+            ---
+
+            # Process: incomplete
+
+            ## Outcome
+
+            A candidate exists.
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[process-shape]", result.stdout)
+
+    def test_process_status_must_use_the_defined_lifecycle(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root, status="activee")
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[process-lifecycle]", result.stdout)
+
+    def test_active_process_must_be_indexed(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        (root / "processes" / "index.md").write_text("# Processes\n")
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("active Process is missing", result.stdout)
+
+    def test_process_index_cannot_invent_routing_meaning(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        index = root / "processes" / "index.md"
+        index.write_text(index.read_text().replace(
+            "Lessons receive an honest outcome.",
+            "Do something unrelated that the Process never says.",
+        ))
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[process-discovery]", result.stdout)
+
+    def test_draft_process_must_not_be_indexed(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root, filename="candidate.md", process_id="candidate", title="candidate", status="draft")
+        (root / "processes" / "index.md").write_text(
+            "# Processes\n- [candidate](../work/process-drafts/candidate.md)\n"
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("draft Process must not appear", result.stdout)
+
     def test_process_sections_must_be_exact_and_ordered(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         self.add_process(root)
-        process = root / "processes/improve-a-process.md"
+        process = root / "processes/review-lessons.md"
         process.write_text(process.read_text().replace(
             "## Steps\n", "## Extra ceremony\n\nNone.\n\n## Steps\n"
         ))
@@ -825,7 +1094,7 @@ class DoctorTests(unittest.TestCase):
                 tmp, root = self.make_instance()
                 self.addCleanup(tmp.cleanup)
                 self.add_process(root)
-                self.add_lesson(root, "process: improve-a-process\nstatus: pending")
+                self.add_lesson(root, "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: pending")
                 source = root / "lessons/2026-08-21-visible-teaching.md"
                 target = root / target_relative
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -869,14 +1138,14 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: proposals/0008-self.md\ndecided-by: proposals/0008-self.md",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: proposals/0008-self.md\ndecided-by: proposals/0008-self.md",
             "Claimed by [Proposal](../proposals/0008-self.md).",
         )
 
         result = self.run_doctor(root)
 
         self.assertEqual(1, result.returncode)
-        self.assertIn("behavioral home", result.stdout)
+        self.assertIn("Standing Knowledge", result.stdout)
 
     def test_lesson_kind_can_receive_lifecycle_teaching(self):
         tmp, root = self.make_instance()
@@ -910,13 +1179,54 @@ class DoctorTests(unittest.TestCase):
         )
         self.add_lesson(
             root,
-            "process: improve-a-process\nstatus: absorbed\nabsorbed-into: lessons/_kind.md\ndecided-by: proposals/0009-lesson-kind.md",
+            "source-process: review-lessons\napplies-to: lessons/_kind.md\nstatus: absorbed\nabsorbed-into: lessons/_kind.md\ndecided-by: proposals/0009-lesson-kind.md",
             "Absorbed into [the Lesson definition](_kind.md) by [Proposal](../proposals/0009-lesson-kind.md).",
         )
 
         result = self.run_doctor(root)
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_absorption_must_land_in_the_reviewed_home(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        self.write(
+            root,
+            "proposals/0011-wrong-home.md",
+            """
+            ---
+            status: applied
+            ---
+
+            # Proposal
+
+            Move [this Lesson](../lessons/2026-08-21-visible-teaching.md) into
+            [the Lesson definition](../lessons/_kind.md).
+
+            ## Ruling
+
+            **Outcome:** approved
+
+            **Ruled by:** Founder
+
+            **Date:** 2026-08-21
+
+            **Lesson outcome:** absorb
+
+            **Reason:** The teaching defines Lesson lifecycle behavior.
+            """,
+        )
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: lessons/_kind.md\ndecided-by: proposals/0011-wrong-home.md",
+            "Absorbed into [the Lesson definition](_kind.md) by [Proposal](../proposals/0011-wrong-home.md).",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("reviewed applies-to home", result.stdout)
 
     def test_machinery_and_mounts_cannot_receive_teaching(self):
         for receiver, proposal_link, lesson_link in (
@@ -956,14 +1266,14 @@ class DoctorTests(unittest.TestCase):
                 )
                 self.add_lesson(
                     root,
-                    f"process: improve-a-process\nstatus: absorbed\nabsorbed-into: {receiver}\ndecided-by: proposals/0010-machinery.md",
+                    f"source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: {receiver}\ndecided-by: proposals/0010-machinery.md",
                     f"Claimed by [receiver]({lesson_link}) and [Proposal](../proposals/0010-machinery.md).",
                 )
 
                 result = self.run_doctor(root)
 
                 self.assertEqual(1, result.returncode)
-                self.assertIn("durable behavioral home", result.stdout)
+                self.assertIn("Standing Knowledge", result.stdout)
 
 
 if __name__ == "__main__":

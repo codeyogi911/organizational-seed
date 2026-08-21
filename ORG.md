@@ -12,8 +12,7 @@ links from here. The glossary of terms is [CONTEXT.md](CONTEXT.md).
 
 {What this organization exists to do, in 2–4 sentences. Real, not aspirational.}
 
-**Current goal:** {the one thing the organization is trying to prove or achieve
-right now}
+Current goals, active work, and the next action live in [NOW.md](NOW.md).
 
 ## Roles
 
@@ -27,80 +26,104 @@ Authority attaches to Roles, never to named people. Occupancy today:
 Chartered roles (created via Proposal) live in `roles/`, one file each; this table
 is the occupancy index.
 
-## Now
-
-- **Active work:** {none yet — or link the open Task}
-- **Founder decision queue:** {empty — or the rulings waiting}
-- **Next action:** {the single next thing; updating this line is part of every Task}
-
 ## How work happens
 
 1. The Founder expresses intent — ephemeral, spoken or typed, quoted verbatim into
    the Task.
 2. The Operator instantiates a **Task** in `work/` from a **Process** in
-   [the Process index](processes/index.md). Intent with no matching Process → the Operator drafts a
-   **Proposal** for a new one and awaits ruling. Growth, not error.
+   [the Process index](processes/index.md). If no Process fits, use
+   [handle uncovered work](processes/handle-uncovered-work.md); absence is a
+   growth signal, not permission to invent standing Authority.
 3. The Task is performed. Every claim in the output cites **Records** — that is
    what evidence means here.
 4. Mechanical **Checks** run (defined in the Process; no LLM required). Then the
    Founder rules the **Judgment**, recorded verbatim in the Task.
-5. **Lessons** go to `lessons/`. Lessons waiting for one Process are handled
-   together through [improve a Process](processes/improve-a-process.md): absorb,
-   keep, reroute, or close. A governed change is never applied without the
-   required Founder ruling.
+5. **Lessons** go to `lessons/` and are handled through
+   [review Lessons](processes/review-lessons.md): absorb, keep, reroute, or
+   close. Creating, correcting, improving, merging, renaming, or retiring what
+   future work follows uses
+   [change Standing Knowledge](processes/change-standing-knowledge.md). A
+   governed change is never applied without the required Founder ruling.
 
 **Concurrent operators.** Before mutating, a session takes a lease in
 `work/_active/` (see its `_kind.md`): operator, task, claimed scopes (e.g.
 `{system}:mutate`, `org:now`), heartbeat ≤15 min. Stale at 30 min — breakable
 with a record. Re-read your own lease before every mutation batch; gone means
-halt. The Now section is append-per-session (correct another session's entry
-with a new entry, never a rewrite). One mutator per external system at a time;
+halt. Updating `NOW.md` requires the `org:now` lease: re-read it, replace the
+four current fields, and commit; a conflicting change means refresh and retry,
+never append a second competing current view. One mutator per external system at a time;
 scheduled runs check leases first and defer once. Every scheduled process has a
 date-stamped expected report — a missing one is a flag, never silence. Leases
 are advisory: crash-safety comes from the write discipline
 ([docs/write-discipline.md](docs/write-discipline.md)), which makes recovery
 "just run the process again".
 
-## What is conserved / what is free
+## How knowledge changes
 
-Like an organism: a small conserved genome, everything else free to vary.
+[KNOWLEDGE.md](KNOWLEDGE.md) defines four classes: Standing Knowledge,
+Organizational Memory, Working State, and Machinery. **Conserved** is the
+change rule applied to Standing Knowledge, not a fifth class or a folder name.
 
-**Conserved** — change requires a Founder ruling, on one of two tracks:
+**Standing Knowledge** changes only with a Founder ruling, on one of two
+tracks. It includes:
 
-- this file's Purpose and Roles sections, and this section itself
-- [AUTHORITY.md](AUTHORITY.md)
-- [AUTHORING.md](AUTHORING.md)
-- everything in `processes/` and `roles/`
+- this file's Purpose, Roles, knowledge-change rules, and map;
+- [KNOWLEDGE.md](KNOWLEDGE.md), [CONTEXT.md](CONTEXT.md),
+  [AUTHORITY.md](AUTHORITY.md), and [AUTHORING.md](AUTHORING.md);
+- active Processes, Process contracts, Role charters, and every `_kind.md`
+  definition;
+- the Proposal template and fast-track ledger definition that shape governed
+  change.
 
-**Full Proposal** for anything that expands power or creates organs (new Roles,
-new or widened grants, new processes, scheduling, security/legal boundaries).
-**Fast-track** for conserved changes that expand nothing (flags, checks,
+**Full Proposal** for anything that expands power or creates standing
+capability (new Roles, new or widened grants, new Processes or Kinds,
+scheduling, security/legal boundaries).
+**Fast-track** for Standing Knowledge changes that expand nothing (flags, checks,
 thresholds, steps, wording): state the diff → the Founder's verbatim yes → one
 commit + a line in `decisions/fast-track.md` — batch-reviewed at the weekly
 review. In doubt → full form; the Founder may always demand it.
 
-**Free** — changes through ordinary work:
+**Organizational Memory** grows through ordinary work and is not rewritten to
+change history: Records, resolved Decisions, Lessons, terminal Tasks, and Git
+history. Corrections supersede earlier claims; deletion requires Founder
+approval.
 
-- `work/`, `records/`, `lessons/`; writing new entries in `proposals/` and
-  `decisions/`
-- the Now section of this file
+**Working State** changes through its performing Process: open Tasks, current
+priorities, draft Processes, and pending Proposals. A draft or Proposal grants
+no standing Authority.
+
+**Machinery** is replaceable through repository maintenance: tools, generated
+indexes, and Mounts. It may check or expose knowledge but cannot own meaning or
+Authority.
+
+Ordinary work may therefore:
+
+- update Working State through its Process; append new Records, Lessons,
+  Proposals, and Decisions; refresh current Record fields only as their Kind
+  allows with new source and `as-of`;
+- append lifecycle receipts or superseding corrections to Organizational
+  Memory, never rewrite an established historical claim;
+- create and revise draft Processes that grant no Authority;
+- update `NOW.md`.
 
 ## Map
 
 | Path | What lives there |
 |---|---|
 | `ORG.md` | this file — canonical entry |
+| `NOW.md` | current goal, active work, decision queue, and next action — Working State |
+| `KNOWLEDGE.md` | knowledge classes, ownership boundary, and evolution map |
 | `AUTHORITY.md` | the rulebook |
 | `CONTEXT.md` | glossary of seed terms |
-| `processes/` | how kinds of work are done (conserved) |
-| `processes/index.md` | the Process discovery list |
+| `processes/` | how kinds of work are done; active definitions are Standing Knowledge |
+| `processes/index.md` | replaceable Process discovery projection, verified against each Process definition |
 | `processes/_contract.md` | how Processes are named and written |
-| `roles/` | chartered Roles (conserved) |
-| `work/` | Tasks — one file per performance |
-| `records/` | the Ontology — each Kind carries a `_kind.md` |
-| `decisions/` | Decisions that rule on the organization itself |
-| `lessons/` | preserved knowledge, tagged by process |
-| `proposals/` | the mutation queue |
+| `roles/` | chartered Roles — Standing Knowledge |
+| `work/` | open Tasks are Working State; terminal Tasks are Organizational Memory |
+| `records/` | Organizational Memory; each Kind's `_kind.md` is Standing Knowledge |
+| `decisions/` | Organizational Memory of rulings on the organization itself |
+| `lessons/` | Organizational Memory naming its source Process and proposed Standing Knowledge home |
+| `proposals/` | governed changes awaiting Judgment, then memory of their ruling |
 | `docs/adr/` | design decisions about the pattern itself |
 | `tools/` | machinery — replaceable check scripts |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/` | Mounts — harness bindings, disposable |

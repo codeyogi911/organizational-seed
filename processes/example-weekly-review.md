@@ -3,13 +3,14 @@ id: example-weekly-review
 kind: process
 status: example
 judge: Founder
+description: Adapt this worked example into an Instance's first recurring Process.
 ---
 
 > **Template note:** a worked example showing the shape every Process shares —
 > one outcome, clear boundaries, evidence, human-followable steps, mechanical
 > Checks, and one Judgment question. Adapt it to your first real recurring pain,
 > rename it, set `status: active`, and delete this note. (New Processes after
-> this one arrive via Proposal — see `proposals/0000-proposal-template.md`.)
+> this one use [change Standing Knowledge](change-standing-knowledge.md).)
 
 # Process: weekly review (example)
 
@@ -44,8 +45,7 @@ Task.
 ## Steps
 
 1. Open a Task in `work/` (id `YYYY-Www-weekly-review`), status `open`; record
-   `performed-by`; quote the standing intent. Update the Now section of
-   [ORG.md](../ORG.md).
+   `performed-by`; quote the standing intent. Update [NOW.md](../NOW.md).
 2. Gather inputs — name them explicitly, with staleness noted: which records, which
    system reads (under what grant in [AUTHORITY.md](../AUTHORITY.md)).
 3. Produce the output as a Record. **Every claim cites the records that support
@@ -55,7 +55,7 @@ Task.
    `checked` only when they pass.
 6. Present the result for Founder Judgment and record the ruling.
 7. Record a Lesson if anything was learned. Route Process teaching through
-   [improve a Process](improve-a-process.md).
+   [review Lessons](review-lessons.md).
 
 ## Done when
 

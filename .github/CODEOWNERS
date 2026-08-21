@@ -1,8 +1,14 @@
 # Copy to .github/CODEOWNERS and set the Founder's handle.
-# The conserved genome — changes require the Founder's review.
+# Standing Knowledge — changes require the Founder's review.
 /ORG.md            @founder-handle
+/KNOWLEDGE.md      @founder-handle
+/CONTEXT.md        @founder-handle
 /AUTHORITY.md      @founder-handle
 /AUTHORING.md      @founder-handle
 /processes/        @founder-handle
 /roles/            @founder-handle
-/CODEOWNERS        @founder-handle
+/**/_kind.md       @founder-handle
+/proposals/0000-proposal-template.md @founder-handle
+/decisions/fast-track.md @founder-handle
+/docs/write-discipline.md @founder-handle
+/.github/CODEOWNERS @founder-handle

@@ -1,8 +1,12 @@
 # Fast-track ledger — append-only
 
-One line per fast-track ruling: date · file(s) · one-line change · outcome · the
-Founder's verbatim ruling. An entry without a valid outcome or verbatim ruling
-is invalid. Batch-reviewed at the weekly review.
+One line per non-expanding Standing Knowledge ruling: date · file(s) · one-line
+change · outcome · the Founder’s verbatim ruling. An entry without a valid
+outcome or verbatim ruling is invalid. Batch-reviewed at the weekly review.
+
+Use [change Standing Knowledge](../processes/change-standing-knowledge.md) to
+prepare and review the exact diff. New or widened Authority, capability, Role,
+Kind, or Process uses the full Proposal path instead.
 
 For a Lesson absorption, the Change cell starts `Lesson outcome: absorb` and
 links the exact Lesson and receiving file; Outcome is `approved` and Ruling is

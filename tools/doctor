@@ -80,6 +80,53 @@ def rooted_path(value):
 def inside(directory, path):
     return bool(path and os.path.commonpath((directory, path)) == directory)
 
+def standing_knowledge_home(path):
+    """Return whether a live file is an allowed Standing Knowledge home."""
+    if not path or not os.path.isfile(path):
+        return False
+    exact_homes = {
+        os.path.join(ROOT, name) for name in
+        ("ORG.md", "KNOWLEDGE.md", "CONTEXT.md", "AUTHORITY.md", "AUTHORING.md")
+    }
+    exact_homes.update({
+        os.path.join(ROOT, "processes", "_contract.md"),
+        os.path.join(ROOT, "proposals", "0000-proposal-template.md"),
+        os.path.join(ROOT, "decisions", "fast-track.md"),
+        os.path.join(ROOT, "docs", "write-discipline.md"),
+    })
+    process_home = bool(
+        inside(os.path.join(ROOT, "processes"), path)
+        and os.path.basename(path) != "index.md"
+        and (frontmatter(path) or {}).get("status") == "active"
+    )
+    role_home = inside(os.path.join(ROOT, "roles"), path)
+    definition_home = os.path.basename(path) == "_kind.md"
+    return path in exact_homes or process_home or role_home or definition_home
+
+def historical_standing_knowledge_home(path):
+    """Allow terminal Lessons to preserve a retired Process reference."""
+    if standing_knowledge_home(path):
+        return True
+    return bool(
+        path
+        and os.path.isfile(path)
+        and inside(os.path.join(ROOT, "processes"), path)
+        and (frontmatter(path) or {}).get("status") == "retired"
+    )
+
+def retired_process_received_before_retirement(path, receipt_date):
+    """A retired Process is an absorption receiver only for older receipts."""
+    if not path or not os.path.isfile(path) or not valid_date(receipt_date):
+        return False
+    fm = frontmatter(path) or {}
+    retired_on = fm.get("retired-on", "")
+    return (
+        inside(os.path.join(ROOT, "processes"), path)
+        and fm.get("status") == "retired"
+        and valid_date(retired_on)
+        and receipt_date < retired_on
+    )
+
 def valid_date(value):
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value or ""):
         return False
@@ -119,8 +166,8 @@ def row_has_link(path, row, target_path, anchor=None):
             return True
     return False
 
-def approved_receipt(path, lesson, disposition, receiver=None):
-    """Validate the exact Founder-governed Lesson outcome receipt."""
+def approval_receipt_date(path, lesson, disposition, receiver=None):
+    """Return the date of an exact Founder-governed Lesson outcome receipt."""
     if not path or not os.path.isfile(path):
         return False
     decisions_dir = os.path.join(ROOT, "decisions")
@@ -148,8 +195,8 @@ def approved_receipt(path, lesson, disposition, receiver=None):
                     and cells[3].lower() == "approved" and exact_yes
                     and lesson in targets and reason_link
                     and (receiver is None or receiver in targets)):
-                return True
-        return False
+                return cells[0]
+        return None
 
     if inside(proposals_dir, path):
         ruling = re.search(r"^##\s+Ruling\s*$([\s\S]*)", body, re.M | re.I)
@@ -165,14 +212,16 @@ def approved_receipt(path, lesson, disposition, receiver=None):
         reason_link = disposition != "close" or has_markdown_link(
             path, lesson, "closure-reason"
         )
-        return (approved and lesson in links and reason_link
-                and (receiver is None or receiver in links))
+        if (approved and lesson in links and reason_link
+                and (receiver is None or receiver in links)):
+            return ruling_field(ruling_text, "Date")
+        return None
 
     if inside(decisions_dir, path):
         # A standalone Decision may close a Lesson, but it cannot authorize the
         # conserved change required for absorption; that uses Proposal or fast-track.
         if disposition != "close":
-            return False
+            return None
         approved = (
             fm.get("kind") == "decision"
             and fm.get("status") == "ruled"
@@ -181,9 +230,14 @@ def approved_receipt(path, lesson, disposition, receiver=None):
             and fm.get("lesson-outcome") == disposition
             and valid_date(fm.get("date"))
         )
-        return approved and has_markdown_link(path, lesson, "closure-reason")
+        if approved and has_markdown_link(path, lesson, "closure-reason"):
+            return fm.get("date")
+        return None
 
-    return False
+    return None
+
+def approved_receipt(path, lesson, disposition, receiver=None):
+    return bool(approval_receipt_date(path, lesson, disposition, receiver))
 
 # D1 — relative links resolve. Exempt: blockquoted lines, and everything in
 # proposals/ — the mutation queue quotes text for other destinations, whose
@@ -209,6 +263,18 @@ if SEED_SOURCE:
                 if relative not in allowed_seed_files:
                     finding("seed-boundary", path,
                             "Seed source carries definitions, not live runtime residue; keep maintenance evidence in PRs, Git history, or ADRs")
+    now_path = os.path.join(ROOT, "NOW.md")
+    if os.path.isfile(now_path):
+        now_fields = {}
+        for line in open(now_path, encoding="utf-8"):
+            match = re.match(r"^- \*\*(.+?):\*\*\s*(.+?)\s*$", line)
+            if match:
+                now_fields[match.group(1)] = match.group(2)
+        for label in ("Current goal", "Active work", "Founder decision queue", "Next action"):
+            value = now_fields.get(label, "")
+            if not (value.startswith("{") and value.endswith("}")):
+                finding("seed-boundary", now_path,
+                        f"Seed source NOW.md must keep the '{label}' template placeholder, not live Working State")
 
 for path in md_files():
     if os.sep + "proposals" + os.sep in path:
@@ -311,65 +377,142 @@ else:
             match = re.match(r"^\s*(/\S+)", line)
             if match:
                 covered.add(match.group(1))
-    required_owners = {"/ORG.md", "/AUTHORITY.md", "/AUTHORING.md", "/processes/", "/roles/"}
+    required_owners = {
+        "/ORG.md", "/KNOWLEDGE.md", "/CONTEXT.md", "/AUTHORITY.md",
+        "/AUTHORING.md", "/processes/", "/roles/", "/**/_kind.md",
+        "/proposals/0000-proposal-template.md", "/decisions/fast-track.md",
+        "/docs/write-discipline.md", "/.github/CODEOWNERS",
+    }
     for missing in sorted(required_owners - covered):
         finding("enforce", codeowner_paths[0],
                 f"conserved path '{missing}' is missing from CODEOWNERS")
 
-# D7 — Process identity stays aligned. This catches mechanical drift only;
-# AUTHORING.md still requires a reviewer to compare the actual meanings of the
-# filename, id, title, and Outcome.
+# D7 — Process identity, shape, lifecycle, and discovery stay aligned. This
+# catches mechanical drift only; AUTHORING.md still requires semantic review.
 process_dir = os.path.join(ROOT, "processes")
+draft_process_dir = os.path.join(ROOT, "work", "process-drafts")
+process_index = os.path.join(process_dir, "index.md")
+index_targets = markdown_targets(process_index) if os.path.isfile(process_index) else set()
 active_processes = {}
+historical_processes = {}
+process_ids = {}
+discoverable_processes = {}
+PROCESS_STATUSES = {"active", "draft", "example", "retired"}
 STOP_WORDS = {"a", "an", "and", "of", "process", "the", "to"}
 
 def name_words(value):
     return {word for word in re.findall(r"[a-z0-9]+", value.lower())
             if len(word) > 2 and word not in STOP_WORDS}
 
-if os.path.isdir(process_dir):
-    for dirpath, dirnames, filenames in os.walk(process_dir):
-        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
-        for filename in filenames:
-            if not filename.endswith(".md") or filename in ("_contract.md", "index.md"):
-                continue
-            path = os.path.join(dirpath, filename)
-            fm = frontmatter(path) or {}
-            if fm.get("kind") != "process":
-                finding("process-shape", path, "Process file must declare kind: process")
-                continue
-            process_id = fm.get("id", "")
-            stem = os.path.splitext(filename)[0]
-            if process_id != stem:
-                finding("process-name", path,
-                        f"filename '{stem}' and id '{process_id or '(missing)'}' differ")
-            body = open(path, encoding="utf-8").read()
-            title_match = re.search(r"^#\s+Process:\s*(.+?)\s*$", body, re.M | re.I)
-            if not title_match:
-                finding("process-name", path, "missing '# Process: …' title")
-            elif process_id and not (name_words(process_id) & name_words(title_match.group(1))):
-                finding("process-name", path,
-                        "id and title share no meaningful outcome word — review filename, id, title, and Outcome together")
-            if fm.get("status") in ("active", "example"):
-                headings = [
-                    heading.strip().lower()
-                    for heading in re.findall(r"^##\s+(.+?)\s*$", body, re.M)
-                ]
-                required_sections = [
-                    "outcome", "when to use", "boundaries", "evidence and approvals",
-                    "steps", "done when", "failure and recovery",
-                ]
-                if headings != required_sections:
-                    finding("process-shape", path,
-                            "active/example Process must have exactly the seven contract sections in order")
-            if fm.get("status") == "active" and process_id:
-                if process_id in active_processes:
-                    finding("process-name", path, f"duplicate active Process id '{process_id}'")
-                active_processes[process_id] = path
+def process_member_paths():
+    for root in (process_dir, draft_process_dir):
+        if not os.path.isdir(root):
+            continue
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+            for filename in filenames:
+                if not filename.endswith(".md"):
+                    continue
+                path = os.path.join(dirpath, filename)
+                if path in (os.path.join(process_dir, "_contract.md"), process_index):
+                    continue
+                yield path
+
+for path in process_member_paths():
+    filename = os.path.basename(path)
+    fm = frontmatter(path) or {}
+    if fm.get("kind") != "process":
+        finding("process-shape", path, "Process file must declare kind: process")
+        continue
+    process_id = fm.get("id", "")
+    stem = os.path.splitext(filename)[0]
+    if process_id != stem:
+        finding("process-name", path,
+                f"filename '{stem}' and id '{process_id or '(missing)'}' differ")
+    status = fm.get("status", "")
+    if status not in PROCESS_STATUSES:
+        finding("process-lifecycle", path,
+                "status must be active, draft, example, or retired")
+    if status == "retired" and not valid_date(fm.get("retired-on", "")):
+        finding("process-lifecycle", path,
+                "retired Process must record retired-on as YYYY-MM-DD")
+    in_drafts = inside(draft_process_dir, path)
+    if status == "draft" and not in_drafts:
+        finding("process-lifecycle", path,
+                "draft Process must live under work/process-drafts/")
+    if status != "draft" and in_drafts:
+        finding("process-lifecycle", path,
+                "only draft Processes may live under work/process-drafts/")
+    if status == "active" and path not in index_targets:
+        finding("process-lifecycle", path, "active Process is missing from processes/index.md")
+    if status in ("draft", "retired") and path in index_targets:
+        finding("process-lifecycle", path,
+                f"{status} Process must not appear in processes/index.md")
+    body = open(path, encoding="utf-8").read()
+    title_match = re.search(r"^#\s+Process:\s*(.+?)\s*$", body, re.M | re.I)
+    if not title_match:
+        finding("process-name", path, "missing '# Process: …' title")
+    elif process_id and not (name_words(process_id) & name_words(title_match.group(1))):
+        finding("process-name", path,
+                "id and title share no meaningful outcome word — review filename, id, title, and Outcome together")
+    if status in ("active", "draft", "example"):
+        headings = [
+            heading.strip().lower()
+            for heading in re.findall(r"^##\s+(.+?)\s*$", body, re.M)
+        ]
+        required_sections = [
+            "outcome", "when to use", "boundaries", "evidence and approvals",
+            "steps", "done when", "failure and recovery",
+        ]
+        if headings != required_sections:
+            finding("process-shape", path,
+                    "active/draft/example Process must have exactly the seven contract sections in order")
+    if process_id:
+        if process_id in process_ids:
+            finding("process-name", path, f"duplicate Process id '{process_id}'")
+        process_ids[process_id] = path
+    if status == "active" and process_id:
+        active_processes[process_id] = path
+    if status in ("active", "example"):
+        discoverable_processes[path] = {
+            "title": title_match.group(1).strip() if title_match else "",
+            "description": fm.get("description", ""),
+        }
+    if status in ("active", "retired") and process_id:
+        historical_processes[process_id] = path
+
+# The Process index is replaceable Machinery: every routing meaning must be an
+# exact projection of Process frontmatter, never an independent rule.
+index_row_counts = {}
+if os.path.isfile(process_index):
+    for line in open(process_index, encoding="utf-8"):
+        match = re.match(
+            r"^\|\s*\[([^]]+)\]\(([^)]+)\)\s*\|\s*(.*?)\s*\|\s*$", line
+        )
+        if not match:
+            continue
+        label, target_value, description = match.groups()
+        target = os.path.realpath(os.path.join(process_dir, target_value.split("#")[0]))
+        index_row_counts[target] = index_row_counts.get(target, 0) + 1
+        expected = discoverable_processes.get(target)
+        if not expected:
+            finding("process-discovery", process_index,
+                    f"index row points to a non-active, non-example Process: {target_value}")
+            continue
+        if label.strip().casefold() != expected["title"].casefold():
+            finding("process-discovery", process_index,
+                    f"index label for {target_value} must match its Process title")
+        if not expected["description"] or description != expected["description"]:
+            finding("process-discovery", process_index,
+                    f"index description for {target_value} must exactly match Process frontmatter")
+for path in discoverable_processes:
+    if index_row_counts.get(path, 0) != 1:
+        finding("process-discovery", process_index,
+                f"active/example Process must have exactly one projected index row: {os.path.relpath(path, ROOT)}")
 
 # D8 — Lessons remain queued until a real approved outcome exists.
 lesson_dir = os.path.join(ROOT, "lessons")
-pending_by_process = {}
+pending_by_home = {}
 
 def lesson_member_paths():
     for dirpath, dirnames, filenames in os.walk(lesson_dir):
@@ -392,17 +535,28 @@ if os.path.isdir(lesson_dir) and not SEED_SOURCE:
         if fm.get("kind") != "lesson":
             finding("lesson-route", path, "kind must be 'lesson'")
             continue
-        process_id = fm.get("process", "")
-        if not process_id or process_id not in active_processes:
+        source_process = fm.get("source-process", "")
+        if not source_process or source_process not in historical_processes:
             finding("lesson-route", path,
-                    f"process '{process_id or '(missing)'}' does not name an active Process")
+                    f"source-process '{source_process or '(missing)'}' does not name an active or retired Process")
         status = fm.get("status", "")
         if status not in ("pending", "absorbed", "retired"):
             finding("lesson-outcome", path,
                     "status must be pending, absorbed, or retired")
             continue
+        applies_to_value = fm.get("applies-to", "")
+        applies_to = None if applies_to_value == "unresolved" else rooted_path(applies_to_value)
+        valid_applies_to = (
+            standing_knowledge_home(applies_to)
+            if status == "pending"
+            else historical_standing_knowledge_home(applies_to)
+        )
+        if applies_to_value != "unresolved" and not valid_applies_to:
+            finding("lesson-route", path,
+                    "applies-to must name live Standing Knowledge, a terminal Lesson's retired Process receiver, or 'unresolved'")
         if status == "pending":
-            pending_by_process[process_id] = pending_by_process.get(process_id, 0) + 1
+            home = applies_to_value or "(missing)"
+            pending_by_home[home] = pending_by_home.get(home, 0) + 1
             continue
 
         decision_key = "decided-by" if status == "absorbed" else "closed-by"
@@ -417,32 +571,26 @@ if os.path.isdir(lesson_dir) and not SEED_SOURCE:
 
         if status == "absorbed":
             receiver = rooted_path(fm.get("absorbed-into", ""))
-            durable_root_files = {
-                os.path.join(ROOT, name) for name in
-                ("ORG.md", "AUTHORITY.md", "AUTHORING.md", "CONTEXT.md")
-            }
-            process_home = bool(
-                receiver and inside(os.path.join(ROOT, "processes"), receiver)
-                and os.path.basename(receiver) != "index.md"
+            receipt_date = approval_receipt_date(
+                decision, os.path.realpath(path), "absorb", receiver
             )
-            role_home = bool(receiver and inside(os.path.join(ROOT, "roles"), receiver))
-            doctrine_home = bool(receiver and inside(os.path.join(ROOT, "docs"), receiver))
-            receiver_is_definition = bool(receiver and os.path.basename(receiver) == "_kind.md")
             receiver_valid = bool(
                 receiver
-                and os.path.isfile(receiver)
-                and os.path.commonpath((ROOT, receiver)) == ROOT
+                and (
+                    standing_knowledge_home(receiver)
+                    or retired_process_received_before_retirement(receiver, receipt_date)
+                )
                 and receiver != decision
-                and (receiver in durable_root_files or process_home or role_home
-                     or doctrine_home or receiver_is_definition)
             )
             if not receiver_valid:
                 finding("lesson-outcome", path,
-                        "absorbed-into must be a durable behavioral home, not work, receipt, Record, tool, Mount, or index")
+                        "absorbed-into must be current Standing Knowledge or a retired Process that historically received it")
+            elif applies_to != receiver:
+                finding("lesson-outcome", path,
+                        "absorbed-into must equal the reviewed applies-to home")
             else:
                 lesson_links = markdown_targets(path)
-                if receiver not in lesson_links or not approved_receipt(
-                        decision, os.path.realpath(path), "absorb", receiver):
+                if receiver not in lesson_links or not receipt_date:
                     finding("lesson-outcome", path,
                             "Lesson and approved receipt must link the exact Lesson and receiving file")
         else:
@@ -458,8 +606,8 @@ if os.path.isdir(lesson_dir) and not SEED_SOURCE:
                 finding("lesson-outcome", path,
                         "closure receipt must approve and link this exact Lesson")
 
-pending_count = sum(pending_by_process.values())
-queue_summary = f"lesson queue: {pending_count} pending across {len(pending_by_process)} process(es)"
+pending_count = sum(pending_by_home.values())
+queue_summary = f"lesson queue: {pending_count} pending across {len(pending_by_home)} proposed home(s)"
 
 if findings:
     print(f"seed doctor: {len(findings)} finding(s)\n" + "\n".join("  " + f for f in findings))
