@@ -68,6 +68,7 @@ class ParsedConcept:
     """Resolved frontmatter and source positions for compiled-result consumers."""
 
     fields: dict[str, str] | None
+    raw_fields: dict[str, str]
     field_lines: dict[str, int]
     body_start: int
     body: str
@@ -561,19 +562,23 @@ def parse_concept(text: str) -> ParsedConcept:
 
     document = parse_markdown(text)
     if document.frontmatter_lines is None:
-        return ParsedConcept(None, {}, 0, document.body)
+        return ParsedConcept(None, {}, {}, 0, document.body)
     resolved = resolved_frontmatter(document)
     if resolved is None:
         raise KnowledgeBundleError("invalid YAML frontmatter")
     yaml = yaml_parser()
     node = yaml.compose("".join(document.frontmatter_lines), Loader=yaml.SafeLoader)
     scalar_values: dict[str, str] = {}
+    raw_fields: dict[str, str] = {}
     if isinstance(node, yaml.MappingNode):
+        yaml_text = "".join(document.frontmatter_lines)
         for key_node, value_node in node.value:
-            if isinstance(key_node, yaml.ScalarNode) and isinstance(
-                value_node, yaml.ScalarNode
-            ):
-                scalar_values[key_node.value] = value_node.value
+            if isinstance(key_node, yaml.ScalarNode):
+                raw_fields[key_node.value] = yaml_text[
+                    value_node.start_mark.index : value_node.end_mark.index
+                ]
+                if isinstance(value_node, yaml.ScalarNode):
+                    scalar_values[key_node.value] = value_node.value
     fields = {
         str(key): scalar_values.get(str(key), _consumer_value(value))
         for key, value in resolved.items()
@@ -589,7 +594,7 @@ def parse_concept(text: str) -> ParsedConcept:
         match = TOP_LEVEL_FIELD.match(line)
         if match:
             field_lines[match.group(1)] = index
-    return ParsedConcept(fields, field_lines, close_at, document.body)
+    return ParsedConcept(fields, raw_fields, field_lines, close_at, document.body)
 
 
 def resolved_repaired_frontmatter(

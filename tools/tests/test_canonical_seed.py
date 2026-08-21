@@ -28,6 +28,7 @@ class CanonicalSeedTest(unittest.TestCase):
         self.assertEqual(parsed.fields["type"], "Process")
         self.assertEqual(parsed.fields["state"], "active")
         self.assertEqual(parsed.fields["tags"], "seed, okf")
+        self.assertEqual(parsed.raw_fields["tags"], "[seed, okf]")
         self.assertEqual(parsed.body, "\n# Process\n")
 
     def test_mount_routes_to_the_canonical_bundle(self):
