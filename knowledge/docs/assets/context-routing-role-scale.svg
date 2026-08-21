@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Intent routing and role-scaled knowledge access</title>
+  <desc id="desc">Every session enters through a small boot path, binds an acting role and work mode, routes intent to one process, loads a minimal context slice, performs bounded work, checks authority before effects, verifies the outcome, and records only useful durable residue. At scale, the same knowledge substrate produces different bounded views for different roles.</desc>
+  <defs>
+    <style>
+      :root { color-scheme: light dark; }
+      .bg { fill: #f7f7f4; }
+      .panel { fill: #ffffff; stroke: #d5d8d4; stroke-width: 2; }
+      .panel-soft { fill: #eef1ed; stroke: #d5d8d4; stroke-width: 2; }
+      .ink { fill: #18201b; }
+      .muted { fill: #5d675f; }
+      .line { stroke: #738078; stroke-width: 3; fill: none; }
+      .dash { stroke: #738078; stroke-width: 3; fill: none; stroke-dasharray: 8 8; }
+      .accent { fill: #dff0e5; stroke: #397955; stroke-width: 2; }
+      .warn { fill: #fff1d8; stroke: #a56a11; stroke-width: 2; }
+      .blue { fill: #e2eef8; stroke: #3a6e9d; stroke-width: 2; }
+      .violet { fill: #eee8f8; stroke: #7553a6; stroke-width: 2; }
+      .t { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .title { font-size: 38px; font-weight: 600; }
+      .subtitle { font-size: 20px; }
+      .section { font-size: 24px; font-weight: 600; }
+      .label { font-size: 18px; font-weight: 600; }
+      .body { font-size: 16px; }
+      .small { font-size: 14px; }
+      @media (prefers-color-scheme: dark) {
+        .bg { fill: #111512; }
+        .panel { fill: #1a201c; stroke: #3d4841; }
+        .panel-soft { fill: #202823; stroke: #3d4841; }
+        .ink { fill: #edf2ee; }
+        .muted { fill: #aeb9b1; }
+        .line, .dash { stroke: #87958c; }
+        .accent { fill: #183525; stroke: #65a77e; }
+        .warn { fill: #3c2e16; stroke: #d79b3d; }
+        .blue { fill: #193044; stroke: #6ca0cc; }
+        .violet { fill: #2b2240; stroke: #a88bd1; }
+      }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#738078"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1600" height="1120" rx="28"/>
+  <text class="t title ink" x="70" y="72">How work passes through the knowledge architecture</text>
+  <text class="t subtitle muted" x="70" y="108">Every session uses the control path. Not every message becomes stored knowledge.</text>
+
+  <text class="t section ink" x="70" y="162">1 · Route one intent</text>
+
+  <rect class="panel" x="70" y="190" width="185" height="122" rx="18"/>
+  <text class="t label ink" x="92" y="225">Intent or trigger</text>
+  <text class="t body muted" x="92" y="254">chat · session</text>
+  <text class="t body muted" x="92" y="278">schedule · webhook</text>
+
+  <rect class="blue" x="292" y="190" width="205" height="122" rx="18"/>
+  <text class="t label ink" x="314" y="225">Boot pointer</text>
+  <text class="t body muted" x="314" y="254">Mount opens the</text>
+  <text class="t body muted" x="314" y="278">canonical entry</text>
+
+  <rect class="panel" x="534" y="190" width="205" height="122" rx="18"/>
+  <text class="t label ink" x="556" y="225">Bind the work</text>
+  <text class="t body muted" x="556" y="254">acting Role</text>
+  <text class="t body muted" x="556" y="278">+ work mode</text>
+
+  <rect class="accent" x="776" y="190" width="215" height="122" rx="18"/>
+  <text class="t label ink" x="798" y="225">Route by intent</text>
+  <text class="t body muted" x="798" y="254">Process index →</text>
+  <text class="t body muted" x="798" y="278">closest active Process</text>
+
+  <rect class="panel" x="1028" y="190" width="220" height="122" rx="18"/>
+  <text class="t label ink" x="1050" y="225">Load a small slice</text>
+  <text class="t body muted" x="1050" y="254">Process · Role · evidence</text>
+  <text class="t body muted" x="1050" y="278">only when needed</text>
+
+  <rect class="violet" x="1285" y="190" width="245" height="122" rx="18"/>
+  <text class="t label ink" x="1307" y="225">Perform bounded work</text>
+  <text class="t body muted" x="1307" y="254">human or Runner chooses</text>
+  <text class="t body muted" x="1307" y="278">strategy inside limits</text>
+
+  <path class="line" d="M255 251 H284" marker-end="url(#arrow)"/>
+  <path class="line" d="M497 251 H526" marker-end="url(#arrow)"/>
+  <path class="line" d="M739 251 H768" marker-end="url(#arrow)"/>
+  <path class="line" d="M991 251 H1020" marker-end="url(#arrow)"/>
+  <path class="line" d="M1248 251 H1277" marker-end="url(#arrow)"/>
+
+  <rect class="warn" x="776" y="360" width="215" height="108" rx="18"/>
+  <text class="t label ink" x="798" y="394">No Process fits?</text>
+  <text class="t body muted" x="798" y="423">smallest safe one-off</text>
+  <text class="t body muted" x="798" y="447">+ gap or draft if useful</text>
+  <path class="dash" d="M883 312 V352" marker-end="url(#arrow)"/>
+
+  <rect class="panel-soft" x="70" y="506" width="1460" height="190" rx="22"/>
+  <text class="t section ink" x="98" y="546">Effect and completion path</text>
+
+  <rect class="panel" x="98" y="570" width="275" height="92" rx="16"/>
+  <text class="t label ink" x="120" y="603">Read or propose an effect</text>
+  <text class="t body muted" x="120" y="629">live facts stay with their System</text>
+
+  <rect class="warn" x="420" y="570" width="300" height="92" rx="16"/>
+  <text class="t label ink" x="442" y="603">Authority + evidence gate</text>
+  <text class="t body muted" x="442" y="629">allow · decision required · stop</text>
+
+  <rect class="blue" x="767" y="570" width="275" height="92" rx="16"/>
+  <text class="t label ink" x="789" y="603">Capability executes</text>
+  <text class="t body muted" x="789" y="629">stable target · bounded scope</text>
+
+  <rect class="accent" x="1089" y="570" width="413" height="92" rx="16"/>
+  <text class="t label ink" x="1111" y="603">Verify, answer, and leave useful residue</text>
+  <text class="t body muted" x="1111" y="629">receipt · Record · Lesson · Decision · commit</text>
+
+  <path class="line" d="M373 616 H412" marker-end="url(#arrow)"/>
+  <path class="line" d="M720 616 H759" marker-end="url(#arrow)"/>
+  <path class="line" d="M1042 616 H1081" marker-end="url(#arrow)"/>
+
+  <text class="t small muted" x="98" y="685">A completed session does not become the memory. Canonical outcomes and evidence do; the next session starts from them again.</text>
+
+  <text class="t section ink" x="70" y="756">2 · Scale access by projecting a role-bounded view</text>
+
+  <rect class="panel" x="70" y="786" width="300" height="248" rx="20"/>
+  <text class="t label ink" x="94" y="822">Four routing inputs</text>
+  <text class="t body muted" x="94" y="858">Identity + Role occupancy</text>
+  <text class="t body muted" x="94" y="894">Intent + work mode</text>
+  <text class="t body muted" x="94" y="930">Process + current stage</text>
+  <text class="t body muted" x="94" y="966">Disclosure + effect scope</text>
+  <text class="t small muted" x="94" y="1008">Never infer one from another.</text>
+
+  <rect class="accent" x="445" y="832" width="340" height="156" rx="22"/>
+  <text class="t label ink" x="472" y="870">Session context projection</text>
+  <text class="t body muted" x="472" y="906">one canonical substrate</text>
+  <text class="t body muted" x="472" y="936">minimal, digest-bound view</text>
+  <text class="t small muted" x="472" y="968">generated by Machinery; owns no rules</text>
+  <path class="line" d="M370 910 H437" marker-end="url(#arrow)"/>
+
+  <path class="line" d="M785 884 H852" marker-end="url(#arrow)"/>
+  <path class="line" d="M785 900 C970 900, 1010 838, 1187 838" marker-end="url(#arrow)"/>
+  <path class="line" d="M785 932 C815 932, 820 981, 852 981" marker-end="url(#arrow)"/>
+  <path class="line" d="M785 948 C970 948, 1010 981, 1187 981" marker-end="url(#arrow)"/>
+
+  <rect class="blue" x="860" y="786" width="300" height="106" rx="18"/>
+  <text class="t label ink" x="882" y="820">Founder view</text>
+  <text class="t body muted" x="882" y="849">Judgment queue + cross-domain</text>
+  <text class="t body muted" x="882" y="873">evidence; reserved powers stay human</text>
+
+  <rect class="panel" x="1195" y="786" width="335" height="106" rx="18"/>
+  <text class="t label ink" x="1217" y="820">Operator view</text>
+  <text class="t body muted" x="1217" y="849">one Process, evidence, boundaries,</text>
+  <text class="t body muted" x="1217" y="873">and permitted capabilities</text>
+
+  <rect class="violet" x="860" y="928" width="300" height="106" rx="18"/>
+  <text class="t label ink" x="882" y="962">Steward view</text>
+  <text class="t body muted" x="882" y="991">chartered domain + explicit grants;</text>
+  <text class="t body muted" x="882" y="1015">no hidden copy of shared truth</text>
+
+  <rect class="panel" x="1195" y="928" width="335" height="106" rx="18"/>
+  <text class="t label ink" x="1217" y="962">Helper view</text>
+  <text class="t body muted" x="1217" y="991">small question + admitted references;</text>
+  <text class="t body muted" x="1217" y="1015">inherits neither context nor power</text>
+
+  <text class="t label ink" x="70" y="1082">Visibility ≠ Authority ≠ Judgment ≠ Capability</text>
+  <text class="t body muted" x="555" y="1082">Separate these four axes so access can scale without cloning or widening the organization.</text>
+</svg>
