@@ -38,14 +38,16 @@ is the occupancy index.
 1. The Founder expresses intent — ephemeral, spoken or typed, quoted verbatim into
    the Task.
 2. The Operator instantiates a **Task** in `work/` from a **Process** in
-   `processes/`. Intent with no matching Process → the Operator drafts a
+   [the Process index](processes/index.md). Intent with no matching Process → the Operator drafts a
    **Proposal** for a new one and awaits ruling. Growth, not error.
 3. The Task is performed. Every claim in the output cites **Records** — that is
    what evidence means here.
 4. Mechanical **Checks** run (defined in the Process; no LLM required). Then the
    Founder rules the **Judgment**, recorded verbatim in the Task.
-5. **Lessons** go to `lessons/`. A friction that would change a governed file
-   becomes a **Proposal** — never applied without a Founder ruling.
+5. **Lessons** go to `lessons/`. Lessons waiting for one Process are handled
+   together through [improve a Process](processes/improve-a-process.md): absorb,
+   keep, reroute, or close. A governed change is never applied without the
+   required Founder ruling.
 
 **Concurrent operators.** Before mutating, a session takes a lease in
 `work/_active/` (see its `_kind.md`): operator, task, claimed scopes (e.g.
@@ -67,6 +69,7 @@ Like an organism: a small conserved genome, everything else free to vary.
 
 - this file's Purpose and Roles sections, and this section itself
 - [AUTHORITY.md](AUTHORITY.md)
+- [AUTHORING.md](AUTHORING.md)
 - everything in `processes/` and `roles/`
 
 **Full Proposal** for anything that expands power or creates organs (new Roles,
@@ -90,6 +93,8 @@ review. In doubt → full form; the Founder may always demand it.
 | `AUTHORITY.md` | the rulebook |
 | `CONTEXT.md` | glossary of seed terms |
 | `processes/` | how kinds of work are done (conserved) |
+| `processes/index.md` | the Process discovery list |
+| `processes/_contract.md` | how Processes are named and written |
 | `roles/` | chartered Roles (conserved) |
 | `work/` | Tasks — one file per performance |
 | `records/` | the Ontology — each Kind carries a `_kind.md` |

@@ -15,6 +15,19 @@ _Avoid_: template, framework, platform, stencil
 One organization living in one repo, grown from the Seed.
 _Avoid_: deployment, installation
 
+**Seed Process**:
+A Process shipped with the Seed because it maintains the knowledge system
+itself and is useful to every Instance. It is a starting rule, not continuing
+upstream Authority: after an Instance is created, that Instance owns its copy
+and reviews any later Seed change before adopting it.
+_Avoid_: global process, upstream policy, automatic update
+
+**Instance Process**:
+A Process created or adapted by one Instance for its own organizational work.
+It belongs to that Instance and does not enter the Seed unless separately
+generalized, reviewed, and published as a reusable pattern.
+_Avoid_: tenant override, local workflow
+
 **Intent**:
 An expression by the founder to the system — spoken, typed, ephemeral. Never stored
 as its own artifact. The system realizes intent by turning it into bounded work
@@ -24,7 +37,9 @@ _Avoid_: request ticket, intent file
 **Process**:
 The durable definition of how a kind of work is done: standing intent, inputs, steps
 a human could follow manually, and explicit success criteria. One definition, many
-performances. Changed only via approved Proposal.
+performances. In an Instance, changed only through that Instance's approval path.
+Processes may be Seed Processes or Instance Processes; the distinction says where
+the definition begins, not who controls an Instance's current copy.
 _Avoid_: workflow, playbook, SOP
 
 **Task**:
@@ -110,9 +125,10 @@ _Avoid_: approval log, minutes
 
 **Lesson**:
 Preserved knowledge from performed work: what happened, what it taught, evidence
-links. Free to record — a Lesson changes no behavior by itself. Every Process's
-first step is to read the Lessons tagged with it. A lesson's standing weight must
-track its evidence: recurring evidence upgrades it; a closed one-off decays.
+links. Free to record — a Lesson changes no behavior by itself. Lessons route to
+one Process and enter behavior only through
+[improve a Process](processes/improve-a-process.md). A lesson's standing weight
+must track its evidence: recurring evidence upgrades it; a closed one-off decays.
 _Avoid_: learning, insight, retro note
 
 **Proposal**:
@@ -125,9 +141,10 @@ biological reading of the same thing)
 
 **Conserved core**:
 The germline of an Instance — identity, Authority, Roles, and Processes — where
-change requires an approved Proposal. Everything else is somatic: free to change
-through ordinary work. Directed evolution means selection happens before a mutation
-reaches the conserved core, never after.
+change requires the Founder-approved full Proposal or fast-track path in `ORG.md`.
+Everything else is somatic: free to change through ordinary work. Directed
+evolution means selection happens before a mutation reaches the conserved core,
+never after.
 _Avoid_: locked files, protected config, constitution
 
 **ORG.md**:

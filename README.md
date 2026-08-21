@@ -59,7 +59,7 @@ adds files, never new kinds:
 | 4 | **Tasks** | `work/` | one bounded performance of a process |
 | 5 | **Records** | `records/` | the nouns the business touches; each Kind defined by a `_kind.md` (this *is* your ontology) |
 | 6 | **Decisions** | `decisions/` + inline | recorded exercises of authority |
-| 7 | **Lessons** | `lessons/` | preserved experience; every process reads its lessons first |
+| 7 | **Lessons** | `lessons/` | preserved experience routed through `improve-a-process` |
 | 8 | **Proposals** | `proposals/` | the mutation queue — reviewable, reversible changes |
 
 …governed by **`AUTHORITY.md`** (the rulebook), with **Mounts** (`AGENTS.md`,
@@ -75,21 +75,44 @@ Every piece of work travels the same path:
 3. A human or agent performs it; every claim in the output **cites Records**.
 4. Mechanical **Checks** verify coherence (no LLM required); a human rules the
    **Judgment**.
-5. **Lessons** are recorded; frictions that would change a governed file become
-   **Proposals** — applied only after a human ruling, always with a rollback.
+5. **Lessons** are recorded. Teaching for one Process is handled through
+   [improve a Process](processes/improve-a-process.md): absorb, keep, reroute,
+   or close. A governed absorption uses the Instance's Proposal or fast-track
+   path.
 
 Intent with no matching process is not an error — it is the growth signal: the
 operator drafts a proposal for the new process, and the organization grows one
 approved mutation at a time (*directed evolution* — see
 [docs/adr/0002](docs/adr/0002-directed-evolution.md)).
 
+## Two layers of Processes
+
+The Seed ships a few **Seed Processes** that maintain the knowledge system
+itself. For example, [improve a Process](processes/improve-a-process.md) turns a
+Lesson backlog into reviewed Process improvements. They are baseline habits
+that every organization needs.
+
+Each organization adds **Instance Processes** for its own work: handling
+support, buying stock, closing books, or anything else specific to it. An
+Instance may also change a Seed Process through its own approval rules. Once
+the Instance exists, its copy is sovereign: a later Seed update is only a
+candidate for review and is never applied automatically.
+
+This repository is the source of the Seed, not a live Instance. Seed
+maintainers change the template through branches and reviewed pull requests;
+they do not create an in-template Proposal to authorize editing the template.
+Seed-maintenance evidence stays in issues, PRs, Git history, and ADRs rather
+than live Task, Lesson, Proposal, or organizational Decision entries. Those
+runtime rules become live when the Seed is instantiated.
+
 ## Principles that keep it honest
 
 - **Bindings, not homes.** Skills, agent files, and connectors point at durable
   state; they never own it. Delete every mount and the organization still runs.
   ([ADR 0001](docs/adr/0001-bindings-not-homes.md))
-- **A small conserved core.** Identity, authority, roles, and processes change only
-  via approved Proposal. Everything else is free.
+- **A small conserved core.** In an Instance, identity, authority, roles, and
+  processes change only through its approved Proposal or fast-track path. Seed
+  source changes use maintainer PR review. Everything else is free.
 - **Access is not permission.** A connected tool grants nothing; only `AUTHORITY.md`
   does. External writes and spending always stop at a human boundary.
 - **Evidence is a citation discipline.** A claim without a citation is unverified by
@@ -112,10 +135,11 @@ approved mutation at a time (*directed evolution* — see
    acknowledgment, not migration.
 5. **Write one process** for one real recurring pain, using
    [processes/example-weekly-review.md](processes/example-weekly-review.md) as the
-   shape: steps a human could follow, Checks, one Judgment question, "read the
-   lessons first" as step 1.
+   shape: one outcome, clear boundaries, human-followable steps, mechanical
+   Checks, and one Judgment question.
 6. **Run the loop once** — intent → task → evidence-cited output → checks → your
-   judgment → lesson → proposal. Then keep running it.
+   judgment → Lesson. Improve the Process when that Lesson's evidence warrants
+   it; do not create a Proposal merely because a Lesson exists.
 7. **Point your agent at it.** Any coding agent that reads `AGENTS.md` (or
    `CLAUDE.md`) lands in `ORG.md` and knows the org, its authority, and the next
    action. Switch harnesses any time — the folder is the organization.
@@ -139,14 +163,20 @@ AUTHORITY.md                ← the rulebook (template; reserved powers ready)
 CONTEXT.md                  ← the glossary of seed terms (keep it)
 AGENTS.md / CLAUDE.md       ← thin mounts for any coding agent
 processes/example-weekly-review.md   ← a worked example process
+processes/improve-a-process.md        ← the baseline knowledge-improvement loop
+processes/_contract.md                ← the small Process authoring contract
+processes/index.md                    ← Process discovery
+lessons/_kind.md                      ← Lesson routing and completion rules
+AUTHORING.md                          ← rules for durable knowledge changes
 records/systems/_kind.md    ← the Kind that makes adoption = acknowledgment
 proposals/0000-proposal-template.md  ← the mutation form (reason, evidence,
                               benefit, validation, rollback, ruling)
 docs/adr/                   ← why the pattern is shaped this way
 ```
 
-Directories like `work/`, `lessons/`, `decisions/` appear when your first task,
-lesson, or decision does — the seed never ships empty scaffolding.
+Directories like `work/` and `decisions/` gain entries when your first Task or
+Decision happens; the Seed ships only definitions and examples that every
+Instance needs.
 
 ## License
 

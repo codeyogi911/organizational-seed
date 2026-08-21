@@ -2,6 +2,7 @@
 # The conserved genome — changes require the Founder's review.
 /ORG.md            @founder-handle
 /AUTHORITY.md      @founder-handle
+/AUTHORING.md      @founder-handle
 /processes/        @founder-handle
 /roles/            @founder-handle
 /CODEOWNERS        @founder-handle

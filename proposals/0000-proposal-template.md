@@ -43,5 +43,16 @@ external writes already made — and what makes manual reversal possible.}
 
 ## Ruling
 
-*(Founder records the Decision here: approved / rejected, date, verbatim
-reasoning.)*
+**Outcome:** {approved / rejected / deferred}
+
+**Ruled by:** {Founder}
+
+**Date:** {YYYY-MM-DD}
+
+**Lesson outcome:** {absorb / close / not applicable}
+
+**Reason:** {the Founder's verbatim reasoning}
+
+*(When ruling on absorption, link the exact Lesson and receiving file. When
+ruling on closure, link the Lesson's exact `#closure-reason` heading. Set
+`status: applied` only after applying an approved mutation.)*

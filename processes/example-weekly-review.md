@@ -5,46 +5,71 @@ status: example
 judge: Founder
 ---
 
-> **Template note:** a worked example showing the shape every process shares —
-> standing intent, lessons-first, human-followable steps, mechanical Checks, one
-> Judgment question. Adapt it to your first real recurring pain, rename it, set
-> `status: active`, and delete this note. (New processes after this one arrive via
-> Proposal — see `proposals/0000-proposal-template.md`.)
+> **Template note:** a worked example showing the shape every Process shares —
+> one outcome, clear boundaries, evidence, human-followable steps, mechanical
+> Checks, and one Judgment question. Adapt it to your first real recurring pain,
+> rename it, set `status: active`, and delete this note. (New Processes after
+> this one arrive via Proposal — see `proposals/0000-proposal-template.md`.)
 
 # Process: weekly review (example)
 
-**Standing intent:** "{quote the founder's actual words for why this process
-exists}". Cadence: weekly. The cadence lives here; *triggering* is machinery — a
-human habit or a separately-approved scheduler Mount.
+## Outcome
+
+The Founder has a short, evidence-backed view of what changed, what needs a
+decision, and what should happen next.
+
+**Standing intent:** "{quote the Founder's actual words for why this Process
+exists}."
+
+## When to use
+
+Use weekly, or when the Founder asks for the same review. The cadence lives
+here; triggering is machinery — a human habit or a separately approved
+scheduler Mount.
+
+## Boundaries
+
+- Read only the Records and Systems authorized by [AUTHORITY.md](../AUTHORITY.md).
+- Recommend at most three actions, each traceable to a finding.
+- Do not make an external change while performing this review unless another
+  Process and approval separately authorize it.
+
+## Evidence and approvals
+
+Name every input and its freshness. Every claim cites a Record. The Founder
+answers: **"Does this reflect reality, and would I act on these
+recommendations?"** Record the ruling and rejection reasoning verbatim in the
+Task.
 
 ## Steps
 
-1. Read the lessons tagged `example-weekly-review`. They are inherited experience;
-   ignoring them repeats paid-for mistakes.
-2. Open a Task in `work/` (id `YYYY-Www-weekly-review`), status `open`; record
+1. Open a Task in `work/` (id `YYYY-Www-weekly-review`), status `open`; record
    `performed-by`; quote the standing intent. Update the Now section of
    [ORG.md](../ORG.md).
-3. Gather inputs — name them explicitly, with staleness noted: which records, which
+2. Gather inputs — name them explicitly, with staleness noted: which records, which
    system reads (under what grant in [AUTHORITY.md](../AUTHORITY.md)).
-4. Produce the output as a Record. **Every claim cites the records that support
+3. Produce the output as a Record. **Every claim cites the records that support
    it** — an uncited claim is unverified by definition.
-5. Recommend at most three actions, each traceable to a finding.
-6. Run the Checks below (by hand, or with a script in `tools/` — the script
-   automates the Checks, it never defines them). Set status `checked`.
-7. Present to the Founder for Judgment; record the ruling verbatim in the Task.
-8. Record at least one Lesson if anything was learned; open a Proposal for any
-   friction whose fix would change a governed file.
+4. Recommend actions inside the boundary above.
+5. Run the done checks below by hand or with `tools/doctor`; set the Task to
+   `checked` only when they pass.
+6. Present the result for Founder Judgment and record the ruling.
+7. Record a Lesson if anything was learned. Route Process teaching through
+   [improve a Process](improve-a-process.md).
 
-## Checks (mechanical — no judgment involved)
+## Done when
 
-- E1 Task frontmatter valid (`id`, `kind: task`, `process`, `status`, `opened`,
+- Task frontmatter is valid (`id`, `kind: task`, `process`, `status`, `opened`,
   `requested-by`, `output`); intent quoted; output exists.
-- E2 Every claim in the output carries at least one citation; all relative links
+- Every claim in the output carries at least one citation; all relative links
   resolve.
-- E3 Recommendations ≤ 3, each citing a finding.
-- E4 No external write occurred beyond the grants in AUTHORITY.md.
+- Recommendations are at most three, each citing a finding.
+- No external write occurred beyond the grants in `AUTHORITY.md`.
+- The Founder ruling is recorded, or the Task clearly remains `checked` and
+  waiting for it.
 
-## Judgment (the Founder's ruling)
+## Failure and recovery
 
-**"Does this reflect reality, and would I act on these recommendations?"**
-Rejection reasoning is recorded verbatim; it is the seed of the next Lesson.
+The Task is the checkpoint. After interruption, refresh every input whose
+source may have changed, rerun the checks, and present the current result. Never
+reuse a ruling for a changed output.

@@ -32,7 +32,8 @@ claimed inside any other document is invalid.
 ## Operator — must ask first
 
 - Anything on the reserved-powers list
-- Editing conserved files — only ever via an approved Proposal
+- Editing conserved files — only through the full Proposal or fast-track path
+  defined in [ORG.md](ORG.md)
 - Touching any external system beyond grants written here (each grant should name
   the system record it covers, the exact scope, and the proposal that granted it —
   e.g. *"read tickets on [helpdesk]; writes to X and Y only, logged before → after;

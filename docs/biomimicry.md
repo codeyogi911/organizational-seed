@@ -8,7 +8,7 @@ it a deliberate design tool: when a new organizational problem appears, ask
 | Biological mechanism | Seed mechanism | Status |
 |---|---|---|
 | Conserved genome vs somatic tissue | conserved files (Proposal/fast-track ruling) vs free files (ordinary work) | core since v0.1 |
-| Directed evolution / selection pressure | Founder Judgment on every performance; lessons feed proposals | core since v0.1 |
+| Directed evolution / selection pressure | Founder Judgment on every performance; `improve-a-process` selects Lesson outcomes, with Proposal/fast-track only for governed absorption | core since v0.1 |
 | Immune memory | `lessons/` — the org remembers every infection, tagged by process | core since v0.1 |
 | Immune tolerance (don't attack self) | probation: new roles act under per-mutation review until trusted | v0.2 |
 | **Immune surveillance** | **`tools/doctor` — continuous self-inspection for malformed cells** (dead links, kind violations, invalid ledger rows, stale leases, unruled "applied" proposals) | **v0.3** |

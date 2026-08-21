@@ -14,6 +14,7 @@ handle:
 # The conserved genome — changes require the Founder's review
 /ORG.md            @founder-handle
 /AUTHORITY.md      @founder-handle
+/AUTHORING.md      @founder-handle
 /processes/        @founder-handle
 /roles/            @founder-handle
 /CODEOWNERS        @founder-handle
@@ -37,4 +38,5 @@ fast-track ledger entry or the proposal's Ruling).
   same-session) need either the Founder's own push, an admin bypass, or a
   short-lived PR. Choose per instance; record the choice in ORG.md.
 
-The doctor's D6 check flags instances with no CODEOWNERS at all.
+The doctor's D6 check flags a missing CODEOWNERS file or a conserved path that
+the file does not cover.
