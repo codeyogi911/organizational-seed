@@ -137,6 +137,53 @@ class DoctorTests(unittest.TestCase):
         )
         self.write(root, "lessons/2026-08-21-visible-teaching.md", content)
 
+    def add_goal(self, root, goal_id="grow-revenue", state="active"):
+        self.write(
+            root,
+            "goals/_kind.md",
+            """
+            # Kind: Goal
+
+            **Required frontmatter:** `id`, `type`, `description`, `state`, `set-by`, and `set-on`.
+            """,
+        )
+        return self.write(
+            root,
+            f"goals/{goal_id}.md",
+            f"""
+            ---
+            id: {goal_id}
+            type: Goal
+            description: Grow revenue without widening authority.
+            state: {state}
+            set-by: Founder
+            set-on: 2026-08-21
+            ---
+
+            # Goal: grow revenue
+
+            ## Outcome
+
+            Revenue grows.
+
+            ## Why now
+
+            The Founder set this direction.
+
+            ## How we know
+
+            Evidence supports the outcome.
+
+            ## Not this
+
+            Authority does not expand.
+
+            ## Direction source
+
+            "Grow revenue without widening authority."
+            """,
+        )
+
     def test_pending_lesson_is_reported_without_failing(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
@@ -1014,28 +1061,139 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("[seed-boundary]", result.stdout)
 
-    def test_seed_source_rejects_populated_now_state(self):
+    def test_seed_source_rejects_live_goal(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         self.write(root, "ORG.md", "# {Organization Name} — the Organization\n")
+        self.add_goal(root)
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[seed-boundary]", result.stdout)
+        self.assertIn("goals/grow-revenue.md", result.stdout)
+
+    def test_task_links_one_goal_and_one_process(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        self.add_goal(root)
         self.write(
             root,
-            "NOW.md",
+            "work/2026-08-21-review-growth.md",
             """
-            # Now
+            ---
+            id: 2026-08-21-review-growth
+            type: Task
+            goal: goals/grow-revenue.md
+            process: review-lessons
+            state: open
+            opened: 2026-08-21
+            requested-by: Founder
+            output: prepared review
+            ---
 
-            - **Current goal:** Ship a live customer order
-            - **Active work:** work/real-task.md
-            - **Founder decision queue:** empty
-            - **Next action:** Send the order
+            # Review growth
+
+            Advance [the Goal](../goals/grow-revenue.md) using
+            [review Lessons](../processes/review-lessons.md).
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout)
+
+    def test_task_without_an_organizational_goal_is_valid(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        self.write(
+            root,
+            "work/2026-08-21-review-growth.md",
+            """
+            ---
+            id: 2026-08-21-review-growth
+            type: Task
+            process: review-lessons
+            state: open
+            opened: 2026-08-21
+            requested-by: Founder
+            output: prepared review
+            ---
+
+            # Review growth
+
+            Use [review Lessons](../processes/review-lessons.md).
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout)
+
+    def test_task_with_an_invalid_goal_cannot_pass(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        self.write(
+            root,
+            "work/2026-08-21-review-growth.md",
+            """
+            ---
+            id: 2026-08-21-review-growth
+            type: Task
+            goal: goals/missing.md
+            process: review-lessons
+            state: open
+            opened: 2026-08-21
+            requested-by: Founder
+            output: prepared review
+            ---
+
+            # Review growth
+
+            Use [review Lessons](../processes/review-lessons.md).
             """,
         )
 
         result = self.run_doctor(root)
 
         self.assertEqual(1, result.returncode)
-        self.assertIn("[seed-boundary]", result.stdout)
-        self.assertIn("NOW.md", result.stdout)
+        self.assertIn("[task-route]", result.stdout)
+        self.assertIn("when set, goal must be", result.stdout)
+
+    def test_open_task_cannot_advance_a_terminal_goal(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        self.add_goal(root, state="achieved")
+        self.write(
+            root,
+            "work/2026-08-21-review-growth.md",
+            """
+            ---
+            id: 2026-08-21-review-growth
+            type: Task
+            goal: goals/grow-revenue.md
+            process: review-lessons
+            state: open
+            opened: 2026-08-21
+            requested-by: Founder
+            output: prepared review
+            ---
+
+            # Review growth
+
+            Advance [the Goal](../goals/grow-revenue.md) using
+            [review Lessons](../processes/review-lessons.md).
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("an active Goal", result.stdout)
 
     def test_process_file_cannot_evade_shape_with_wrong_kind(self):
         tmp, root = self.make_instance()

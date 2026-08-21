@@ -61,8 +61,9 @@ project, or present it. See the
 
 Every piece of work travels the same path:
 
-1. A human expresses **intent** (ephemeral — never a filed artifact).
-2. The intent becomes a bounded **Task** under a **Process**.
+1. A human expresses bounded **intent** (ephemeral — never a filed artifact).
+2. The intent becomes a **Task** under one **Process**. It links a **Goal** only
+   when it advances durable organizational direction.
 3. A human or agent performs it; every claim in the output **cites Records**.
 4. Mechanical **Checks** verify coherence (no LLM required); a human rules the
    **Judgment**.
@@ -116,8 +117,9 @@ runtime rules become live when the Seed is instantiated.
 ## Quick start — grow a new organization
 
 1. **Use this template** (GitHub → "Use this template", or clone).
-2. **Write your `knowledge/ORG.md`** — fill every `{placeholder}`: purpose, a Founder and an
-   Operator role. Fill `knowledge/NOW.md` with the current goal and next action.
+2. **Write your `knowledge/ORG.md`** — fill every `{placeholder}`: purpose, a
+   Founder and an Operator role. If the organization needs a durable Goal,
+   create it under `knowledge/goals/` using its `_kind.md` definition.
 3. **Keep `knowledge/AUTHORITY.md`'s reserved powers** (they travel well verbatim); write your
    Operator grants.
 4. **Enumerate your external systems** as `knowledge/records/systems/` entries — what each is
@@ -128,12 +130,14 @@ runtime rules become live when the Seed is instantiated.
    shape. Put the candidate under `knowledge/work/process-drafts/`, then use
    [change Standing Knowledge](knowledge/processes/change-standing-knowledge.md) with a
    full Proposal and Founder ruling to make it active under `knowledge/processes/`.
-6. **Run the loop once** — intent → Task → evidence-cited output → Checks → your
-   Judgment → Lesson. Review the Lesson when its evidence warrants it; do not
-   create a Proposal merely because a Lesson exists.
+6. **Run the loop once** — intent → Task under one Process → evidence-cited
+   output → Checks → your Judgment → Lesson. Link a Goal only when relevant.
+   Review the Lesson when its evidence warrants it; do not create a Proposal
+   merely because a Lesson exists.
 7. **Point your agent at it.** Any coding agent that reads `AGENTS.md` (or
-   `CLAUDE.md`) lands in `knowledge/ORG.md` and knows the org, its authority, and the next
-   action. Switch harnesses any time — the folder is the organization.
+   `CLAUDE.md`) lands in `knowledge/ORG.md` and can find the organization, its
+   Authority, Goals, Tasks, and Processes. Switch harnesses any time — the
+   folder is the organization.
 
 ## Migrating an existing business
 
@@ -150,10 +154,10 @@ the gaps you find. The conserved home outlives every tool that visits it.
 
 ```
 knowledge/ORG.md                      ← your canonical entry (template)
-knowledge/NOW.md                      ← current Working State (template)
 knowledge/KNOWLEDGE.md                ← three Knowledge classes, Machinery boundary, evolution map
 knowledge/AUTHORITY.md                ← the rulebook (template; reserved powers ready)
 knowledge/CONTEXT.md                  ← the glossary of seed terms (keep it)
+knowledge/goals/_kind.md              ← Goal definition; Instances create their own Goals
 AGENTS.md / CLAUDE.md       ← thin mounts for any coding agent
 knowledge/processes/example-weekly-review.md   ← a worked example process
 knowledge/processes/handle-uncovered-work.md    ← safe route when no Process fits
@@ -162,6 +166,7 @@ knowledge/processes/change-standing-knowledge.md ← one route for governed know
 knowledge/processes/_contract.md                ← the small Process authoring contract
 knowledge/processes/index.md                    ← Process discovery
 knowledge/lessons/_kind.md                      ← Lesson routing and completion rules
+knowledge/work/_kind.md                         ← Task definition and optional Goal link
 knowledge/AUTHORING.md                          ← rules for durable knowledge changes
 knowledge/records/systems/_kind.md    ← the Kind that makes adoption = acknowledgment
 knowledge/proposals/0000-proposal-template.md  ← the mutation form (reason, evidence,

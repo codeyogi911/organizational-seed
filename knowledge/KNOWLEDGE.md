@@ -34,7 +34,7 @@ flowchart TB
         subgraph Bundle["knowledge/ — canonical OKF bundle"]
             Standing["Standing Knowledge<br/>purpose, Authority, Roles, vocabulary,<br/>Processes, and change rules"]
             Memory["Organizational Memory<br/>Records, Decisions, Lessons,<br/>terminal Tasks, and history"]
-            Working["Working State<br/>current priorities, open Tasks,<br/>drafts, and proposed changes"]
+            Working["Working State<br/>active Goals, open Tasks,<br/>drafts, and proposed changes"]
         end
         Machinery["Machinery<br/>tools, Mounts, checks, indexes,<br/>graphs, search, and agents"]
     end
@@ -57,7 +57,7 @@ the three Knowledge classes to repository responsibilities and change routes.
 |---|---|---|
 | **Standing Knowledge** | purpose, Authority, Roles, vocabulary, Kind definitions, Processes, authoring and change rules | Governed change with evidence, an exact diff, review, and the required ruling |
 | **Organizational Memory** | Records, Decisions, Lessons, accepted or rejected Tasks, Git history | Append through ordinary work; correct by superseding; deletion requires Founder approval |
-| **Working State** | open Tasks, current priorities, draft Processes, proposed changes | Update through the Process performing the work; existence grants no standing Authority |
+| **Working State** | active Goals, open Tasks, draft Processes, proposed changes | Update through the deciding Role or Process that owns the work; existence grants no standing Authority |
 
 Machinery is not Knowledge. It is the replaceable infrastructure that reads,
 checks, projects, or presents Knowledge: tools, generated or mechanically
@@ -106,11 +106,14 @@ a draft, and Change Standing Knowledge may later create the active Process.
 
 ```mermaid
 flowchart LR
-    Intent["Human intent"] --> Fit{"Active Process fits?"}
-    Fit -->|yes| Task["Bounded Task"]
+    Purpose["Purpose"] -. durable direction when useful .-> Goal["Optional Goal"]
+    Intent["Bounded human request"] --> Fit
+    Fit{"Active Process fits?"}
+    Fit -->|yes| Task["Task under one Process"]
     Fit -->|no| Uncovered["Handle uncovered work"]
     Uncovered --> Task
     Uncovered -. repeatable gap .-> Draft["Draft Process or other candidate"]
+    Goal -. when relevant .-> Task
 
     Task --> Perform["Perform work<br/>cite Records"]
     Perform --> Checks["Mechanical Checks"]
@@ -134,3 +137,8 @@ This is the compounding loop: performed work can create evidence, evidence can
 create a Lesson, and governed change can improve what future work follows.
 Keeping, rerouting, closing, or rejecting is also a valid outcome; the system
 does not force every observation into Standing Knowledge.
+
+Goal and Process do not point directly at each other. When a Task advances a
+Goal, their relationship lives in that Task: one Goal may need several
+Processes, while the same Process can serve different Goals without being
+rewritten whenever priorities change. A Task with no durable Goal is valid.

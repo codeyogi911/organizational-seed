@@ -13,7 +13,7 @@ One live operator session — created at Task start, deleted at Task close.
 
 **Required frontmatter:** `operator` (harness + model, or human name) · `task`
 (work/ id) · `started` (ISO) · `heartbeat` (ISO, refreshed ≤15 min) · `scopes`
-(e.g. `{system}:mutate`, `org:now`, `repo:<path>`).
+(e.g. `{system}:mutate`, `repo:knowledge/goals/<id>.md`, `repo:<path>`).
 
 **Optional:** `note` — coordination messages to other operators; `broke-lease`
 — the stale lease this session broke, with reason.

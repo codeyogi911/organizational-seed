@@ -45,8 +45,10 @@ Task.
 
 ## Steps
 
-1. Open a Task in `work/` (id `YYYY-Www-weekly-review`), status `open`; record
-   `performed-by`; quote the standing intent. Update [NOW.md](../NOW.md).
+1. Open a Task in `work/` (id `YYYY-Www-weekly-review`), state `open`; link this
+   Process and, when the review advances durable direction, one active
+   [Goal](../goals/_kind.md). Record `performed-by` and quote the standing
+   intent.
 2. Gather inputs — name them explicitly, with staleness noted: which records, which
    system reads (under what grant in [AUTHORITY.md](../AUTHORITY.md)).
 3. Produce the output as a Record. **Every claim cites the records that support
@@ -61,7 +63,8 @@ Task.
 ## Done when
 
 - Task frontmatter is valid (`id`, `type: Task`, `process`, `state`, `opened`,
-  `requested-by`, `output`); intent quoted; output exists.
+  `requested-by`, `output`, and optional `goal`); Process and any Goal linked;
+  intent quoted; output exists.
 - Every claim in the output carries at least one citation; all relative links
   resolve.
 - Recommendations are at most three, each citing a finding.

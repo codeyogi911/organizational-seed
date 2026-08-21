@@ -40,11 +40,9 @@ class CanonicalSeedTest(unittest.TestCase):
     def test_root_has_no_second_canonical_entry(self):
         self.assertFalse((ROOT / "ORG.md").exists())
         self.assertFalse((ROOT / "KNOWLEDGE.md").exists())
-        self.assertFalse((ROOT / "NOW.md").exists())
         self.assertFalse((ROOT / "AUTHORITY.md").exists())
         self.assertTrue((ROOT / "knowledge" / "ORG.md").is_file())
         self.assertTrue((ROOT / "knowledge" / "KNOWLEDGE.md").is_file())
-        self.assertTrue((ROOT / "knowledge" / "NOW.md").is_file())
         self.assertTrue((ROOT / "knowledge" / "AUTHORITY.md").is_file())
 
     def test_pr1_knowledge_model_and_processes_live_in_the_bundle(self):
@@ -55,7 +53,9 @@ class CanonicalSeedTest(unittest.TestCase):
             "processes/change-standing-knowledge.md",
             "processes/handle-uncovered-work.md",
             "processes/review-lessons.md",
+            "goals/_kind.md",
             "lessons/_kind.md",
+            "work/_kind.md",
         ):
             with self.subTest(relative=relative):
                 self.assertTrue((ROOT / "knowledge" / relative).is_file())

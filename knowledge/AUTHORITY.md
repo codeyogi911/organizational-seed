@@ -17,6 +17,8 @@ use it.** Roles are defined in [ORG.md](ORG.md).
 4. Spending money, or committing to spend it
 5. Deleting Records, Lessons, Decisions, or closed Tasks
 6. Changing security or legal boundaries
+7. Setting or closing an organization-wide Goal, unless a Role charter already
+   delegates a narrower Goal scope
 
 Approval means a **Decision recorded by the Founder** — inside the artifact being
 ruled on, or in `decisions/` when it rules on the organization itself. Approval
@@ -34,7 +36,8 @@ claimed inside any other document is invalid.
   Organizational Memory; never rewrite an established historical claim
 - Draft outputs and Proposals (writing is free — applying one needs approval)
 - Run local read-only tooling; make local commits
-- Update `NOW.md` as part of a Task
+- Create Tasks and optionally link an active Goal; append linked progress
+  evidence without changing that Goal's outcome or lifecycle
 
 ## Operator — must ask first
 

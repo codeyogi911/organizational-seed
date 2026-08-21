@@ -67,6 +67,18 @@ as its own artifact. The system realizes intent by turning it into bounded work
 using the durable Processes and policies.
 _Avoid_: request ticket, intent file
 
+**Outcome**:
+The state a Process performance or Task is trying to make true. Every Task has
+an outcome; only direction that must coordinate work beyond that Task becomes a
+Goal.
+_Avoid_: organizational Goal, output file
+
+**Goal**:
+An optional durable outcome chosen to coordinate several Tasks, people, or time
+periods. It may be organization-wide or scoped by a delegated Role, and grants
+no Authority.
+_Avoid_: Task outcome, user request, Purpose, permission
+
 **Process**:
 The durable definition of how a kind of work is done: standing intent, inputs, steps
 a human could follow manually, and explicit success criteria. One definition, many
@@ -76,10 +88,11 @@ the definition begins, not who controls an Instance's current copy.
 _Avoid_: workflow, playbook, SOP
 
 **Task**:
-One bounded performance of a Process: who asked, status, the output produced,
-evidence links, and the evaluation verdict. Cheap to create; ends **checked** (all
-Checks pass, awaiting judgment), then **accepted** or **rejected** (the judge's
-ruling, with reasoning).
+One bounded performance of one Process: who asked, its outcome, status, the
+output produced, evidence links, and the evaluation verdict. It may link one
+durable Goal. Cheap to create; ends **checked** (all Checks pass, awaiting
+judgment), then **accepted** or **rejected** (the judge's ruling, with
+reasoning).
 _Avoid_: job, ticket, run, work item
 
 **Check**:
@@ -109,16 +122,16 @@ stable slug.
 _Avoid_: data file, master data, entity (use the Kind's name instead)
 
 **Kind**:
-A category of Record, defined by one `_kind.md` in its folder: what the Kind is, its
-canonical-identity rule, and required fields. The set of Kind definitions is the
-organization's Ontology.
-_Avoid_: type, schema, class
+A governed category of Knowledge artifact, defined by one `_kind.md` in its
+folder: what it is, its identity rule, required fields, and lifecycle. Records,
+Goals, Tasks, Lessons, and leases may each have a Kind.
+_Avoid_: file extension, schema class
 
 **Ontology**:
-The set of Kind definitions an organization currently has. It lives as the structure
-of Records — never as a separate modeling layer — and grows only when a Process
-first needs a new Kind. A graph database over it, if ever needed, is an index (a
-Mount), not the home.
+The set of Kind definitions an organization currently has. It lives beside the
+artifacts it defines, never as a separate modeling layer, and grows only when a
+Process first needs a new Kind. A graph database over it, if ever needed, is an
+index (a Mount), not the home.
 _Avoid_: data model, knowledge graph, master data management
 
 **System**:

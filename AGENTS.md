@@ -15,9 +15,10 @@ reusable starting pattern, not operating an Instance.
    the Seed source; the Proposal template is content shipped to Instances.
 3. Keep the Seed general. It must contain no tenant facts and must never update
    an Instance automatically.
-4. Do not store live Tasks, Lessons, Proposals, or organizational Decisions in
-   the Seed source. Seed-maintenance evidence lives in issues, reviewed PRs,
-   Git history, and ADRs; the runtime folders are content for Instances.
+4. Do not store live Goals, Tasks, Lessons, Proposals, or organizational
+   Decisions in the Seed source. Seed-maintenance evidence lives in issues,
+   reviewed PRs, Git history, and ADRs; the runtime folders are content for
+   Instances.
 
 ## If this is an Instance
 
@@ -32,8 +33,8 @@ reusable starting pattern, not operating an Instance.
 3. Before changing durable knowledge, read
    [AUTHORING.md](knowledge/AUTHORING.md). Never change Standing Knowledge
    without the approval required by the Instance.
-4. Perform bounded work as Tasks and cite Records as evidence for material
-   claims.
+4. Perform bounded work as Tasks under one Process, optionally linking a Goal,
+   and cite Records as evidence for material claims.
 
 This file and everything harness-specific (`.claude/`, `CLAUDE.md`) are
 disposable Mounts. Never store organizational state in them.

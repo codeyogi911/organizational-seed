@@ -257,7 +257,7 @@ if SEED_SOURCE:
         os.path.join("proposals", "0000-proposal-template.md"),
         os.path.join("decisions", "fast-track.md"),
     }
-    for folder in ("work", "lessons", "proposals", "decisions"):
+    for folder in ("goals", "work", "lessons", "proposals", "decisions"):
         folder_path = os.path.join(ROOT, folder)
         if not os.path.isdir(folder_path):
             continue
@@ -270,19 +270,6 @@ if SEED_SOURCE:
                 if relative not in allowed_seed_files:
                     finding("seed-boundary", path,
                             "Seed source carries definitions, not live runtime residue; keep maintenance evidence in PRs, Git history, or ADRs")
-    now_path = os.path.join(ROOT, "NOW.md")
-    if os.path.isfile(now_path):
-        now_fields = {}
-        for line in open(now_path, encoding="utf-8"):
-            match = re.match(r"^- \*\*(.+?):\*\*\s*(.+?)\s*$", line)
-            if match:
-                now_fields[match.group(1)] = match.group(2)
-        for label in ("Current goal", "Active work", "Founder decision queue", "Next action"):
-            value = now_fields.get(label, "")
-            if not (value.startswith("{") and value.endswith("}")):
-                finding("seed-boundary", now_path,
-                        f"Seed source NOW.md must keep the '{label}' template placeholder, not live Working State")
-
 for path in md_files():
     if os.sep + "proposals" + os.sep in path:
         continue
@@ -521,7 +508,113 @@ for path in discoverable_processes:
         finding("process-discovery", process_index,
                 f"active/example Process must have exactly one projected index row: {os.path.relpath(path, ROOT)}")
 
-# D8 — Lessons remain queued until a real approved outcome exists.
+# D8 — Goals are optional organizational direction. Every Task names its
+# Process and may link one Goal. Goal membership is Instance state; the Seed
+# source ships only the definitions checked by D0.
+goal_dir = os.path.join(ROOT, "goals")
+goal_members = {}
+goal_states = {}
+GOAL_STATES = {"active", "achieved", "abandoned", "superseded"}
+
+if os.path.isdir(goal_dir) and not SEED_SOURCE:
+    for dirpath, dirnames, filenames in os.walk(goal_dir):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        for filename in filenames:
+            if not filename.endswith(".md") or filename == "_kind.md":
+                continue
+            path = os.path.join(dirpath, filename)
+            if dirpath != goal_dir:
+                finding("goal-identity", path,
+                        "Goal must be one top-level Markdown file under goals/")
+            fm = frontmatter(path) or {}
+            if concept_type(fm) != "goal":
+                finding("goal-shape", path, "Goal file must declare type: Goal")
+                continue
+            stem = os.path.splitext(filename)[0]
+            goal_id = fm.get("id", "")
+            if goal_id != stem:
+                finding("goal-identity", path,
+                        f"filename '{stem}' and id '{goal_id or '(missing)'}' differ")
+            state = operational_state(fm)
+            if state not in GOAL_STATES:
+                finding("goal-lifecycle", path,
+                        "state must be active, achieved, abandoned, or superseded")
+            if not meaningful_text(fm.get("description", "")):
+                finding("goal-shape", path, "Goal needs a non-placeholder description")
+            if not meaningful_text(fm.get("set-by", "")):
+                finding("goal-shape", path, "Goal needs the deciding Role in set-by")
+            if not valid_date(fm.get("set-on", "")):
+                finding("goal-shape", path, "Goal set-on must be YYYY-MM-DD")
+            body = open(path, encoding="utf-8").read()
+            direction = re.search(
+                r"^##\s+Direction source\s*$([\s\S]*?)(?=^##\s|\Z)",
+                body, re.M | re.I,
+            )
+            if not direction or not meaningful_text(direction.group(1)):
+                finding("goal-shape", path,
+                        "Goal needs a non-placeholder '## Direction source'")
+            if goal_id:
+                if goal_id in goal_members:
+                    finding("goal-identity", path, f"duplicate Goal id '{goal_id}'")
+                goal_members[goal_id] = path
+                goal_states[path] = state
+
+task_dir = os.path.join(ROOT, "work")
+TASK_STATES = {"open", "checked", "accepted", "rejected"}
+if os.path.isdir(task_dir) and not SEED_SOURCE:
+    for dirpath, dirnames, filenames in os.walk(task_dir):
+        dirnames[:] = [d for d in dirnames
+                       if d not in ("_active", "process-drafts") and not d.startswith(".")]
+        for filename in filenames:
+            if not filename.endswith(".md") or filename == "_kind.md":
+                continue
+            path = os.path.join(dirpath, filename)
+            if dirpath != task_dir:
+                finding("task-identity", path,
+                        "Task must be one top-level Markdown file under work/")
+            fm = frontmatter(path) or {}
+            if concept_type(fm) != "task":
+                finding("task-shape", path, "Task file must declare type: Task")
+                continue
+            stem = os.path.splitext(filename)[0]
+            task_id = fm.get("id", "")
+            if task_id != stem:
+                finding("task-identity", path,
+                        f"filename '{stem}' and id '{task_id or '(missing)'}' differ")
+            state = operational_state(fm)
+            if state not in TASK_STATES:
+                finding("task-lifecycle", path,
+                        "state must be open, checked, accepted, or rejected")
+            goal_value = fm.get("goal", "")
+            goal = rooted_path(goal_value) if goal_value else None
+            if goal_value and (not goal or goal not in goal_members.values()):
+                finding("task-route", path,
+                        "when set, goal must be a root-relative path to one Goal under goals/")
+            elif (goal_value and state in ("open", "checked")
+                    and goal_states.get(goal) != "active"):
+                finding("task-route", path,
+                        "an open or checked Task must advance an active Goal")
+            process_id = fm.get("process", "")
+            process = historical_processes.get(process_id)
+            if not process:
+                finding("task-route", path,
+                        f"process '{process_id or '(missing)'}' must name an active or retired Process")
+            elif state in ("open", "checked") and process_id not in active_processes:
+                finding("task-route", path,
+                        "an open or checked Task must use an active Process")
+            if not valid_date(fm.get("opened", "")):
+                finding("task-shape", path, "Task opened must be YYYY-MM-DD")
+            for field in ("requested-by", "output"):
+                if not meaningful_text(fm.get(field, "")):
+                    finding("task-shape", path,
+                            f"Task needs a non-placeholder {field}")
+            targets = markdown_targets(path)
+            if goal_value and goal and goal not in targets:
+                finding("task-route", path, "Task body must link its exact Goal")
+            if process and process not in targets:
+                finding("task-route", path, "Task body must link its exact Process")
+
+# D9 — Lessons remain queued until a real approved outcome exists.
 lesson_dir = os.path.join(ROOT, "lessons")
 pending_by_home = {}
 
