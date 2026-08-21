@@ -15,6 +15,48 @@ _Avoid_: template, framework, platform, stencil
 One organization living in one repo, grown from the Seed.
 _Avoid_: deployment, installation
 
+**Knowledge**:
+Organizational meaning, evidence, or current state that a human or agent may
+use to understand, decide, or perform work. It is Standing Knowledge,
+Organizational Memory, or Working State; Machinery is outside it.
+_Avoid_: files, content, machinery
+
+**Standing Knowledge**:
+Durable knowledge that future work must follow or interpret consistently:
+identity, Authority, Roles, vocabulary, Kind definitions, Processes, and the
+rules for changing them. Its current form is governed in an Instance.
+_Avoid_: meta knowledge, configuration, policy layer
+
+**Organizational Memory**:
+Durable evidence of what happened, what was decided, and what experience
+taught. It grows through ordinary work and is corrected by superseding rather
+than rewriting history.
+_Avoid_: archive, logs, historical data
+
+**Working State**:
+Knowledge about work that is active, draft, or awaiting Judgment. It may be
+updated by its performing Process and gains no standing Authority merely by
+existing.
+_Avoid_: temporary knowledge, mutable layer
+
+**Machinery**:
+Replaceable infrastructure that reads, checks, projects, or presents Knowledge
+without owning organizational meaning or Authority. Machinery is not Knowledge.
+_Avoid_: source of truth, governance layer
+
+**Seed Process**:
+A Process shipped with the Seed because it maintains the knowledge system
+itself and is useful to every Instance. It is a starting rule, not continuing
+upstream Authority: after an Instance is created, that Instance owns its copy
+and reviews any later Seed change before adopting it.
+_Avoid_: global process, upstream policy, automatic update
+
+**Instance Process**:
+A Process created or adapted by one Instance for its own organizational work.
+It belongs to that Instance and does not enter the Seed unless separately
+generalized, reviewed, and published as a reusable pattern.
+_Avoid_: tenant override, local workflow
+
 **Intent**:
 An expression by the founder to the system — spoken, typed, ephemeral. Never stored
 as its own artifact. The system realizes intent by turning it into bounded work
@@ -24,7 +66,9 @@ _Avoid_: request ticket, intent file
 **Process**:
 The durable definition of how a kind of work is done: standing intent, inputs, steps
 a human could follow manually, and explicit success criteria. One definition, many
-performances. Changed only via approved Proposal.
+performances. In an Instance, changed only through that Instance's approval path.
+Processes may be Seed Processes or Instance Processes; the distinction says where
+the definition begins, not who controls an Instance's current copy.
 _Avoid_: workflow, playbook, SOP
 
 **Task**:
@@ -110,31 +154,33 @@ _Avoid_: approval log, minutes
 
 **Lesson**:
 Preserved knowledge from performed work: what happened, what it taught, evidence
-links. Free to record — a Lesson changes no behavior by itself. Every Process's
-first step is to read the Lessons tagged with it. A lesson's standing weight must
-track its evidence: recurring evidence upgrades it; a closed one-off decays.
+links. Free to record — a Lesson changes no behavior by itself. Lessons name
+the Standing Knowledge they may affect and enter behavior only through
+[Review Lessons](processes/review-lessons.md) and an approved
+[Change Standing Knowledge](processes/change-standing-knowledge.md). A Lesson's
+standing weight must track its evidence: recurring evidence upgrades it; a
+closed one-off decays.
 _Avoid_: learning, insight, retro note
 
 **Proposal**:
-A requested change to a governed file (Process, Authority, identity), carrying
+A requested change to Standing Knowledge, carrying
 reason, evidence, expected benefit, validation method, and rollback method. Free to
 write; applying it requires a Founder Decision recorded in the Proposal. A Lesson
-becomes a Proposal when acting on it would change a governed file.
+may motivate a Proposal, but remains separate evidence.
 _Avoid_: change request, RFC, PR (the mechanism, not the artifact), mutation (the
 biological reading of the same thing)
 
-**Conserved core**:
-The germline of an Instance — identity, Authority, Roles, and Processes — where
-change requires an approved Proposal. Everything else is somatic: free to change
-through ordinary work. Directed evolution means selection happens before a mutation
-reaches the conserved core, never after.
-_Avoid_: locked files, protected config, constitution
+**Conserved**:
+A change rule applied to Standing Knowledge: its current form changes only
+through the Instance's Founder-approved full Proposal or fast-track path.
+Conserved is not a folder or a separate Knowledge class.
+_Avoid_: conserved core, locked files, protected configuration
 
 **ORG.md**:
 The canonical entry file of an Instance. The single file a new human or agent opens
-to understand the organization, current goal, authority, active work, and next
-action. Deliberately not README.md, which is reserved for describing the repo as a
-project.
+to understand the organization's purpose, Roles, Authority, knowledge model,
+and links to current state. Deliberately not README.md, which describes the repo
+as a project.
 
 **Lease**:
 A session's advisory claim on mutation scopes, held as a file in
@@ -157,6 +203,7 @@ Every scheduled process has a date-stamped expected report; the next run (and
 the weekly review) verifies the previous one exists. Silence is never success.
 
 **Correction**:
-A dated section appended to a report that retracts and supersedes an earlier
-conclusion in place. History is append-only; being wrong is recoverable,
-rewriting is not.
+A change that replaces a false or contradictory current claim while preserving
+truthful history. Correct Standing Knowledge through its governed change path;
+correct Organizational Memory with a dated superseding entry.
+_Avoid_: silent fix, historical rewrite

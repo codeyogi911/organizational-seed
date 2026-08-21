@@ -24,15 +24,20 @@ claimed inside any other document is invalid.
 
 - Read anything in the repo
 - Create Tasks and perform them within their Process
-- Create and update Records; draft outputs
-- Record Lessons; write Proposals (writing is free — applying one needs approval)
+- Create Records and Lessons; refresh current Record fields only when their
+  Kind permits it and the new source and `as-of` are recorded
+- Append evidence, receipts, lifecycle fields, and superseding corrections to
+  Organizational Memory; never rewrite an established historical claim
+- Draft outputs and Proposals (writing is free — applying one needs approval)
 - Run local read-only tooling; make local commits
-- Update the Now section of ORG.md as part of a Task
+- Update `NOW.md` as part of a Task
 
 ## Operator — must ask first
 
 - Anything on the reserved-powers list
-- Editing conserved files — only ever via an approved Proposal
+- Changing Standing Knowledge — only through
+  [change Standing Knowledge](processes/change-standing-knowledge.md) and the
+  full Proposal or fast-track path defined in [ORG.md](ORG.md)
 - Touching any external system beyond grants written here (each grant should name
   the system record it covers, the exact scope, and the proposal that granted it —
   e.g. *"read tickets on [helpdesk]; writes to X and Y only, logged before → after;

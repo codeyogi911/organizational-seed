@@ -4,7 +4,8 @@ kind: proposal
 date: {YYYY-MM-DD}
 proposed-by: {who — human or "Operator (agent, session of …)"}
 status: proposed
-targets: {which governed files this would change}
+targets: {which Standing Knowledge homes this would change}
+operation: {create / correct / improve / merge / rename / retire}
 ---
 
 > **Template note:** copy this file to `NNNN-short-slug.md` (next number), fill
@@ -12,7 +13,7 @@ targets: {which governed files this would change}
 > only after an approval is recorded does anyone touch the targeted files — in one
 > commit, so rollback is one revert. Keep this template file in the repo.
 
-# Proposal: {one-line title of the mutation}
+# Proposal: {one-line title of the governed change}
 
 ## Reason
 
@@ -27,10 +28,11 @@ without evidence is an opinion.}
 
 {What improves, for whom, observably.}
 
-## The mutation (applied verbatim on approval)
+## The change (applied verbatim on approval)
 
-{The exact change: new file contents, or precise before → after edits. If applying
-requires any deviation from this text, record the deviation in the Ruling.}
+{The exact Standing Knowledge change: new file contents, or precise before →
+after edits. If applying requires any deviation from this text, record the
+deviation in the Ruling.}
 
 ## Validation
 
@@ -43,5 +45,16 @@ external writes already made — and what makes manual reversal possible.}
 
 ## Ruling
 
-*(Founder records the Decision here: approved / rejected, date, verbatim
-reasoning.)*
+**Outcome:** {approved / rejected / deferred}
+
+**Ruled by:** {Founder}
+
+**Date:** {YYYY-MM-DD}
+
+**Lesson outcome:** {absorb / close / not applicable}
+
+**Reason:** {the Founder's verbatim reasoning}
+
+*(When ruling on absorption, link the exact Lesson and receiving file. When
+ruling on closure, link the Lesson's exact `#closure-reason` heading. Set
+`status: applied` only after applying an approved mutation.)*
