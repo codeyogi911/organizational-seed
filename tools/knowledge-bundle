@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""Inventory, compile, and validate an Open Knowledge Format bundle."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+TOOLS_DIR = Path(__file__).resolve().parent
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
+from knowledge_bundle import (  # noqa: E402
+    KnowledgeBundleError,
+    compile_bundle,
+    inventory,
+    load_profile,
+    validate_bundle,
+)
+
+
+def repository_root(explicit: str | None) -> Path:
+    if explicit:
+        return Path(explicit).expanduser().resolve()
+    here = Path.cwd().resolve()
+    for candidate in (here, *here.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    return Path(__file__).resolve().parent.parent
+
+
+def profile_path(root: Path, value: str | None) -> Path:
+    if value:
+        path = Path(value)
+        return path if path.is_absolute() else root / path
+    canonical = root / "knowledge" / "docs" / "okf-canonical-contract.md"
+    return canonical if canonical.is_file() else root / "docs" / "okf-canonical-contract.md"
+
+
+def parser() -> argparse.ArgumentParser:
+    command = argparse.ArgumentParser(prog="knowledge-bundle")
+    command.add_argument("--root", help="repository root")
+    subcommands = command.add_subparsers(dest="command", required=True)
+
+    inventory_parser = subcommands.add_parser("inventory")
+    inventory_parser.add_argument("--profile")
+    inventory_parser.add_argument("--json", action="store_true")
+
+    compile_parser = subcommands.add_parser("compile")
+    compile_parser.add_argument("--profile")
+    compile_parser.add_argument("--output", required=True)
+    compile_parser.add_argument("--json", action="store_true")
+
+    validate_parser = subcommands.add_parser("validate")
+    validate_parser.add_argument("--bundle", required=True)
+    validate_parser.add_argument("--json", action="store_true")
+    return command
+
+
+def emit(payload: dict, as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return
+    print("PASS" if payload.get("ok") else "FAIL")
+    for key, value in payload.items():
+        if key != "ok":
+            print(f"{key}: {value}")
+
+
+def main() -> int:
+    args = parser().parse_args()
+    root = repository_root(args.root)
+    try:
+        if args.command == "inventory":
+            profile = load_profile(profile_path(root, args.profile))
+            payload = inventory(root, profile)
+        elif args.command == "compile":
+            profile = load_profile(profile_path(root, args.profile))
+            payload = compile_bundle(root, Path(args.output), profile)
+        else:
+            payload = validate_bundle(Path(args.bundle))
+        emit(payload, args.json)
+        return 0 if payload.get("ok") else 1
+    except KnowledgeBundleError as exc:
+        emit({"ok": False, "error": str(exc)}, getattr(args, "json", False))
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

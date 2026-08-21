@@ -1,0 +1,61 @@
+---
+id: 0000-proposal-template
+type: proposal
+date: {YYYY-MM-DD}
+proposed-by: {who — human or "Operator (agent, session of …)"}
+state: proposed
+targets: {which Standing Knowledge homes this would change}
+operation: {create / correct / improve / merge / rename / retire}
+status: draft
+---
+
+> **Template note:** copy this file to `NNNN-short-slug.md` (next number), fill
+> every section, leave `state: proposed`. The Founder's ruling goes at the bottom;
+> only after an approval is recorded does anyone touch the targeted files — in one
+> commit, so rollback is one revert. Keep this template file in the repo.
+
+# Proposal: {one-line title of the governed change}
+
+## Reason
+
+{Why — quote the triggering intent or friction verbatim where possible.}
+
+## Evidence
+
+{Links to the tasks, records, lessons, or reports that motivated this. A proposal
+without evidence is an opinion.}
+
+## Expected benefit
+
+{What improves, for whom, observably.}
+
+## The change (applied verbatim on approval)
+
+{The exact Standing Knowledge change: new file contents, or precise before →
+after edits. If applying requires any deviation from this text, record the
+deviation in the Ruling.}
+
+## Validation
+
+{How we will know it worked — the next performance, a metric, a review date.}
+
+## Rollback
+
+{Usually: revert the applying commit. Name anything that does NOT roll back — e.g.
+external writes already made — and what makes manual reversal possible.}
+
+## Ruling
+
+**Outcome:** {approved / rejected / deferred}
+
+**Ruled by:** {Founder}
+
+**Date:** {YYYY-MM-DD}
+
+**Lesson outcome:** {absorb / close / not applicable}
+
+**Reason:** {the Founder's verbatim reasoning}
+
+*(When ruling on absorption, link the exact Lesson and receiving file. When
+ruling on closure, link the Lesson's exact `#closure-reason` heading. Set
+`status: applied` only after applying an approved mutation.)*

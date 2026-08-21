@@ -4,11 +4,12 @@ First determine which repo you are in.
 
 ## If this is the Seed source
 
-`ORG.md` still begins with `# {Organization Name}`. You are maintaining the
+`knowledge/ORG.md` still begins with `# {Organization Name}`. You are maintaining the
 reusable starting pattern, not operating an Instance.
 
-1. Read [README.md](README.md), [KNOWLEDGE.md](KNOWLEDGE.md),
-   [CONTEXT.md](CONTEXT.md), and [AUTHORING.md](AUTHORING.md).
+1. Read [README.md](README.md), [KNOWLEDGE.md](knowledge/KNOWLEDGE.md),
+   [CONTEXT.md](knowledge/CONTEXT.md), and
+   [AUTHORING.md](knowledge/AUTHORING.md).
 2. Make changes on a branch, review the exact diff, and use the repository's PR
    approval rules. Do not create an organizational Proposal merely to change
    the Seed source; the Proposal template is content shipped to Instances.
@@ -20,14 +21,17 @@ reusable starting pattern, not operating an Instance.
 
 ## If this is an Instance
 
-`ORG.md` names a real organization. You are entering an **organization, not a
-codebase**.
+`knowledge/ORG.md` names a real organization. You are entering an
+**organization, not a codebase**.
 
-1. Read [ORG.md](ORG.md) first, then [KNOWLEDGE.md](KNOWLEDGE.md), and obey
-   [AUTHORITY.md](AUTHORITY.md). Tool access never grants permission.
-2. Find the relevant Process through [processes/index.md](processes/index.md).
-3. Before changing durable knowledge, read [AUTHORING.md](AUTHORING.md). Never
-   change Standing Knowledge without the approval required by the Instance.
+1. Read [ORG.md](knowledge/ORG.md) first, then
+   [KNOWLEDGE.md](knowledge/KNOWLEDGE.md), and obey
+   [AUTHORITY.md](knowledge/AUTHORITY.md). Tool access never grants permission.
+2. Find the relevant Process through
+   [processes/index.md](knowledge/processes/index.md).
+3. Before changing durable knowledge, read
+   [AUTHORING.md](knowledge/AUTHORING.md). Never change Standing Knowledge
+   without the approval required by the Instance.
 4. Perform bounded work as Tasks and cite Records as evidence for material
    claims.
 

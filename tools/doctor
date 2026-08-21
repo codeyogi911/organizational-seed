@@ -3,23 +3,27 @@
 
 Lints an Organizational Seed instance: links resolve, kinds' required
 frontmatter present, fast-track ledger valid, leases fresh, applied
-proposals carry rulings. Stdlib only. Exit 0 = clean, 1 = findings.
+proposals carry rulings. Exit 0 = clean, 1 = findings.
 
 Usage: tools/doctor [path-to-instance-root]
 """
 import os, re, sys, time
 
-ROOT = os.path.realpath(sys.argv[1] if len(sys.argv) > 1 else ".")
+from knowledge_bundle import KnowledgeBundleError, parse_concept
+
+REPO_ROOT = os.path.realpath(sys.argv[1] if len(sys.argv) > 1 else ".")
+canonical_root = os.path.join(REPO_ROOT, "knowledge")
+ROOT = canonical_root if os.path.isfile(os.path.join(canonical_root, "ORG.md")) else REPO_ROOT
 findings = []
 org_path = os.path.join(ROOT, "ORG.md")
 org_text = open(org_path, encoding="utf-8").read() if os.path.isfile(org_path) else ""
 SEED_SOURCE = bool(re.search(r"^#\s+\{Organization Name\}(?:\s|$)", org_text, re.M))
 
 def finding(check, path, msg):
-    findings.append(f"[{check}] {os.path.relpath(path, ROOT)}: {msg}")
+    findings.append(f"[{check}] {os.path.relpath(path, REPO_ROOT)}: {msg}")
 
 def md_files():
-    for dirpath, dirnames, filenames in os.walk(ROOT):
+    for dirpath, dirnames, filenames in os.walk(REPO_ROOT):
         dirnames[:] = [d for d in dirnames if d not in
                        (".git", "node_modules", ".claude", "__pycache__")]
         for f in filenames:
@@ -28,19 +32,22 @@ def md_files():
 
 def frontmatter(path):
     try:
-        lines = open(path, encoding="utf-8").read().splitlines()
+        text = open(path, encoding="utf-8").read()
     except Exception:
         return None
-    if not lines or lines[0].strip() != "---":
+    try:
+        parsed = parse_concept(text)
+    except KnowledgeBundleError:
         return None
-    fm = {}
-    for ln in lines[1:80]:
-        if ln.strip() == "---":
-            return fm
-        m = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", ln)
-        if m:
-            fm[m.group(1)] = m.group(2).strip()
-    return None
+    return dict(parsed.fields) if parsed.fields is not None else None
+
+def operational_state(fm):
+    """Read the domain lifecycle without confusing it with OKF status."""
+    return fm.get("state", fm.get("status", ""))
+
+def concept_type(fm):
+    """Read the OKF type while accepting pre-migration Instance kinds."""
+    return fm.get("type", fm.get("kind", "")).lower()
 
 def markdown_targets(path):
     """Return absolute local targets linked from a Markdown file."""
@@ -97,7 +104,7 @@ def standing_knowledge_home(path):
     process_home = bool(
         inside(os.path.join(ROOT, "processes"), path)
         and os.path.basename(path) != "index.md"
-        and (frontmatter(path) or {}).get("status") == "active"
+        and operational_state(frontmatter(path) or {}) == "active"
     )
     role_home = inside(os.path.join(ROOT, "roles"), path)
     definition_home = os.path.basename(path) == "_kind.md"
@@ -111,7 +118,7 @@ def historical_standing_knowledge_home(path):
         path
         and os.path.isfile(path)
         and inside(os.path.join(ROOT, "processes"), path)
-        and (frontmatter(path) or {}).get("status") == "retired"
+        and operational_state(frontmatter(path) or {}) == "retired"
     )
 
 def retired_process_received_before_retirement(path, receipt_date):
@@ -122,7 +129,7 @@ def retired_process_received_before_retirement(path, receipt_date):
     retired_on = fm.get("retired-on", "")
     return (
         inside(os.path.join(ROOT, "processes"), path)
-        and fm.get("status") == "retired"
+        and operational_state(fm) == "retired"
         and valid_date(retired_on)
         and receipt_date < retired_on
     )
@@ -201,7 +208,7 @@ def approval_receipt_date(path, lesson, disposition, receiver=None):
     if inside(proposals_dir, path):
         ruling = re.search(r"^##\s+Ruling\s*$([\s\S]*)", body, re.M | re.I)
         ruling_text = ruling.group(1) if ruling else ""
-        approved = fm.get("status") == "applied" and bool(
+        approved = operational_state(fm) == "applied" and bool(
             ruling
             and ruling_field(ruling_text, "Outcome").lower() == "approved"
             and ruling_field(ruling_text, "Ruled by") == "Founder"
@@ -223,8 +230,8 @@ def approval_receipt_date(path, lesson, disposition, receiver=None):
         if disposition != "close":
             return None
         approved = (
-            fm.get("kind") == "decision"
-            and fm.get("status") == "ruled"
+            concept_type(fm) == "decision"
+            and operational_state(fm) == "ruled"
             and fm.get("ruled-by") == "Founder"
             and fm.get("outcome") == "approved"
             and fm.get("lesson-outcome") == disposition
@@ -358,14 +365,14 @@ if os.path.isdir(props):
             continue
         p = os.path.join(props, f)
         fm = frontmatter(p) or {}
-        if fm.get("status") == "applied":
+        if operational_state(fm) == "applied":
             body = open(p, encoding="utf-8").read()
             m = re.search(r"##\s*Ruling(.+)\Z", body, re.S)
             if not m or "pending" in m.group(1)[:200].lower():
                 finding("rulings", p, "status: applied but Ruling section missing or pending")
 
 # D6 — mechanical conserved-file gate present and complete?
-codeowner_paths = [os.path.join(ROOT, p) for p in
+codeowner_paths = [os.path.join(REPO_ROOT, p) for p in
                    ("CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS")]
 codeowner_paths = [path for path in codeowner_paths if os.path.isfile(path)]
 if not codeowner_paths:
@@ -377,11 +384,15 @@ else:
             match = re.match(r"^\s*(/\S+)", line)
             if match:
                 covered.add(match.group(1))
+    knowledge_prefix = "/knowledge" if ROOT != REPO_ROOT else ""
     required_owners = {
-        "/ORG.md", "/KNOWLEDGE.md", "/CONTEXT.md", "/AUTHORITY.md",
-        "/AUTHORING.md", "/processes/", "/roles/", "/**/_kind.md",
-        "/proposals/0000-proposal-template.md", "/decisions/fast-track.md",
-        "/docs/write-discipline.md", "/.github/CODEOWNERS",
+        f"{knowledge_prefix}/ORG.md", f"{knowledge_prefix}/KNOWLEDGE.md",
+        f"{knowledge_prefix}/CONTEXT.md", f"{knowledge_prefix}/AUTHORITY.md",
+        f"{knowledge_prefix}/AUTHORING.md", f"{knowledge_prefix}/processes/",
+        f"{knowledge_prefix}/roles/", f"{knowledge_prefix}/**/_kind.md",
+        f"{knowledge_prefix}/proposals/0000-proposal-template.md",
+        f"{knowledge_prefix}/decisions/fast-track.md",
+        f"{knowledge_prefix}/docs/write-discipline.md", "/.github/CODEOWNERS",
     }
     for missing in sorted(required_owners - covered):
         finding("enforce", codeowner_paths[0],
@@ -421,15 +432,15 @@ def process_member_paths():
 for path in process_member_paths():
     filename = os.path.basename(path)
     fm = frontmatter(path) or {}
-    if fm.get("kind") != "process":
-        finding("process-shape", path, "Process file must declare kind: process")
+    if concept_type(fm) != "process":
+        finding("process-shape", path, "Process file must declare type: Process")
         continue
     process_id = fm.get("id", "")
     stem = os.path.splitext(filename)[0]
     if process_id != stem:
         finding("process-name", path,
                 f"filename '{stem}' and id '{process_id or '(missing)'}' differ")
-    status = fm.get("status", "")
+    status = operational_state(fm)
     if status not in PROCESS_STATUSES:
         finding("process-lifecycle", path,
                 "status must be active, draft, example, or retired")
@@ -532,14 +543,14 @@ if os.path.isdir(lesson_dir) and not SEED_SOURCE:
             finding("lesson-identity", path,
                     "Lesson must be a top-level YYYY-MM-DD-what-it-teaches.md file")
         fm = frontmatter(path) or {}
-        if fm.get("kind") != "lesson":
+        if concept_type(fm) != "lesson":
             finding("lesson-route", path, "kind must be 'lesson'")
             continue
         source_process = fm.get("source-process", "")
         if not source_process or source_process not in historical_processes:
             finding("lesson-route", path,
                     f"source-process '{source_process or '(missing)'}' does not name an active or retired Process")
-        status = fm.get("status", "")
+        status = operational_state(fm)
         if status not in ("pending", "absorbed", "retired"):
             finding("lesson-outcome", path,
                     "status must be pending, absorbed, or retired")

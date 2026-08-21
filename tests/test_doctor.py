@@ -259,6 +259,27 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn("1 pending", result.stdout)
 
+    def test_pending_lesson_accepts_a_canonical_active_process_home(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        process = root / "processes" / "review-lessons.md"
+        process.write_text(
+            process.read_text(encoding="utf-8")
+            .replace("kind: process", "type: process")
+            .replace("status: active", "state: active\nstatus: stable"),
+            encoding="utf-8",
+        )
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: pending",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("1 pending", result.stdout)
+
     def test_lesson_may_name_a_retired_source_process(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
@@ -266,6 +287,48 @@ class DoctorTests(unittest.TestCase):
         self.add_lesson(
             root,
             "source-process: review-lessons\napplies-to: unresolved\nstatus: pending",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("1 pending", result.stdout)
+
+    def test_lesson_accepts_a_canonical_retired_source_process(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root, status="retired")
+        process = root / "processes" / "review-lessons.md"
+        process.write_text(
+            process.read_text(encoding="utf-8")
+            .replace("kind: process", "type: process")
+            .replace("status: retired", "state: retired\nstatus: deprecated"),
+            encoding="utf-8",
+        )
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: unresolved\nstatus: pending",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("1 pending", result.stdout)
+
+    def test_lesson_accepts_quoted_canonical_process_fields(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root, status="active")
+        process = root / "processes" / "review-lessons.md"
+        process.write_text(
+            process.read_text(encoding="utf-8")
+            .replace("kind: process", 'type: "process"')
+            .replace("status: active", 'state: "active"\nstatus: stable'),
+            encoding="utf-8",
+        )
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: pending",
         )
 
         result = self.run_doctor(root)
