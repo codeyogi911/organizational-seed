@@ -16,12 +16,22 @@ The candidate branch is Working State and the pull request is Machinery that
 presents it; the Decision is the ruling that survives when Mainmind, GitHub's
 UI, or any agent harness is removed.
 
-Mainmind preallocates a stable server-owned member path before it builds the
-candidate: `mainmind-<safe-id>.md`. Existing candidate-prefix IDs remain valid.
-**Required frontmatter:** `id`, `type`,
-`date`, `ruled-by`, `ruling`, `ruled-at`, `state`, `outcome`, `base-sha`,
-`repository`, `base-ref`, `candidate-sha`, `target-diff-sha256`, `targets`,
-`status`, `access-scope`, and `write-class`.
+**Required frontmatter for every Decision:** `id`, `type`, `date`, `ruled-by`,
+`ruling`, `state`, `outcome`, `status`, `access-scope`, and `write-class`.
+
+Every non-definition member directly under `decisions/` is `type: decision`,
+and every Decision lives there. A generic organizational Decision records a
+ruling that does not mutate Standing Knowledge. Its safe filename matches its
+`id`; it uses `state: ruled`, `status: stable`, `write-class: ledger`, and a
+`yes` / `approved` or `no` / `rejected` pair. It must not carry governed-change
+bindings or `lesson-outcome`, `lesson`, or `receiver` fields.
+
+An exact governed-change receipt declares
+`governance-protocol: mainmind-exact-v1`. Mainmind preallocates its stable
+server-owned path before it builds the candidate: `mainmind-<safe-id>.md`.
+Existing candidate-prefix IDs remain valid. This profile additionally requires
+`ruled-at`, `repository`, `base-ref`, `base-sha`, `candidate-sha`,
+`target-diff-sha256`, and `targets`.
 
 - `type` is `decision`, `state` is `ruled`, `status` is `stable`, and
   `write-class` is `ledger`.

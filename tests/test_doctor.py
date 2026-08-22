@@ -220,6 +220,7 @@ class DoctorTests(unittest.TestCase):
             'ruled-at: "2026-08-22T10:11:12.000Z"',
             "state: ruled",
             f"outcome: {outcome}",
+            "governance-protocol: mainmind-exact-v1",
             f'repository: "{repository}"',
             f'base-ref: "{base_ref}"',
             f'base-sha: "{base}"',
@@ -298,6 +299,125 @@ class DoctorTests(unittest.TestCase):
         result = self.run_doctor(root)
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_generic_organizational_decision_is_valid_without_a_candidate(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "decisions/mainmind-organizational-direction.md",
+            """
+            ---
+            id: mainmind-organizational-direction
+            type: decision
+            date: 2026-08-22
+            ruled-by: Founder
+            ruling: yes
+            state: ruled
+            outcome: approved
+            status: stable
+            access-scope: core
+            write-class: ledger
+            ---
+
+            # Decision: organizational direction
+
+            The Founder approved the direction without mutating Standing Knowledge.
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_generic_decision_cannot_fabricate_a_lesson_lifecycle(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "decisions/fabricated-lifecycle.md",
+            """
+            ---
+            id: fabricated-lifecycle
+            type: decision
+            date: 2026-08-22
+            ruled-by: Founder
+            ruling: yes
+            state: ruled
+            outcome: approved
+            lesson-outcome: close
+            lesson: lessons/2026-08-21-visible-teaching.md
+            status: stable
+            access-scope: core
+            write-class: ledger
+            ---
+
+            # Decision
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[decision-receipt]", result.stdout)
+
+    def test_decisions_directory_rejects_a_non_decision_member(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "decisions/disguised-note.md",
+            """
+            ---
+            id: disguised-note
+            type: note
+            ---
+
+            # Note
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[decision-route]", result.stdout)
+
+    def test_decision_typed_file_must_live_under_decisions(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "records/disguised-decision.md",
+            """
+            ---
+            id: disguised-decision
+            type: decision
+            ---
+
+            # Decision
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[decision-route]", result.stdout)
+
+    def test_exact_receipt_cannot_drop_its_protocol_discriminator(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        decision = self.add_mainmind_decision(root)
+        decision.write_text(
+            decision.read_text(encoding="utf-8").replace(
+                "governance-protocol: mainmind-exact-v1\n", ""
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[decision-receipt]", result.stdout)
 
     def test_mainmind_rejection_receipt_is_valid_without_landing_candidate_bytes(self):
         tmp, root = self.make_instance()
@@ -1215,7 +1335,7 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("[lesson-outcome]", result.stdout)
 
-    def test_fast_track_row_can_authorize_absorption(self):
+    def test_legacy_fast_track_cannot_bypass_the_decision_member_schema(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         self.add_process(root)
@@ -1238,7 +1358,8 @@ class DoctorTests(unittest.TestCase):
 
         result = self.run_doctor(root)
 
-        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[decision-route]", result.stdout)
 
     def test_fast_track_no_cannot_authorize_absorption(self):
         tmp, root = self.make_instance()

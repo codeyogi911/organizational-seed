@@ -233,6 +233,7 @@ class CanonicalSeedTest(unittest.TestCase):
                     ruled-at: "2026-08-22T10:11:12.000Z"
                     state: ruled
                     outcome: rejected
+                    governance-protocol: mainmind-exact-v1
                     repository: "example/clone-company"
                     base-ref: "refs/heads/main"
                     base-sha: "{base}"

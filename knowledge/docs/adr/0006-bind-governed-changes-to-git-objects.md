@@ -16,6 +16,9 @@ complete path set, and before/after bytes are preserved in Git. The Founder surf
 shows that immutable candidate and rules yes or no. The repository-native
 Decision binds the immutable repository identity, fully qualified base ref,
 base SHA, candidate SHA, target set, and canonical target-diff SHA-256.
+It declares `governance-protocol: mainmind-exact-v1`, separating this exact
+mutation receipt from generic organizational Decisions that record rulings but
+do not claim governed bytes or Lesson lifecycle outcomes.
 
 Approval appends deterministic Decision-only child `B` to `A` and uses an
 ordinary merge retaining both. Rejection never integrates `A`; it closes the

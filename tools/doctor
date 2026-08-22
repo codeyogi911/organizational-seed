@@ -203,7 +203,7 @@ def approval_receipt_date(path, lesson, disposition, receiver=None):
     links = markdown_targets(path)
 
     if (inside(decisions_dir, path)
-            and MAINMIND_DECISION.fullmatch(os.path.basename(path))):
+            and fm.get("governance-protocol") == "mainmind-exact-v1"):
         fm, targets_value = parsed_frontmatter(path)
         targets = targets_value if isinstance(targets_value, list) else []
         lesson_value = os.path.relpath(lesson, ROOT)
@@ -355,11 +355,13 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
         if missing:
             finding("kinds", p, f"missing required frontmatter: {', '.join(missing)}")
 
-# D3 — repository-native Mainmind Decisions carry a complete portable ruling
-# envelope. The receipt intentionally omits its own commit SHA: its bytes must
-# be deterministic before Git creates the receipt commit.
+# D3 — every Decision stays in decisions/. Generic organizational rulings use
+# a minimal schema and cannot claim governed bytes or Lesson lifecycle. The
+# explicit mainmind-exact-v1 protocol selects the complete portable mutation
+# envelope; its receipt intentionally omits its own commit SHA.
 decision_dir = os.path.join(ROOT, "decisions")
 MAINMIND_DECISION = re.compile(r"^mainmind-([a-z0-9](?:[a-z0-9-]{0,127}))\.md$")
+GENERIC_DECISION = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,127})\.md$")
 SHA40 = re.compile(r"^[a-f0-9]{40}$")
 SHA256 = re.compile(r"^[a-f0-9]{64}$")
 REPOSITORY = re.compile(r"^[a-z0-9_.-]+/[a-z0-9_.-]+$")
@@ -397,7 +399,57 @@ if os.path.isdir(decision_dir):
         filename = os.path.basename(path)
         text = open(path, encoding="utf-8").read()
         summary = frontmatter(path) or {}
-        if concept_type(summary) != "decision":
+        is_decision_member = inside(decision_dir, path) and filename != "_kind.md"
+        is_decision_type = concept_type(summary) == "decision"
+        if is_decision_member and not is_decision_type:
+            finding("decision-route", path,
+                    "every decisions/ member except _kind.md must declare type: decision")
+            continue
+        if is_decision_type and os.path.dirname(path) != decision_dir:
+            finding("decision-route", path,
+                    "a type: decision member must live directly under decisions/")
+            continue
+        if not is_decision_type:
+            continue
+        if summary.get("governance-protocol") != "mainmind-exact-v1":
+            required = {
+                "id", "type", "date", "ruled-by", "ruling", "state",
+                "outcome", "status", "access-scope", "write-class",
+            }
+            missing = sorted(required - set(summary))
+            reserved = {
+                "governance-protocol", "ruled-at", "repository", "base-ref",
+                "base-sha", "candidate-sha", "target-diff-sha256", "targets",
+                "lesson-outcome", "lesson", "receiver",
+            } & set(summary)
+            expected_pair = {"yes": "approved", "no": "rejected"}
+            generic_checks = [
+                (not missing,
+                 f"generic Decision is missing fields: {', '.join(missing)}"),
+                (not reserved,
+                 "generic Decision cannot claim governed mutation or Lesson lifecycle fields"),
+                (GENERIC_DECISION.fullmatch(filename)
+                 and summary.get("id") == os.path.splitext(filename)[0],
+                 "generic Decision id must match its safe filename"),
+                (summary.get("type") == "decision"
+                 and summary.get("state") == "ruled"
+                 and summary.get("status") == "stable",
+                 "generic Decision type, state, and status must be decision, ruled, and stable"),
+                (summary.get("ruling") in expected_pair
+                 and expected_pair.get(summary.get("ruling")) == summary.get("outcome"),
+                 "generic Decision ruling/outcome must be yes/approved or no/rejected"),
+                (valid_date(summary.get("date")),
+                 "generic Decision date must be YYYY-MM-DD"),
+                (meaningful_text(summary.get("ruled-by", "")),
+                 "generic Decision must name who ruled"),
+                (summary.get("write-class") == "ledger",
+                 "generic Decision must use write-class ledger"),
+                (summary.get("access-scope") in {"core", "support", "finance", "founder"},
+                 "generic Decision must use one frozen pilot access scope"),
+            ]
+            for valid, message in generic_checks:
+                if not valid:
+                    finding("decision-receipt", path, message)
             continue
         name_match = MAINMIND_DECISION.fullmatch(filename)
         if os.path.dirname(path) != decision_dir or not name_match:
@@ -408,7 +460,7 @@ if os.path.isdir(decision_dir):
 
         required = {
             "id", "type", "date", "ruled-by", "ruling", "ruled-at", "state",
-            "outcome", "repository", "base-ref", "base-sha", "candidate-sha", "target-diff-sha256",
+            "outcome", "governance-protocol", "repository", "base-ref", "base-sha", "candidate-sha", "target-diff-sha256",
             "targets", "status", "access-scope", "write-class",
         }
         missing = sorted(required - set(fm))
@@ -432,6 +484,8 @@ if os.path.isdir(decision_dir):
 
         checks = [
             (fm["id"] == expected_id, "id must match the stable server-owned filename"),
+            (fm["governance-protocol"] == "mainmind-exact-v1",
+             "governance-protocol must be mainmind-exact-v1"),
             (SHA40.fullmatch(candidate),
              "candidate-sha must be a complete lowercase commit ID"),
             (SHA40.fullmatch(base) and base != candidate,
