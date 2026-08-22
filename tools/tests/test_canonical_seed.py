@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
+import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -12,10 +15,370 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 COMMAND = ROOT / "tools" / "knowledge-bundle"
 sys.path.insert(0, str(ROOT / "tools"))
-from knowledge_bundle import parse_concept  # noqa: E402
+from knowledge_bundle import (  # noqa: E402
+    KnowledgeBundleError,
+    parse_concept,
+    target_diff_sha256,
+)
 
 
 class CanonicalSeedTest(unittest.TestCase):
+    def test_target_diff_digest_matches_the_mainmind_cross_runtime_vector(self):
+        digest = target_diff_sha256(
+            [
+                {
+                    "operation": "create",
+                    "path": "records/😀.md",
+                    "was": None,
+                    "now": "created\n",
+                },
+                {
+                    "operation": "update",
+                    "path": "records/\ue000.md",
+                    "was": "before\n",
+                    "now": "after\n",
+                },
+                {
+                    "operation": "update",
+                    "path": "ORG.md",
+                    "was": "old\n",
+                    "now": "new\n",
+                },
+                {
+                    "operation": "delete",
+                    "path": "records/old.md",
+                    "was": "retired\n",
+                    "now": None,
+                },
+            ]
+        )
+
+        self.assertEqual(
+            digest,
+            "758928cf3727e0bcc8d38e58e70da389fa01791ea9176858f5f59e7dd5c1154a",
+        )
+
+    def test_repository_native_decisions_replace_proposal_and_fast_track_artifacts(self):
+        self.assertTrue((ROOT / "knowledge" / "decisions" / "_kind.md").is_file())
+        self.assertFalse((ROOT / "knowledge" / "decisions" / "fast-track.md").exists())
+        self.assertEqual(list((ROOT / "knowledge" / "proposals").glob("*.md")), [])
+
+        manifest = json.loads((ROOT / ".mainmind.json").read_text(encoding="utf-8"))
+        self.assertNotIn("proposals", manifest["projection"]["dirs"])
+        self.assertFalse(
+            any(path.startswith("processes/") for path in manifest["projection"]["root"])
+        )
+
+    def test_governed_delete_requires_before_bytes_and_a_null_after(self):
+        for change in (
+            {"operation": "delete", "path": "records/old.md", "was": None, "now": None},
+            {"operation": "delete", "path": "records/old.md", "was": "old\n", "now": "new\n"},
+        ):
+            with self.subTest(change=change):
+                with self.assertRaises(KnowledgeBundleError):
+                    target_diff_sha256([change])
+
+    def test_mainmind_deposit_is_valid_inside_a_real_instance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            instance = Path(directory)
+            shutil.copytree(ROOT / "knowledge", instance / "knowledge")
+            shutil.copytree(ROOT / ".github", instance / ".github")
+            shutil.copy2(ROOT / ".mainmind.json", instance / ".mainmind.json")
+
+            org = instance / "knowledge" / "ORG.md"
+            org.write_text(
+                org.read_text(encoding="utf-8").replace(
+                    "# {Organization Name} — the Organization",
+                    "# Example Company — the Organization",
+                ),
+                encoding="utf-8",
+            )
+            process = instance / "knowledge" / "processes" / "returns-review.md"
+            process.write_text(
+                textwrap.dedent(
+                    """
+                    ---
+                    id: returns-review
+                    type: process
+                    state: active
+                    description: Returns receive an evidence-backed review.
+                    status: stable
+                    access-scope: core
+                    write-class: conserved
+                    ---
+
+                    # Process: returns review
+
+                    ## Outcome
+
+                    Returns receive an evidence-backed review.
+
+                    ## When to use
+
+                    Use when reviewing a return.
+
+                    ## Boundaries
+
+                    Stay within Authority.
+
+                    ## Evidence and approvals
+
+                    Read the return evidence.
+
+                    ## Steps
+
+                    1. Review the return.
+
+                    ## Done when
+
+                    The result and evidence are visible.
+
+                    ## Failure and recovery
+
+                    Retry from the preserved evidence.
+                    """
+                ).lstrip(),
+                encoding="utf-8",
+            )
+            process_index = instance / "knowledge" / "processes" / "index.md"
+            process_index.write_text(
+                process_index.read_text(encoding="utf-8")
+                + "\n| [returns review](returns-review.md) | Returns receive an evidence-backed review. |\n",
+                encoding="utf-8",
+            )
+            fixture = (
+                instance
+                / "knowledge"
+                / "lessons"
+                / "2026-08-22-returns-need-a-visible-receipt.md"
+            )
+            fixture.write_text(
+                textwrap.dedent(
+                    """
+                    ---
+                    id: lesson-2026-08-22-returns-need-a-visible-receipt
+                    type: Lesson
+                    date: 2026-08-22
+                    source-process: returns-review
+                    state: pending
+                    status: stable
+                    access-scope: core
+                    write-class: ledger
+                    applies-to: processes/returns-review.md
+                    ---
+
+                    # Returns need a visible receipt
+
+                    ## What happened
+
+                    A return could not be reconciled without its receipt.
+
+                    ## What it teaches
+
+                    Require the receipt before reconciliation.
+
+                    ## Where it applies
+
+                    processes/returns-review.md
+
+                    ## Evidence
+
+                    - Synthetic acceptance evidence only.
+                    """
+                ).lstrip(),
+                encoding="utf-8",
+            )
+            parsed = parse_concept(fixture.read_text(encoding="utf-8"))
+            result = subprocess.run(
+                [str(ROOT / "tools" / "doctor"), str(instance)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(parsed.fields["source-process"], "returns-review")
+            self.assertEqual(parsed.fields["applies-to"], "processes/returns-review.md")
+            self.assertFalse(parsed.raw_fields["source-process"].lstrip().startswith("["))
+            self.assertFalse(parsed.raw_fields["applies-to"].lstrip().startswith("["))
+
+    def test_repository_native_decision_validates_from_a_depth_one_plain_clone(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "fixture"
+            clone = Path(directory) / "clone"
+            shutil.copytree(ROOT / "knowledge", fixture / "knowledge")
+            shutil.copytree(ROOT / ".github", fixture / ".github")
+            shutil.copy2(ROOT / ".mainmind.json", fixture / ".mainmind.json")
+            org = fixture / "knowledge" / "ORG.md"
+            org.write_text(
+                org.read_text(encoding="utf-8").replace(
+                    "# {Organization Name} — the Organization",
+                    "# Clone Company — the Organization",
+                ),
+                encoding="utf-8",
+            )
+            candidate = "2" * 40
+            base = "1" * 40
+            digest = "3" * 64
+            decision = fixture / "knowledge" / "decisions" / f"mainmind-{candidate[:12]}.md"
+            decision.write_text(
+                textwrap.dedent(
+                    f'''\
+                    ---
+                    id: "mainmind-{candidate[:12]}"
+                    type: decision
+                    date: 2026-08-22
+                    ruled-by: "Founder (@founder-user), authenticated Mainmind session"
+                    ruling: "no"
+                    ruled-at: "2026-08-22T10:11:12.000Z"
+                    state: ruled
+                    outcome: rejected
+                    governance-protocol: mainmind-exact-v1
+                    repository: "example/clone-company"
+                    base-ref: "refs/heads/main"
+                    base-sha: "{base}"
+                    candidate-sha: "{candidate}"
+                    target-diff-sha256: "{digest}"
+                    targets:
+                      - "processes/review-lessons.md"
+                    status: stable
+                    access-scope: core
+                    write-class: ledger
+                    ---
+
+                    # Decision: refuse a candidate
+
+                    ## Ruling
+
+                    > No.
+
+                    — Founder (@founder-user), 2026-08-22T10:11:12.000Z
+
+                    ## What would have become true
+
+                    - A refused rule would have changed.
+
+                    ## Exact candidate refused
+
+                    - Repository: `example/clone-company`
+                    - Base ref: `refs/heads/main`
+                    - Base commit: `{base}`
+                    - Candidate commit: `{candidate}`
+                    - Target diff SHA-256: `{digest}`
+                    - Target left unchanged: `processes/review-lessons.md`
+
+                    ## Integration
+
+                    Only this Decision receipt lands on the canonical branch.
+                    '''
+                ),
+                encoding="utf-8",
+            )
+            commands = [
+                ["git", "init", "-b", "main"],
+                ["git", "config", "user.name", "Acceptance"],
+                ["git", "config", "user.email", "acceptance@example.invalid"],
+                ["git", "add", "."],
+                ["git", "commit", "-m", "synthetic instance"],
+            ]
+            for command in commands:
+                subprocess.run(command, cwd=fixture, check=True, capture_output=True)
+            subprocess.run(
+                ["git", "clone", "--depth=1", f"file://{fixture}", str(clone)],
+                check=True,
+                capture_output=True,
+            )
+
+            result = subprocess.run(
+                [str(ROOT / "tools" / "doctor"), str(clone)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_optional_mainmind_mount_projects_every_policy_bearing_node(self):
+        manifest = json.loads((ROOT / ".mainmind.json").read_text(encoding="utf-8"))
+        projection = manifest["projection"]
+
+        self.assertTrue(projection["replace"])
+        self.assertEqual(projection["prefix"], "knowledge")
+        self.assertIn("processes", projection["dirs"])
+        projected = {
+            path.relative_to(ROOT / "knowledge").as_posix()
+            for path in (ROOT / "knowledge").rglob("*.md")
+            if (
+                path.relative_to(ROOT / "knowledge").as_posix()
+                in projection["root"]
+                or path.relative_to(ROOT / "knowledge").parts[0]
+                in projection["dirs"]
+            )
+        }
+        canonical = {
+            path.relative_to(ROOT / "knowledge").as_posix()
+            for path in (ROOT / "knowledge").rglob("*.md")
+            if path.relative_to(ROOT / "knowledge").as_posix() != "index.md"
+        }
+        self.assertEqual(projected, canonical)
+
+        # The directory declaration is the future-proof contract: a new
+        # Instance Process is projected without editing this Mount. The
+        # generated index is included too, but remains fail-closed because it
+        # carries no discovery classification; the Process contract is an
+        # explicitly classified conserved node.
+        def is_projected(path):
+            return path in projection["root"] or any(
+                path.startswith(f"{directory}/")
+                for directory in projection["dirs"]
+            )
+
+        for path in (
+            "processes/future-instance-process.md",
+            "processes/retired-instance-process.md",
+            "processes/index.md",
+            "processes/_contract.md",
+            "work/process-drafts/future-process.md",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(is_projected(path))
+        index = parse_concept(
+            (ROOT / "knowledge" / "processes" / "index.md").read_text(encoding="utf-8")
+        )
+        contract = parse_concept(
+            (ROOT / "knowledge" / "processes" / "_contract.md").read_text(encoding="utf-8")
+        )
+        self.assertIsNone(index.fields)
+        self.assertEqual(contract.fields["write-class"], "conserved")
+
+    def test_every_canonical_node_declares_access_and_write_policy(self):
+        access = parse_concept(
+            (ROOT / "knowledge" / "ACCESS.md").read_text(encoding="utf-8")
+        ).fields
+        allowed_scopes = {
+            value.strip() for value in access["access-scopes"].split(",")
+        }
+        allowed_write_classes = {
+            value.strip() for value in access["write-classes"].split(",")
+        }
+
+        self.assertEqual(allowed_scopes, {"core", "support", "finance", "founder"})
+        self.assertEqual(allowed_write_classes, {"conserved", "ruled", "ledger"})
+
+        for path in (ROOT / "knowledge").rglob("*.md"):
+            relative = path.relative_to(ROOT / "knowledge").as_posix()
+            if relative in {"index.md", "processes/index.md"}:
+                continue
+            with self.subTest(path=path.relative_to(ROOT)):
+                fields = parse_concept(path.read_text(encoding="utf-8")).fields
+                self.assertIsNotNone(fields)
+                self.assertIn(fields.get("access-scope"), allowed_scopes)
+                self.assertIn(fields.get("write-class"), allowed_write_classes)
+                self.assertEqual(fields["access-scope"], "core")
+
+        self.assertEqual(access["access-scope"], "core")
+        self.assertEqual(access["write-class"], "ruled")
+
     def test_shared_parser_resolves_canonical_yaml_for_consumers(self):
         parsed = parse_concept(
             "---\n"

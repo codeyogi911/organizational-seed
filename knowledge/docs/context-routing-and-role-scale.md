@@ -2,6 +2,8 @@
 type: Reference
 status: stable
 state: design reference; not organizational law
+access-scope: core
+write-class: conserved
 ---
 
 # Context routing and role-scaled access

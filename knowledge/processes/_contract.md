@@ -4,6 +4,8 @@ type: process-contract
 state: active
 judge: Founder
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Process contract

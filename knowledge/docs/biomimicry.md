@@ -1,6 +1,8 @@
 ---
 type: Reference
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # Biomimicry — the seed's design vocabulary
 
@@ -11,11 +13,11 @@ it a deliberate design tool: when a new organizational problem appears, ask
 
 | Biological mechanism | Seed mechanism | Status |
 |---|---|---|
-| Conserved genome vs somatic tissue | Standing Knowledge (Proposal/fast-track ruling) vs Organizational Memory and Working State (ordinary work) | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |
+| Conserved genome vs somatic tissue | Standing Knowledge (exact candidate + Founder Decision) vs Organizational Memory and Working State (ordinary work) | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |
 | Directed evolution / selection pressure | `review-lessons` selects teaching; `change-standing-knowledge` governs every lasting mutation | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |
 | Immune memory | `lessons/` — the org remembers what a Process performance taught and the Standing Knowledge it may affect | current model |
 | Immune tolerance (don't attack self) | probation: new roles act under per-mutation review until trusted | v0.2 |
-| **Immune surveillance** | **`tools/doctor` — continuous self-inspection for malformed cells** (dead links, kind violations, invalid ledger rows, stale leases, unruled "applied" proposals) | **v0.3** |
+| **Immune surveillance** | **`tools/doctor` — continuous self-inspection for malformed cells** (dead links, Kind violations, invalid Decision receipts, stale leases) | **v0.3** |
 | Self/non-self recognition | three Knowledge classes separate governed meaning, memory, and current work; Machinery sits outside Knowledge as replaceable infrastructure | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |
 | Apoptosis (programmed cell death) | stale-lease self-termination: a superseded session must never write again; broken leases are recycled with a record | v0.2 |
 | Senescence | retired Processes leave their stable historical definition while disappearing from active discovery | current model; [ADR 0003](adr/0003-classify-knowledge-before-changing-it.md) |

@@ -5,6 +5,8 @@ state: active
 judge: Founder
 description: Reach the smallest safe result when no active Process fits, then preserve only the reusable residue.
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Process: handle uncovered work

@@ -4,6 +4,8 @@ type: kind-definition
 of: goal
 state: active
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Kind: Goal

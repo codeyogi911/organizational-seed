@@ -4,6 +4,8 @@ type: kind-definition
 of: lesson
 state: active
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Kind: Lesson
@@ -17,8 +19,11 @@ definition but carries no live Lesson members; Seed-maintenance evidence stays
 in reviewed PRs, Git history, and ADRs.
 
 **Required frontmatter:** `id`, `type`, `date`, `source-process`, `applies-to`,
-and `state`. `type` is **Lesson**; `source-process` names the Process whose
-performance produced the teaching, even if that Process is now retired.
+and `state`.
+
+`type` is **Lesson**; `source-process` is the Process's stable frontmatter
+`id`, not its file path, and may name the Process whose performance produced
+the teaching even when that Process is now retired.
 `applies-to` is a root-relative path
 to the proposed Standing Knowledge home, or `unresolved` when review has not
 found one. `state` is **pending**, **absorbed**, or **retired**. OKF `status`
@@ -48,8 +53,9 @@ normally grouped by `applies-to`. Each Lesson receives one outcome:
   `lesson-file.md#closure-reason`.
 
 For absorption, [change Standing Knowledge](../processes/change-standing-knowledge.md)
-supplies either an applied Proposal with a Founder-ruled approved Ruling or the
-exact row in the fast-track ledger. Closure may also use a standalone
-Founder-ruled Decision. Absorption and closure are valid only when the receipt
-approves the exact Lesson outcome. Age, a filename mention, or an unapproved
-field never removes a Lesson from the queue.
+supplies a repository-native Founder Decision bound to the exact candidate and
+target-diff digest. Closure uses the same Decision receipt without integrating a
+Standing Knowledge target when no governed mutation is needed. Absorption and
+closure are valid only when the receipt approves the exact Lesson outcome. Age,
+a filename mention, or an unapproved field never removes a Lesson from the
+queue.

@@ -88,6 +88,72 @@ def write_utf8_exact(path: Path, text: str) -> None:
         handle.write(text)
 
 
+def target_diff_sha256(changes: Iterable[dict[str, Any]]) -> str:
+    """Digest complete governed before/after bytes using Mainmind's contract.
+
+    Paths sort by Unicode code point. Each complete file is reduced to its
+    operation, path, before SHA-256 (or null), and after SHA-256 (or null). That list is
+    encoded as compact UTF-8 JSON without a trailing newline and hashed once
+    more. The field insertion order is part of the cross-runtime contract.
+    """
+
+    canonical = []
+    paths = set()
+    for change in changes:
+        operation = change.get("operation")
+        path = change.get("path")
+        before = change.get("was")
+        after = change.get("now")
+        valid = (
+            operation in {"create", "update", "delete"}
+            and isinstance(path, str)
+            and bool(path)
+            and (
+                (operation == "create" and before is None and isinstance(after, str))
+                or (
+                    operation == "update"
+                    and isinstance(before, str)
+                    and isinstance(after, str)
+                )
+                or (operation == "delete" and isinstance(before, str) and after is None)
+            )
+        )
+        if not valid:
+            raise KnowledgeBundleError(
+                "governed target diff requires complete create/update/delete bytes"
+            )
+        if path in paths:
+            raise KnowledgeBundleError(
+                "governed target diff cannot contain a duplicate path"
+            )
+        paths.add(path)
+        canonical.append(
+            {
+                "operation": operation,
+                "path": path,
+                "before_sha256": (
+                    None
+                    if before is None
+                    else hashlib.sha256(before.encode("utf-8")).hexdigest()
+                ),
+                "after_sha256": (
+                    None
+                    if after is None
+                    else hashlib.sha256(after.encode("utf-8")).hexdigest()
+                ),
+            }
+        )
+    if not canonical:
+        raise KnowledgeBundleError("governed target diff cannot be empty")
+    canonical.sort(key=lambda item: item["path"])
+    envelope = json.dumps(
+        canonical,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(envelope).hexdigest()
+
+
 def yaml_parser():
     try:
         import yaml

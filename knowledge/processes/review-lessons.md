@@ -5,6 +5,8 @@ state: active
 judge: Founder
 description: Decide whether pending Lessons should be absorbed, kept, rerouted, or closed.
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Process: review Lessons
@@ -49,11 +51,13 @@ reason.
 2. Verify the evidence behind each Lesson and whether the proposed home is the
    smallest correct owner.
 3. Record absorb, keep, reroute, or close with a short reason.
-4. For absorb, prepare a Change Standing Knowledge performance linking the
-   exact Lesson and receiving file. Do not mark the Lesson absorbed yet.
-5. After the governed change is integrated, reduce the Lesson to a short
-   `absorbed-into:` and `decided-by:` pointer. For closure, preserve
-   `## Closure reason` and the approval pointer. Keep and reroute stay pending.
+4. For absorb, preallocate the stable Decision path, then prepare one Change
+   Standing Knowledge candidate containing the receiver mutation and the exact
+   Lesson terminal bytes: `state: absorbed`, matching `applies-to:` and
+   `absorbed-into:`, `decided-by:` that Decision, and short links to both files.
+5. For close, prepare one candidate containing `state: retired`, `closed-by:`
+   the preallocated Decision, and a non-placeholder `## Closure reason`. The
+   receipt links that exact heading. Keep and reroute stay pending.
 6. Run the repository checks and report what remains pending.
 
 ## Done when

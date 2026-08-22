@@ -11,11 +11,11 @@ reusable starting pattern, not operating an Instance.
    [CONTEXT.md](knowledge/CONTEXT.md), and
    [AUTHORING.md](knowledge/AUTHORING.md).
 2. Make changes on a branch, review the exact diff, and use the repository's PR
-   approval rules. Do not create an organizational Proposal merely to change
-   the Seed source; the Proposal template is content shipped to Instances.
+   approval rules. Do not create an organizational Decision merely to change
+   the Seed source; runtime Decisions belong to Instances.
 3. Keep the Seed general. It must contain no tenant facts and must never update
    an Instance automatically.
-4. Do not store live Goals, Tasks, Lessons, Proposals, or organizational
+4. Do not store live Goals, Tasks, Lessons, or organizational
    Decisions in the Seed source. Seed-maintenance evidence lives in issues,
    reviewed PRs, Git history, and ADRs; the runtime folders are content for
    Instances.

@@ -1,6 +1,8 @@
 ---
 type: Organization
 status: stable
+access-scope: core
+write-class: ruled
 ---
 # {Organization Name} — the Organization
 
@@ -9,8 +11,10 @@ status: stable
 > stated here once or linked from here — never mirrored.
 
 This file is the canonical entry point. If you are new here — human or agent — read
-this file top to bottom, then obey [AUTHORITY.md](AUTHORITY.md). Everything else
-links from here. The glossary of terms is [CONTEXT.md](CONTEXT.md).
+this file top to bottom, then obey [AUTHORITY.md](AUTHORITY.md). When a scoped
+Mount is in use, [ACCESS.md](ACCESS.md) limits what the current Role may
+discover; it never grants Authority. Everything else links from here. The
+glossary of terms is [CONTEXT.md](CONTEXT.md).
 
 ## Purpose
 
@@ -28,8 +32,8 @@ Authority attaches to Roles, never to named people. Occupancy today:
 | **Founder** | Judgment on all Processes; the reserved powers ([AUTHORITY.md](AUTHORITY.md)) | {name} |
 | **Operator** | Performs Tasks within granted authority | any human or agent working this repo |
 
-Chartered roles (created via Proposal) live in `roles/`, one file each; this table
-is the occupancy index.
+Chartered roles (created through an approved governed candidate) live in
+`roles/`, one file each; this table is the occupancy index.
 
 ## How work happens
 
@@ -69,24 +73,27 @@ three classes: Standing Knowledge, Organizational Memory, and Working State.
 **Conserved** is the change rule applied to Standing Knowledge, not a fourth
 class or a folder name.
 
-**Standing Knowledge** changes only with a Founder ruling, on one of two
-tracks. It includes:
+**Standing Knowledge** changes only with a Founder ruling under one exact
+candidate contract. It includes:
 
 - this file's Purpose, Roles, knowledge-change rules, and map;
 - [KNOWLEDGE.md](KNOWLEDGE.md), [CONTEXT.md](CONTEXT.md),
-  [AUTHORITY.md](AUTHORITY.md), and [AUTHORING.md](AUTHORING.md);
+  [AUTHORITY.md](AUTHORITY.md), [ACCESS.md](ACCESS.md), and
+  [AUTHORING.md](AUTHORING.md);
 - active Processes, Process contracts, Role charters, and every `_kind.md`
   definition;
-- the Proposal template and fast-track ledger definition that shape governed
-  change.
+- the repository-native Decision definition that shapes governed change.
 
-**Full Proposal** for anything that expands power or creates standing
-capability (new Roles, new or widened grants, new Processes or Kinds,
-scheduling, security/legal boundaries).
-**Fast-track** for Standing Knowledge changes that expand nothing (flags, checks,
-thresholds, steps, wording): state the diff → the Founder's verbatim yes → one
-commit + a line in `decisions/fast-track.md` — batch-reviewed at the weekly
-review. In doubt → full form; the Founder may always demand it.
+Every Standing Knowledge change uses one contract, whether it expands power or
+only corrects wording: bind the immutable repository and base ref, preallocate
+the stable Decision path, prepare one exact target-only candidate `A`, display
+its complete before/after bytes and target-diff digest, and obtain an
+authenticated Founder yes or no for that immutable candidate. Approval appends
+a deterministic Decision-only child `B` and uses an ordinary merge retaining
+`A` and `B`.
+Rejection keeps `A` out of canonical history and appends only the refusal
+Decision to the canonical branch. A changed byte, target, branch, repository,
+or candidate requires a fresh ruling. See [the Decision Kind](decisions/_kind.md).
 
 **Organizational Memory** grows through ordinary work and is not rewritten to
 change history: Records, resolved Decisions, Lessons, terminal Tasks, and Git
@@ -94,8 +101,8 @@ history. Corrections supersede earlier claims; deletion requires Founder
 approval.
 
 **Working State** changes through the deciding Role or Process that owns it:
-active Goals, open Tasks, draft Processes, and pending Proposals. A Goal, draft,
-or Proposal grants no standing Authority.
+active Goals, open Tasks, draft Processes, and governed candidate branches. A
+Goal, draft, or candidate grants no standing Authority.
 
 **Machinery is not Knowledge.** It is replaceable through repository
 maintenance: tools, generated indexes, and Mounts. It may read, check, project,
@@ -103,8 +110,8 @@ or present Knowledge but cannot own organizational meaning or Authority.
 
 Ordinary work may therefore:
 
-- update Working State through its Process; append new Records, Lessons,
-  Proposals, and Decisions; refresh current Record fields only as their Kind
+- update Working State through its Process; append new Records, Lessons, and
+  Decisions; refresh current Record fields only as their Kind
   allows with new source and `as-of`;
 - append lifecycle receipts or superseding corrections to Organizational
   Memory, never rewrite an established historical claim;
@@ -119,6 +126,7 @@ Ordinary work may therefore:
 | `ORG.md` | this file — canonical entry |
 | `KNOWLEDGE.md` | Knowledge classes, Machinery boundary, ownership, and evolution map |
 | `AUTHORITY.md` | the rulebook |
+| `ACCESS.md` | repository-native discovery scopes and write ceremonies; never an Authority grant |
 | `CONTEXT.md` | glossary of seed terms |
 | `goals/` | Founder-set outcomes; active Goals are Working State, terminal Goals are Organizational Memory |
 | `processes/` | how kinds of work are done; active definitions are Standing Knowledge |
@@ -129,10 +137,9 @@ Ordinary work may therefore:
 | `records/` | Organizational Memory; each Kind's `_kind.md` is Standing Knowledge |
 | `decisions/` | Organizational Memory of rulings on the organization itself |
 | `lessons/` | Organizational Memory naming its source Process and proposed Standing Knowledge home |
-| `proposals/` | governed changes awaiting Judgment, then memory of their ruling |
 | `docs/adr/` | design decisions about the pattern itself |
 | `tools/` | machinery — replaceable check scripts |
-| `AGENTS.md`, `CLAUDE.md`, `.claude/` | Mounts — harness bindings, disposable |
+| `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.mainmind.json` | Mounts — harness bindings, disposable |
 
 ## For harnesses
 

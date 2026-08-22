@@ -1,10 +1,16 @@
 ---
-state: accepted
+state: superseded
 type: Architecture Decision
-status: stable
+status: deprecated
+access-scope: core
+write-class: ruled
 ---
 
 # Directed evolution, not random
+
+> Superseded by [ADR 0006](0006-bind-governed-changes-to-git-objects.md). This
+> file preserves why pre-integration Judgment was chosen; the Proposal artifact
+> and fast-track mechanisms below are historical.
 
 The Instance must adapt — mutate, within the framework. Two models were considered.
 Darwinian: agents freely rewrite governed files and problems are culled after the

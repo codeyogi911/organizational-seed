@@ -4,6 +4,8 @@ state: stable
 title: Organizational Seed OKF canonical contract
 description: The shared, service-independent bundle contract instantiated by an organization grown from this Seed.
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Organizational Seed OKF canonical contract
@@ -44,6 +46,7 @@ repository at runtime.
   "source": {
     "root": "knowledge",
     "files": [
+      "ACCESS.md",
       "AUTHORING.md",
       "AUTHORITY.md",
       "CONTEXT.md",
@@ -56,27 +59,26 @@ repository at runtime.
       "goals",
       "lessons",
       "processes",
-      "proposals",
       "records",
       "roles",
       "work"
     ]
   },
   "type_rules": [
+    {"glob": "ACCESS.md", "type": "Access Policy"},
     {"glob": "AUTHORING.md", "type": "Authoring Rules"},
     {"glob": "AUTHORITY.md", "type": "Authority"},
     {"glob": "CONTEXT.md", "type": "Glossary"},
     {"glob": "KNOWLEDGE.md", "type": "Knowledge Model"},
     {"glob": "ORG.md", "type": "Organization"},
-    {"glob": "decisions/fast-track.md", "type": "Decision Ledger"},
+    {"glob": "decisions/_kind.md", "type": "kind-definition"},
+    {"glob": "decisions/**", "type": "Decision"},
     {"glob": "docs/adr/**", "type": "Architecture Decision"},
     {"glob": "docs/**", "type": "Reference"},
     {"glob": "goals/_kind.md", "type": "kind-definition"},
     {"glob": "goals/**", "type": "Goal"},
     {"glob": "lessons/**", "type": "Lesson"},
     {"glob": "processes/**", "type": "Process"},
-    {"glob": "proposals/0000-proposal-template.md", "type": "Proposal Template"},
-    {"glob": "proposals/**", "type": "Proposal"},
     {"glob": "roles/**", "type": "Role Template"},
     {"glob": "work/_active/**", "type": "Session Lease"},
     {"glob": "work/_kind.md", "type": "kind-definition"},
@@ -85,7 +87,7 @@ repository at runtime.
   "identity_overrides": {},
   "incompatible_field_overrides": {},
   "lifecycle": {
-    "draft_types": ["proposal"],
+    "draft_types": [],
     "draft_state_prefixes": ["draft", "proposed"],
     "deprecated_state_prefixes": ["retired", "superseded", "withdrawn"],
     "default": "stable"

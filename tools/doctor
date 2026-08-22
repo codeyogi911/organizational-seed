@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """seed doctor — immune surveillance for an instance.
 
-Lints an Organizational Seed instance: links resolve, kinds' required
-frontmatter present, fast-track ledger valid, leases fresh, applied
-proposals carry rulings. Exit 0 = clean, 1 = findings.
+Lints an Organizational Seed Instance: links resolve, Kinds' required
+frontmatter is present, repository-native Decisions carry exact bindings,
+leases are fresh, and governed paths have review gates. Exit 0 = clean,
+1 = findings.
 
 Usage: tools/doctor [path-to-instance-root]
 """
 import os, re, sys, time
 
-from knowledge_bundle import KnowledgeBundleError, parse_concept
+from knowledge_bundle import (
+    KnowledgeBundleError,
+    parse_concept,
+    target_diff_sha256,
+    yaml_safe_load_unique,
+)
 
 REPO_ROOT = os.path.realpath(sys.argv[1] if len(sys.argv) > 1 else ".")
 canonical_root = os.path.join(REPO_ROOT, "knowledge")
@@ -40,6 +46,20 @@ def frontmatter(path):
     except KnowledgeBundleError:
         return None
     return dict(parsed.fields) if parsed.fields is not None else None
+
+def parsed_frontmatter(path):
+    """Return scalar fields plus exact structured target values."""
+    try:
+        parsed = parse_concept(open(path, encoding="utf-8").read())
+        fields = dict(parsed.fields or {})
+        raw_targets = parsed.raw_fields.get("targets", "")
+        targets_yaml = "targets:\n" + "".join(
+            "  " + line.lstrip() for line in raw_targets.splitlines(keepends=True)
+        )
+        targets = yaml_safe_load_unique(targets_yaml).get("targets")
+        return fields, targets
+    except Exception:
+        return {}, None
 
 def operational_state(fm):
     """Read the domain lifecycle without confusing it with OKF status."""
@@ -93,12 +113,11 @@ def standing_knowledge_home(path):
         return False
     exact_homes = {
         os.path.join(ROOT, name) for name in
-        ("ORG.md", "KNOWLEDGE.md", "CONTEXT.md", "AUTHORITY.md", "AUTHORING.md")
+        ("ACCESS.md", "ORG.md", "KNOWLEDGE.md", "CONTEXT.md", "AUTHORITY.md", "AUTHORING.md")
     }
     exact_homes.update({
         os.path.join(ROOT, "processes", "_contract.md"),
-        os.path.join(ROOT, "proposals", "0000-proposal-template.md"),
-        os.path.join(ROOT, "decisions", "fast-track.md"),
+        os.path.join(ROOT, "decisions", "_kind.md"),
         os.path.join(ROOT, "docs", "write-discipline.md"),
     })
     process_home = bool(
@@ -183,6 +202,40 @@ def approval_receipt_date(path, lesson, disposition, receiver=None):
     body = open(path, encoding="utf-8").read()
     links = markdown_targets(path)
 
+    if (inside(decisions_dir, path)
+            and fm.get("governance-protocol") == "mainmind-exact-v1"):
+        fm, targets_value = parsed_frontmatter(path)
+        targets = targets_value if isinstance(targets_value, list) else []
+        lesson_value = os.path.relpath(lesson, ROOT)
+        receiver_value = os.path.relpath(receiver, ROOT) if receiver else None
+        exact_fields = (
+            concept_type(fm) == "decision"
+            and operational_state(fm) == "ruled"
+            and fm.get("ruling") == "yes"
+            and fm.get("outcome") == "approved"
+            and FOUNDER_IDENTITY.fullmatch(fm.get("ruled-by", ""))
+            and fm.get("lesson-outcome") == disposition
+            and fm.get("lesson") == lesson_value
+            and lesson_value in targets
+            and valid_date(fm.get("date"))
+        )
+        if disposition == "absorb":
+            exact_fields = bool(
+                exact_fields
+                and receiver_value
+                and fm.get("receiver") == receiver_value
+                and receiver_value in targets
+                and has_markdown_link(path, lesson)
+                and has_markdown_link(path, receiver)
+            )
+        else:
+            exact_fields = bool(
+                exact_fields
+                and "receiver" not in fm
+                and has_markdown_link(path, lesson, "closure-reason")
+            )
+        return fm.get("date") if exact_fields else None
+
     if path == os.path.join(decisions_dir, "fast-track.md"):
         for row in body.splitlines():
             if not row.startswith("|") or set(row.strip()) <= {"|", "-", " "}:
@@ -225,8 +278,8 @@ def approval_receipt_date(path, lesson, disposition, receiver=None):
         return None
 
     if inside(decisions_dir, path):
-        # A standalone Decision may close a Lesson, but it cannot authorize the
-        # conserved change required for absorption; that uses Proposal or fast-track.
+        # Legacy standalone Decisions may close a Lesson but cannot authorize
+        # the conserved mutation required for absorption.
         if disposition != "close":
             return None
         approved = (
@@ -253,10 +306,7 @@ LINK = re.compile(r"\]\(([^)#\s][^)]*)\)")
 
 # D0 — the Seed source ships runtime definitions, never its own runtime residue.
 if SEED_SOURCE:
-    allowed_seed_files = {
-        os.path.join("proposals", "0000-proposal-template.md"),
-        os.path.join("decisions", "fast-track.md"),
-    }
+    allowed_seed_files = set()
     for folder in ("goals", "work", "lessons", "proposals", "decisions"):
         folder_path = os.path.join(ROOT, folder)
         if not os.path.isdir(folder_path):
@@ -305,7 +355,265 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
         if missing:
             finding("kinds", p, f"missing required frontmatter: {', '.join(missing)}")
 
-# D3 — fast-track ledger rows carry a verbatim ruling
+# D3 — every Decision stays in decisions/. Generic organizational rulings use
+# a minimal schema and cannot claim governed bytes or Lesson lifecycle. The
+# explicit mainmind-exact-v1 protocol selects the complete portable mutation
+# envelope; its receipt intentionally omits its own commit SHA.
+decision_dir = os.path.join(ROOT, "decisions")
+MAINMIND_DECISION = re.compile(r"^mainmind-([a-z0-9](?:[a-z0-9-]{0,127}))\.md$")
+GENERIC_DECISION = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,127})\.md$")
+SHA40 = re.compile(r"^[a-f0-9]{40}$")
+SHA256 = re.compile(r"^[a-f0-9]{64}$")
+REPOSITORY = re.compile(r"^[a-z0-9_.-]+/[a-z0-9_.-]+$")
+BASE_REF = re.compile(r"^refs/heads/[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$")
+UTC_INSTANT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$")
+FOUNDER_IDENTITY = re.compile(
+    r"^Founder \(@([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)\), "
+    r"authenticated Mainmind session$"
+)
+
+def valid_utc_instant(value):
+    if not UTC_INSTANT.fullmatch(value or ""):
+        return False
+    try:
+        time.strptime(value[:19], "%Y-%m-%dT%H:%M:%S")
+        return True
+    except ValueError:
+        return False
+
+try:
+    vector_digest = target_diff_sha256([
+        {"operation": "create", "path": "records/😀.md", "was": None, "now": "created\n"},
+        {"operation": "update", "path": "records/\ue000.md", "was": "before\n", "now": "after\n"},
+        {"operation": "update", "path": "ORG.md", "was": "old\n", "now": "new\n"},
+        {"operation": "delete", "path": "records/old.md", "was": "retired\n", "now": None},
+    ])
+except KnowledgeBundleError:
+    vector_digest = ""
+if vector_digest != "758928cf3727e0bcc8d38e58e70da389fa01791ea9176858f5f59e7dd5c1154a":
+    finding("decision-contract", ROOT,
+            "target-diff SHA-256 implementation differs from the Mainmind cross-runtime vector")
+
+if os.path.isdir(decision_dir):
+    for path in md_files():
+        filename = os.path.basename(path)
+        text = open(path, encoding="utf-8").read()
+        summary = frontmatter(path) or {}
+        is_decision_member = inside(decision_dir, path) and filename != "_kind.md"
+        is_decision_type = concept_type(summary) == "decision"
+        if is_decision_member and not is_decision_type:
+            finding("decision-route", path,
+                    "every decisions/ member except _kind.md must declare type: decision")
+            continue
+        if is_decision_type and os.path.dirname(path) != decision_dir:
+            finding("decision-route", path,
+                    "a type: decision member must live directly under decisions/")
+            continue
+        if not is_decision_type:
+            continue
+        if summary.get("governance-protocol") != "mainmind-exact-v1":
+            required = {
+                "id", "type", "date", "ruled-by", "ruling", "state",
+                "outcome", "status", "access-scope", "write-class",
+            }
+            missing = sorted(required - set(summary))
+            reserved = {
+                "governance-protocol", "ruled-at", "repository", "base-ref",
+                "base-sha", "candidate-sha", "target-diff-sha256", "targets",
+                "lesson-outcome", "lesson", "receiver",
+            } & set(summary)
+            expected_pair = {"yes": "approved", "no": "rejected"}
+            generic_checks = [
+                (not missing,
+                 f"generic Decision is missing fields: {', '.join(missing)}"),
+                (not reserved,
+                 "generic Decision cannot claim governed mutation or Lesson lifecycle fields"),
+                (GENERIC_DECISION.fullmatch(filename)
+                 and summary.get("id") == os.path.splitext(filename)[0],
+                 "generic Decision id must match its safe filename"),
+                (summary.get("type") == "decision"
+                 and summary.get("state") == "ruled"
+                 and summary.get("status") == "stable",
+                 "generic Decision type, state, and status must be decision, ruled, and stable"),
+                (summary.get("ruling") in expected_pair
+                 and expected_pair.get(summary.get("ruling")) == summary.get("outcome"),
+                 "generic Decision ruling/outcome must be yes/approved or no/rejected"),
+                (valid_date(summary.get("date")),
+                 "generic Decision date must be YYYY-MM-DD"),
+                (meaningful_text(summary.get("ruled-by", "")),
+                 "generic Decision must name who ruled"),
+                (summary.get("write-class") == "ledger",
+                 "generic Decision must use write-class ledger"),
+                (summary.get("access-scope") in {"core", "support", "finance", "founder"},
+                 "generic Decision must use one frozen pilot access scope"),
+            ]
+            for valid, message in generic_checks:
+                if not valid:
+                    finding("decision-receipt", path, message)
+            continue
+        name_match = MAINMIND_DECISION.fullmatch(filename)
+        if os.path.dirname(path) != decision_dir or not name_match:
+            finding("decision-receipt", path,
+                    "Decision filename must use a top-level safe server-owned decisions/mainmind-<id>.md path")
+            continue
+        fm, targets_value = parsed_frontmatter(path)
+
+        required = {
+            "id", "type", "date", "ruled-by", "ruling", "ruled-at", "state",
+            "outcome", "governance-protocol", "repository", "base-ref", "base-sha", "candidate-sha", "target-diff-sha256",
+            "targets", "status", "access-scope", "write-class",
+        }
+        missing = sorted(required - set(fm))
+        if missing:
+            finding("decision-receipt", path,
+                    f"missing required binding fields: {', '.join(missing)}")
+            continue
+
+        candidate = fm["candidate-sha"]
+        base = fm["base-sha"]
+        digest = fm["target-diff-sha256"]
+        ruling = fm["ruling"]
+        outcome = fm["outcome"]
+        repository = fm["repository"]
+        base_ref = fm["base-ref"]
+        identity = FOUNDER_IDENTITY.fullmatch(fm["ruled-by"])
+        targets = targets_value if isinstance(targets_value, list) else []
+        expected_pair = {"yes": "approved", "no": "rejected"}
+        expected_id = os.path.splitext(filename)[0]
+        ref_tail = base_ref.removeprefix("refs/heads/")
+
+        checks = [
+            (fm["id"] == expected_id, "id must match the stable server-owned filename"),
+            (fm["governance-protocol"] == "mainmind-exact-v1",
+             "governance-protocol must be mainmind-exact-v1"),
+            (SHA40.fullmatch(candidate),
+             "candidate-sha must be a complete lowercase commit ID"),
+            (SHA40.fullmatch(base) and base != candidate,
+             "base-sha must be a distinct complete lowercase commit ID"),
+            (REPOSITORY.fullmatch(repository),
+             "repository must be a canonical lowercase owner/repository identity"),
+            (BASE_REF.fullmatch(base_ref) and all(
+                part not in {"", ".", ".."} for part in ref_tail.split("/")
+             ) and not ref_tail.endswith((".", ".lock", "/")),
+             "base-ref must be a safe immutable fully qualified branch ref"),
+            (SHA256.fullmatch(digest), "target-diff-sha256 must be a lowercase SHA-256 digest"),
+            (ruling in expected_pair and expected_pair.get(ruling) == outcome,
+             "ruling and outcome must be exactly yes/approved or no/rejected"),
+            (fm["type"] == "decision" and fm["state"] == "ruled" and fm["status"] == "stable",
+             "type, state, and status must be decision, ruled, and stable"),
+            (fm["write-class"] == "ledger", "a Decision receipt must use write-class ledger"),
+            (fm["access-scope"] in {"core", "support", "finance", "founder"},
+             "a Decision receipt must use one frozen pilot access scope"),
+            (bool(identity), "ruled-by must identify an authenticated Mainmind Founder session"),
+            (valid_utc_instant(fm["ruled-at"]) and fm["date"] == fm["ruled-at"][:10],
+             "date and ruled-at must name the same valid UTC ruling day"),
+            (bool(targets) and len(targets) == len(set(targets)) and all(
+                isinstance(target, str) and target and not target.startswith("/")
+                and "\0" not in target and ".." not in target.split("/")
+                and target.endswith(".md") for target in targets
+             ), "targets must be a non-empty distinct set of safe root-relative Markdown paths"),
+            (not ({"receipt-commit", "decision-sha", "integration-commit"} & set(fm)),
+             "the receipt must not contain a circular hash of itself or its later integration"),
+        ]
+        for valid, message in checks:
+            if not valid:
+                finding("decision-receipt", path, message)
+
+        lifecycle_keys = {"lesson-outcome", "lesson", "receiver"}
+        lifecycle_present = lifecycle_keys & set(fm)
+        if lifecycle_present:
+            disposition = fm.get("lesson-outcome", "")
+            lesson_value = fm.get("lesson", "")
+            receiver_value = fm.get("receiver", "")
+            lesson = rooted_path(lesson_value)
+            receiver = rooted_path(receiver_value)
+            decision_value = os.path.relpath(path, ROOT)
+            lesson_fm = frontmatter(lesson) if lesson and os.path.isfile(lesson) else {}
+            approved_lifecycle = ruling == "yes" and outcome == "approved"
+            lesson_valid = bool(
+                lesson
+                and os.path.isfile(lesson)
+                and inside(os.path.join(ROOT, "lessons"), lesson)
+                and concept_type(lesson_fm or {}) == "lesson"
+            )
+            if disposition == "absorb":
+                exact_lifecycle = (
+                    lifecycle_present == lifecycle_keys
+                    and lesson_valid
+                    and bool(receiver)
+                    and standing_knowledge_home(receiver)
+                    and lesson_value in targets
+                    and receiver_value in targets
+                    and has_markdown_link(path, lesson)
+                    and has_markdown_link(path, receiver)
+                    and operational_state(lesson_fm or {}) == "absorbed"
+                    and lesson_fm.get("absorbed-into") == receiver_value
+                    and lesson_fm.get("decided-by") == decision_value
+                    and has_markdown_link(lesson, receiver)
+                    and has_markdown_link(lesson, path)
+                )
+                lifecycle_message = (
+                    "absorb requires exact Lesson and receiver fields, targets, and body links"
+                )
+            elif disposition == "close":
+                exact_lifecycle = (
+                    lifecycle_present == {"lesson-outcome", "lesson"}
+                    and lesson_valid
+                    and lesson_value in targets
+                    and has_markdown_link(path, lesson, "closure-reason")
+                    and operational_state(lesson_fm or {}) == "retired"
+                    and lesson_fm.get("closed-by") == decision_value
+                    and has_markdown_link(lesson, path)
+                    and bool(re.search(
+                        r"^##\s+Closure reason\s*$[\s\S]*?\S",
+                        open(lesson, encoding="utf-8").read() if lesson_valid else "",
+                        re.M | re.I,
+                    ))
+                )
+                lifecycle_message = (
+                    "close requires an exact Lesson target and closure-reason body link, without receiver"
+                )
+            else:
+                exact_lifecycle = False
+                lifecycle_message = "lesson-outcome must be exactly absorb or close"
+            if not approved_lifecycle:
+                finding("decision-receipt", path,
+                        "Lesson lifecycle fields may appear only on a yes/approved Decision")
+            if not exact_lifecycle:
+                finding("decision-receipt", path, lifecycle_message)
+
+        founder = identity.group(1) if identity else ""
+        verdict = "Yes" if ruling == "yes" else "No"
+        exact_heading = "Exact candidate" if outcome == "approved" else "Exact candidate refused"
+        becomes_heading = "What becomes true" if outcome == "approved" else "What would have become true"
+        target_label = "Target" if outcome == "approved" else "Target left unchanged"
+        body_checks = [
+            (re.search(rf"^## Ruling\s*$[\s\S]*?^> {verdict}\.\s*$", text, re.M),
+             "body must preserve the exact yes/no ruling"),
+            (re.search(rf"^— Founder \(@{re.escape(founder)}\), {re.escape(fm['ruled-at'])}$", text, re.M),
+             "body attribution must match the authenticated Founder and ruling time"),
+            (re.search(rf"^## {re.escape(becomes_heading)}\s*$", text, re.M),
+             "body must preserve what the ruling would make true"),
+            (re.search(rf"^## {re.escape(exact_heading)}\s*$", text, re.M),
+             "body must name the approved or refused exact candidate"),
+            (f"- Base commit: `{base}`" in text, "body base commit must match frontmatter"),
+            (f"- Repository: `{repository}`" in text,
+             "body repository must match frontmatter"),
+            (f"- Base ref: `{base_ref}`" in text,
+             "body base ref must match frontmatter"),
+            (f"- Candidate commit: `{candidate}`" in text,
+             "body candidate commit must match frontmatter"),
+            (f"- Target diff SHA-256: `{digest}`" in text,
+             "body target digest must match frontmatter"),
+            (all(f"- {target_label}: `{target}`" in text for target in targets),
+             "body target list must match frontmatter"),
+        ]
+        for valid, message in body_checks:
+            if not valid:
+                finding("decision-receipt", path, message)
+
+# Legacy Instance compatibility only. The Seed no longer ships or documents
+# the fast-track ledger; old Instances can still be checked while they migrate.
 ledger = os.path.join(ROOT, "decisions", "fast-track.md")
 if os.path.exists(ledger):
     for i, ln in enumerate(open(ledger, encoding="utf-8"), 1):
@@ -377,13 +685,74 @@ else:
         f"{knowledge_prefix}/CONTEXT.md", f"{knowledge_prefix}/AUTHORITY.md",
         f"{knowledge_prefix}/AUTHORING.md", f"{knowledge_prefix}/processes/",
         f"{knowledge_prefix}/roles/", f"{knowledge_prefix}/**/_kind.md",
-        f"{knowledge_prefix}/proposals/0000-proposal-template.md",
-        f"{knowledge_prefix}/decisions/fast-track.md",
         f"{knowledge_prefix}/docs/write-discipline.md", "/.github/CODEOWNERS",
     }
+    if os.path.isfile(os.path.join(ROOT, "ACCESS.md")):
+        required_owners.add(f"{knowledge_prefix}/ACCESS.md")
+    if os.path.isfile(os.path.join(REPO_ROOT, ".mainmind.json")):
+        required_owners.add("/.mainmind.json")
     for missing in sorted(required_owners - covered):
         finding("enforce", codeowner_paths[0],
                 f"conserved path '{missing}' is missing from CODEOWNERS")
+
+# D6a — an ACCESS.md policy activates explicit classification for every
+# canonical Knowledge node. Missing metadata fails closed in enforcing Mounts,
+# so the doctor reports it before a teammate discovers a mysteriously empty
+# result. The vocabulary belongs to ACCESS.md; these are its mechanically
+# valid field values.
+access_policy = os.path.join(ROOT, "ACCESS.md")
+if os.path.isfile(access_policy):
+    policy_fields = frontmatter(access_policy) or {}
+    valid_access_scopes = {
+        value.strip() for value in policy_fields.get("access-scopes", "").split(",")
+        if value.strip()
+    }
+    valid_write_classes = {
+        value.strip() for value in policy_fields.get("write-classes", "").split(",")
+        if value.strip()
+    }
+    frozen_access_scopes = {"core", "support", "finance", "founder"}
+    frozen_write_classes = {"conserved", "ruled", "ledger"}
+    if valid_access_scopes != frozen_access_scopes:
+        finding("access-policy", access_policy,
+                "access-scopes must be exactly core, support, finance, founder during the pilot")
+    if valid_write_classes != frozen_write_classes:
+        finding("access-policy", access_policy,
+                "write-classes must be exactly conserved, ruled, ledger during the pilot")
+    if not valid_access_scopes:
+        finding("access-policy", access_policy,
+                "access-scopes must declare the policy vocabulary")
+    if not valid_write_classes:
+        finding("access-policy", access_policy,
+                "write-classes must declare the policy vocabulary")
+    reserved_machinery = {
+        os.path.join(ROOT, "index.md"),
+        os.path.join(ROOT, "processes", "index.md"),
+    }
+    for dirpath, dirnames, filenames in os.walk(ROOT):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        for filename in filenames:
+            path = os.path.join(dirpath, filename)
+            if not filename.endswith(".md") or path in reserved_machinery:
+                continue
+            fm = frontmatter(path) or {}
+            scope = fm.get("access-scope", "")
+            write_class = fm.get("write-class", "")
+            missing = [
+                field for field, value in (
+                    ("access-scope", scope), ("write-class", write_class)
+                ) if not value
+            ]
+            if missing:
+                finding("access-policy", path,
+                        f"missing {' and '.join(missing)}; ACCESS.md requires explicit classification")
+                continue
+            if scope not in valid_access_scopes:
+                finding("access-policy", path,
+                        f"unknown access-scope '{scope}'")
+            if write_class not in valid_write_classes:
+                finding("access-policy", path,
+                        f"unknown write-class '{write_class}'")
 
 # D7 — Process identity, shape, lifecycle, and discovery stay aligned. This
 # catches mechanical drift only; AUTHORING.md still requires semantic review.

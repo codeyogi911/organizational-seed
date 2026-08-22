@@ -1,6 +1,8 @@
 ---
 type: Knowledge Model
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # Knowledge model
 
@@ -67,8 +69,9 @@ in the wrong place.
 
 A Knowledge class follows responsibility, not file extension. A `_kind.md`
 definition is Standing Knowledge even though the Record members beside it are
-Organizational Memory. A Proposal is Working State while awaiting Judgment;
-its recorded ruling becomes Organizational Memory after resolution.
+Organizational Memory. A governed candidate branch is Working State while
+awaiting Judgment; its repository-native Decision becomes Organizational
+Memory after resolution.
 
 ## What is governed
 
@@ -77,13 +80,15 @@ is conserved because altering what future work obeys requires organizational
 Judgment. In this Seed that includes:
 
 - organizational purpose and the knowledge model itself;
-- Authority and Role charters;
+- Authority, access classification, and Role charters;
 - vocabulary and Kind definitions;
 - active Processes and their contracts;
 - authoring, Lesson-lifecycle, and governed-change rules.
 
 The repository paths and approval tracks are defined once in
-[ORG.md](ORG.md). [AUTHORING.md](AUTHORING.md) supplies the review questions.
+[ORG.md](ORG.md). [ACCESS.md](ACCESS.md) defines discovery scopes and mutation
+ceremonies without granting Authority. [AUTHORING.md](AUTHORING.md) supplies
+the review questions.
 
 ## How the organization evolves
 

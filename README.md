@@ -40,8 +40,8 @@ private.
 **v0.2** folds back what sustained live operation taught: chartered agent Roles
 (`knowledge/roles/_charter-template.md` — narrow grants, hard boundaries, probation), the
 concurrency convention (session leases + fencing + deadman checks; `knowledge/work/_active/`),
-two-tier governance (full Proposals only where power grows; `knowledge/decisions/fast-track.md`
-for everything else), and the write discipline that makes crashed or colliding agents
+exact governed candidates with repository-native Founder Decisions, and the
+write discipline that makes crashed or colliding agents
 recoverable by design ([knowledge/docs/write-discipline.md](knowledge/docs/write-discipline.md)). All of
 it was forced by real failures — concurrent agents in one ledger, mid-write crashes,
 silent schedule deaths — not designed in advance.
@@ -93,10 +93,10 @@ the Instance exists, its copy is sovereign: a later Seed update is only a
 candidate for review and is never applied automatically.
 
 This repository is the source of the Seed, not a live Instance. Seed
-maintainers change the template through branches and reviewed pull requests;
-they do not create an in-template Proposal to authorize editing the template.
+maintainers change the pattern through branches and reviewed pull requests;
+they do not create an in-template organizational Decision to authorize editing it.
 Seed-maintenance evidence stays in issues, PRs, Git history, and ADRs rather
-than live Task, Lesson, Proposal, or organizational Decision entries. Those
+than live Task, Lesson, or organizational Decision entries. Those
 runtime rules become live when the Seed is instantiated.
 
 ## Principles that keep it honest
@@ -105,8 +105,8 @@ runtime rules become live when the Seed is instantiated.
   state; they never own it. Delete every mount and the organization still runs.
   ([ADR 0001](knowledge/docs/adr/0001-bindings-not-homes.md))
 - **Standing Knowledge is governed.** In an Instance, anything future work must
-  obey or interpret consistently changes only through its approved Proposal or
-  fast-track path. Seed source changes use maintainer PR review.
+  obey or interpret consistently changes only through an exact candidate and
+  authenticated Founder Decision. Seed source changes use maintainer PR review.
 - **Access is not permission.** A connected tool grants nothing; only `knowledge/AUTHORITY.md`
   does. External writes and spending always stop at a human boundary.
 - **Evidence is a citation discipline.** A claim without a citation is unverified by
@@ -131,16 +131,39 @@ runtime rules become live when the Seed is instantiated.
 5. **Write one process** for one real recurring pain, using
    [knowledge/processes/example-weekly-review.md](knowledge/processes/example-weekly-review.md) as the
    shape. Put the candidate under `knowledge/work/process-drafts/`, then use
-   [change Standing Knowledge](knowledge/processes/change-standing-knowledge.md) with a
-   full Proposal and Founder ruling to make it active under `knowledge/processes/`.
+   [change Standing Knowledge](knowledge/processes/change-standing-knowledge.md) with an
+   exact candidate diff and Founder ruling to make it active under `knowledge/processes/`.
 6. **Run the loop once** — intent → Task under one Process → evidence-cited
    output → Checks → your Judgment → Lesson. Link a Goal only when relevant.
-   Review the Lesson when its evidence warrants it; do not create a Proposal
-   merely because a Lesson exists.
+   Review the Lesson when its evidence warrants it; do not create a governed
+   candidate merely because a Lesson exists.
 7. **Point your agent at it.** Any coding agent that reads `AGENTS.md` (or
    `CLAUDE.md`) lands in `knowledge/ORG.md` and can find the organization, its
    Authority, Goals, Tasks, and Processes. Switch harnesses any time — the
    folder is the organization.
+
+### Optional: serve scoped knowledge through Mainmind
+
+This repository is also the one canonical starter for a Mainmind-backed team;
+there is no separate Mainmind company seed. The included `.mainmind.json` Mount
+projects every policy-bearing node in the `knowledge/` bundle, including the
+whole `processes/` directory so future active and retired Instance Processes do
+not require a Mount edit, while
+[`knowledge/ACCESS.md`](knowledge/ACCESS.md) defines repository-native access
+scopes and write classes. Install Mainmind on an Instance when teammates should
+work through scoped MCP tools without receiving a Git checkout or GitHub
+credential.
+
+Mainmind is Machinery, not the organization. Removing `.mainmind.json` or the
+GitHub App disconnects that Mount without deleting Knowledge. Conversely,
+installing it grants no operational Authority: `knowledge/AUTHORITY.md` and the
+active Process remain binding. Run `tools/doctor` before connecting an Instance;
+once `ACCESS.md` exists, every Markdown node in the canonical bundle must carry
+an explicit `access-scope` and `write-class`. Reserved generated indexes remain
+Machinery rather than Knowledge. `processes/index.md` is projected for path
+continuity but has no Knowledge classification, so a scoped Mount must fail
+closed instead of disclosing it. The conserved Process contract and every
+active, retired, or draft Process retain their own explicit classification.
 
 ## Migrating an existing business
 
@@ -157,11 +180,13 @@ the gaps you find. The conserved home outlives every tool that visits it.
 
 ```
 knowledge/ORG.md                      ← your canonical entry (template)
+knowledge/ACCESS.md                   ← discovery scopes and mutation ceremonies
 knowledge/KNOWLEDGE.md                ← three Knowledge classes, Machinery boundary, evolution map
 knowledge/AUTHORITY.md                ← the rulebook (template; reserved powers ready)
 knowledge/CONTEXT.md                  ← the glossary of seed terms (keep it)
 knowledge/goals/_kind.md              ← Goal definition; Instances create their own Goals
 AGENTS.md / CLAUDE.md       ← thin mounts for any coding agent
+.mainmind.json              ← optional scoped MCP Mount over knowledge/
 knowledge/processes/example-weekly-review.md   ← a worked example process
 knowledge/processes/handle-uncovered-work.md    ← safe route when no Process fits
 knowledge/processes/review-lessons.md           ← Lesson disposition without queue pressure
@@ -172,8 +197,7 @@ knowledge/lessons/_kind.md                      ← Lesson routing and completio
 knowledge/work/_kind.md                         ← Task definition and optional Goal link
 knowledge/AUTHORING.md                          ← rules for durable knowledge changes
 knowledge/records/systems/_kind.md    ← the Kind that makes adoption = acknowledgment
-knowledge/proposals/0000-proposal-template.md  ← the mutation form (reason, evidence,
-                              benefit, validation, rollback, ruling)
+knowledge/decisions/_kind.md          ← portable exact-candidate Founder receipt contract
 knowledge/docs/adr/                   ← why the pattern is shaped this way
 ```
 

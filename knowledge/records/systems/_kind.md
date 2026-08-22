@@ -3,6 +3,8 @@ id: _kind
 type: kind-definition
 of: system
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Kind: system

@@ -3,6 +3,8 @@ state: accepted
 supersedes: 0001 change-route sentence; 0002 mechanism description
 type: Architecture Decision
 status: stable
+access-scope: core
+write-class: ruled
 ---
 
 # Classify knowledge before changing it

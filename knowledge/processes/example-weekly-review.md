@@ -5,6 +5,8 @@ state: example
 judge: Founder
 description: Adapt this worked example into an Instance's first recurring Process.
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 > **Template note:** a worked example showing the shape every Process shares —

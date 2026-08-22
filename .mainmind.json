@@ -1,0 +1,24 @@
+{
+  "projection": {
+    "prefix": "knowledge",
+    "replace": true,
+    "root": [
+      "ACCESS.md",
+      "AUTHORING.md",
+      "AUTHORITY.md",
+      "CONTEXT.md",
+      "KNOWLEDGE.md",
+      "ORG.md"
+    ],
+    "dirs": [
+      "decisions",
+      "docs",
+      "goals",
+      "lessons",
+      "processes",
+      "records",
+      "roles",
+      "work"
+    ]
+  }
+}
