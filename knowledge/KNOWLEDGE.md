@@ -69,8 +69,9 @@ in the wrong place.
 
 A Knowledge class follows responsibility, not file extension. A `_kind.md`
 definition is Standing Knowledge even though the Record members beside it are
-Organizational Memory. A Proposal is Working State while awaiting Judgment;
-its recorded ruling becomes Organizational Memory after resolution.
+Organizational Memory. A governed candidate branch is Working State while
+awaiting Judgment; its repository-native Decision becomes Organizational
+Memory after resolution.
 
 ## What is governed
 

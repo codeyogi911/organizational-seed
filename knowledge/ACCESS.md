@@ -10,10 +10,9 @@ access-scopes:
   - finance
   - founder
 write-classes:
-  - ledger
   - conserved
   - ruled
-  - derived
+  - ledger
 ---
 # Knowledge access and write policy
 
@@ -52,9 +51,6 @@ The `write-classes` frontmatter list is the mechanically readable vocabulary.
 - `conserved` — propose an exact diff and integrate it only after the ruling
   required by [ORG.md](ORG.md) and [AUTHORITY.md](AUTHORITY.md).
 - `ruled` — change only through the dedicated ruling path owned by the Founder.
-- `derived` — regenerate from canonical sources; do not hand-edit it as
-  independent Knowledge.
-
 Every Knowledge node declares exactly one `write-class`. A write class selects
 the mutation ceremony; it never widens who may perform that ceremony.
 
@@ -62,9 +58,11 @@ the mutation ceremony; it never widens who may perform that ceremony.
 
 The Seed deliberately starts every shipped node in `core`; an Instance must
 reclassify sensitive additions before granting teammates access. Constitutional
-files and ruling ledgers are `ruled`, Standing Knowledge is `conserved`, and
-mechanical indexes are `derived`. Runtime members use the class required by
-their Kind and Process rather than inheriting from a directory name.
+files are `ruled`, Standing Knowledge definitions are `conserved`, and
+append-only organizational receipts are `ledger`. Mechanical indexes are
+Machinery and therefore carry no Knowledge write class. Runtime members use the
+class required by their Kind and Process rather than inheriting from a
+directory name.
 
 `tools/doctor` checks this policy mechanically. Any Mount may compile these
 fields into enforcement backstops, but no Mount owns their meaning.

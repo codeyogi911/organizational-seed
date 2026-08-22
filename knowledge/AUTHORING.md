@@ -35,8 +35,10 @@ Before approving new or materially changed Standing Knowledge:
    or exceptions are named explicitly.
 4. Confirm Organizational Memory remains truthful; supersede history instead
    of rewriting it.
-5. Confirm the governance track matches the Authority effect: full Proposal
-   for new or wider power, fast-track for no expansion.
+5. Confirm the governed candidate names its complete target set and exact
+   before/after bytes. Power-expanding and non-expanding changes use the same
+   exact-candidate Founder Decision contract; Authority effect never lowers the
+   receipt standard.
 6. Run the mechanical checks and review the exact Git diff.
 7. In an Instance, confirm the exact change carries the Founder ruling required
    by `ORG.md` and `AUTHORITY.md`. In the Seed source, confirm the branch or

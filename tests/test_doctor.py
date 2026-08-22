@@ -184,6 +184,153 @@ class DoctorTests(unittest.TestCase):
             """,
         )
 
+    def add_mainmind_decision(
+        self,
+        root,
+        *,
+        candidate="2" * 40,
+        base="1" * 40,
+        digest="3" * 64,
+        ruling="yes",
+        outcome="approved",
+    ):
+        suffix = candidate[:12]
+        return self.write(
+            root,
+            f"decisions/mainmind-{suffix}.md",
+            f'''
+            ---
+            id: "mainmind-{suffix}"
+            type: decision
+            date: 2026-08-22
+            ruled-by: "Founder (@founder-user), authenticated Mainmind session"
+            ruling: "{ruling}"
+            ruled-at: "2026-08-22T10:11:12.000Z"
+            state: ruled
+            outcome: {outcome}
+            base-sha: "{base}"
+            candidate-sha: "{candidate}"
+            target-diff-sha256: "{digest}"
+            targets:
+              - "processes/review-lessons.md"
+            status: stable
+            access-scope: core
+            write-class: ledger
+            ---
+
+            # Decision: make Lesson receipts portable
+
+            ## Ruling
+
+            > {"Yes" if ruling == "yes" else "No"}.
+            >
+            > Keep the exact candidate auditable.
+
+            — Founder (@founder-user), 2026-08-22T10:11:12.000Z
+
+            ## {"What becomes true" if outcome == "approved" else "What would have become true"}
+
+            - Lesson dispositions have a repository-native receipt.
+
+            ## {"Exact candidate" if outcome == "approved" else "Exact candidate refused"}
+
+            - Base commit: `{base}`
+            - Candidate commit: `{candidate}`
+            - Target diff SHA-256: `{digest}`
+            - {"Target" if outcome == "approved" else "Target left unchanged"}: `processes/review-lessons.md`
+
+            ## Integration
+
+            {"Mainmind may land only an ordinary merge commit that retains the approved candidate and this Decision child commit in repository ancestry." if outcome == "approved" else "Only this Decision receipt lands on the canonical branch. The refused candidate remains outside canonical history."}
+            ''',
+        )
+
+    def test_mainmind_decision_receipt_is_valid_in_a_plain_instance(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_mainmind_decision(root)
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_mainmind_rejection_receipt_is_valid_without_landing_candidate_bytes(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_mainmind_decision(root, ruling="no", outcome="rejected")
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_mainmind_decision_receipt_requires_exact_binding_fields(self):
+        cases = {
+            "candidate suffix": ("candidate-sha: \"" + "2" * 40 + "\"", "candidate-sha: \"" + "4" * 40 + "\""),
+            "target digest": ("target-diff-sha256: \"" + "3" * 64 + "\"", "target-diff-sha256: \"short\""),
+            "ruling outcome": ("outcome: approved", "outcome: rejected"),
+            "circular receipt hash": ("state: ruled", "state: ruled\nreceipt-commit: \"" + "5" * 40 + "\""),
+        }
+        for name, (before, after) in cases.items():
+            with self.subTest(name=name):
+                tmp, root = self.make_instance()
+                self.addCleanup(tmp.cleanup)
+                decision = self.add_mainmind_decision(root)
+                decision.write_text(
+                    decision.read_text(encoding="utf-8").replace(before, after),
+                    encoding="utf-8",
+                )
+
+                result = self.run_doctor(root)
+
+                self.assertEqual(1, result.returncode)
+                self.assertIn("[decision-receipt]", result.stdout)
+
+    def test_mainmind_decision_cannot_evade_validation_with_a_malformed_filename(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        decision = self.add_mainmind_decision(root)
+        decision.rename(decision.with_name("mainmind-not-a-candidate.md"))
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[decision-receipt]", result.stdout)
+        self.assertIn("filename", result.stdout)
+
+    def test_access_policy_uses_the_frozen_mainmind_pilot_vocabulary(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "ACCESS.md",
+            """
+            ---
+            type: Access Policy
+            access-scope: core
+            write-class: ruled
+            access-scopes:
+              - core
+              - support
+              - finance
+              - founder
+              - legal
+            write-classes:
+              - conserved
+              - ruled
+              - ledger
+              - derived
+            ---
+
+            # Knowledge access
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("exactly core, support, finance, founder", result.stdout)
+        self.assertIn("exactly conserved, ruled, ledger", result.stdout)
+
     def test_pending_lesson_is_reported_without_failing(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
@@ -231,7 +378,7 @@ class DoctorTests(unittest.TestCase):
         self.assertIn("records/audit/log.md", result.stdout)
         self.assertIn("missing access-scope and write-class", result.stdout)
 
-    def test_access_policy_frontmatter_owns_the_allowed_vocabulary(self):
+    def test_access_policy_cannot_expand_the_frozen_pilot_vocabulary(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         access = self.write(
@@ -256,10 +403,8 @@ class DoctorTests(unittest.TestCase):
 
         result = self.run_doctor(root)
 
-        self.assertNotIn(
-            f"{access.relative_to(root)}: unknown access-scope 'legal'",
-            result.stdout,
-        )
+        self.assertEqual(1, result.returncode)
+        self.assertIn("exactly core, support, finance, founder", result.stdout)
 
     def test_active_access_policy_rejects_unknown_policy_values(self):
         tmp, root = self.make_instance()

@@ -30,7 +30,8 @@ claimed inside any other document is invalid.
 
 ## Operator — granted freely
 
-> Template note: start narrow; expand only via Proposal. These defaults are safe.
+> Template note: start narrow; expand only through an exact governed candidate
+> and Founder Decision. These defaults are safe.
 
 - Read anything in the repo
 - Create Tasks and perform them within their Process
@@ -38,7 +39,8 @@ claimed inside any other document is invalid.
   Kind permits it and the new source and `as-of` are recorded
 - Append evidence, receipts, lifecycle fields, and superseding corrections to
   Organizational Memory; never rewrite an established historical claim
-- Draft outputs and Proposals (writing is free — applying one needs approval)
+- Draft outputs and governed candidates (writing is free — integrating one
+  needs approval)
 - Run local read-only tooling; make local commits
 - Create Tasks and optionally link an active Goal; append linked progress
   evidence without changing that Goal's outcome or lifecycle
@@ -48,11 +50,11 @@ claimed inside any other document is invalid.
 - Anything on the reserved-powers list
 - Changing Standing Knowledge — only through
   [change Standing Knowledge](processes/change-standing-knowledge.md) and the
-  full Proposal or fast-track path defined in [ORG.md](ORG.md)
+  exact-candidate Decision path defined in [ORG.md](ORG.md)
 - Touching any external system beyond grants written here (each grant should name
-  the system record it covers, the exact scope, and the proposal that granted it —
+  the system record it covers, the exact scope, and the Decision that granted it —
   e.g. *"read tickets on [helpdesk]; writes to X and Y only, logged before → after;
-  sending stays reserved — granted via Proposal NNNN"*)
+  sending stays reserved — granted via Decision mainmind-…"*)
 
 ## Enforcement — honest statement
 

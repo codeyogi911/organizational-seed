@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """seed doctor — immune surveillance for an instance.
 
-Lints an Organizational Seed instance: links resolve, kinds' required
-frontmatter present, fast-track ledger valid, leases fresh, applied
-proposals carry rulings. Exit 0 = clean, 1 = findings.
+Lints an Organizational Seed Instance: links resolve, Kinds' required
+frontmatter is present, repository-native Decisions carry exact bindings,
+leases are fresh, and governed paths have review gates. Exit 0 = clean,
+1 = findings.
 
 Usage: tools/doctor [path-to-instance-root]
 """
 import os, re, sys, time
 
-from knowledge_bundle import KnowledgeBundleError, parse_concept
+from knowledge_bundle import (
+    KnowledgeBundleError,
+    parse_concept,
+    target_diff_sha256,
+    yaml_safe_load_unique,
+)
 
 REPO_ROOT = os.path.realpath(sys.argv[1] if len(sys.argv) > 1 else ".")
 canonical_root = os.path.join(REPO_ROOT, "knowledge")
@@ -97,8 +103,7 @@ def standing_knowledge_home(path):
     }
     exact_homes.update({
         os.path.join(ROOT, "processes", "_contract.md"),
-        os.path.join(ROOT, "proposals", "0000-proposal-template.md"),
-        os.path.join(ROOT, "decisions", "fast-track.md"),
+        os.path.join(ROOT, "decisions", "_kind.md"),
         os.path.join(ROOT, "docs", "write-discipline.md"),
     })
     process_home = bool(
@@ -225,8 +230,8 @@ def approval_receipt_date(path, lesson, disposition, receiver=None):
         return None
 
     if inside(decisions_dir, path):
-        # A standalone Decision may close a Lesson, but it cannot authorize the
-        # conserved change required for absorption; that uses Proposal or fast-track.
+        # Legacy standalone Decisions may close a Lesson but cannot authorize
+        # the conserved mutation required for absorption.
         if disposition != "close":
             return None
         approved = (
@@ -253,10 +258,7 @@ LINK = re.compile(r"\]\(([^)#\s][^)]*)\)")
 
 # D0 — the Seed source ships runtime definitions, never its own runtime residue.
 if SEED_SOURCE:
-    allowed_seed_files = {
-        os.path.join("proposals", "0000-proposal-template.md"),
-        os.path.join("decisions", "fast-track.md"),
-    }
+    allowed_seed_files = set()
     for folder in ("goals", "work", "lessons", "proposals", "decisions"):
         folder_path = os.path.join(ROOT, folder)
         if not os.path.isdir(folder_path):
@@ -305,7 +307,148 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
         if missing:
             finding("kinds", p, f"missing required frontmatter: {', '.join(missing)}")
 
-# D3 — fast-track ledger rows carry a verbatim ruling
+# D3 — repository-native Mainmind Decisions carry a complete portable ruling
+# envelope. The receipt intentionally omits its own commit SHA: its bytes must
+# be deterministic before Git creates the receipt commit.
+decision_dir = os.path.join(ROOT, "decisions")
+MAINMIND_DECISION = re.compile(r"^mainmind-([a-f0-9]{12})\.md$")
+SHA40 = re.compile(r"^[a-f0-9]{40}$")
+SHA256 = re.compile(r"^[a-f0-9]{64}$")
+UTC_INSTANT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$")
+FOUNDER_IDENTITY = re.compile(
+    r"^Founder \(@([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)\), "
+    r"authenticated Mainmind session$"
+)
+
+def valid_utc_instant(value):
+    if not UTC_INSTANT.fullmatch(value or ""):
+        return False
+    try:
+        time.strptime(value[:19], "%Y-%m-%dT%H:%M:%S")
+        return True
+    except ValueError:
+        return False
+
+try:
+    vector_digest = target_diff_sha256([
+        {"operation": "create", "path": "records/😀.md", "was": None, "now": "created\n"},
+        {"operation": "update", "path": "records/\ue000.md", "was": "before\n", "now": "after\n"},
+        {"operation": "update", "path": "ORG.md", "was": "old\n", "now": "new\n"},
+    ])
+except KnowledgeBundleError:
+    vector_digest = ""
+if vector_digest != "f4ba5e40856c5a71a9233dfb9c59789ceed564e059412e4480e33b8b1ac6f3e7":
+    finding("decision-contract", ROOT,
+            "target-diff SHA-256 implementation differs from the Mainmind cross-runtime vector")
+
+if os.path.isdir(decision_dir):
+    for filename in os.listdir(decision_dir):
+        if not filename.endswith(".md") or filename in {"_kind.md", "fast-track.md"}:
+            continue
+        path = os.path.join(decision_dir, filename)
+        text = open(path, encoding="utf-8").read()
+        summary = frontmatter(path) or {}
+        is_mainmind_receipt = (
+            filename.startswith("mainmind-")
+            or "authenticated Mainmind session" in summary.get("ruled-by", "")
+        )
+        if not is_mainmind_receipt:
+            continue
+        name_match = MAINMIND_DECISION.fullmatch(filename)
+        if not name_match:
+            finding("decision-receipt", path,
+                    "Mainmind Decision filename must contain the first 12 lowercase candidate SHA characters")
+            continue
+        try:
+            parsed = parse_concept(text)
+            fm = dict(parsed.fields or {})
+            raw_targets = parsed.raw_fields.get("targets", "")
+            targets_yaml = "targets:\n" + "".join(
+                "  " + line for line in raw_targets.splitlines(keepends=True)
+            )
+            targets_value = yaml_safe_load_unique(targets_yaml).get("targets")
+        except Exception:
+            fm = {}
+            targets_value = None
+
+        required = {
+            "id", "type", "date", "ruled-by", "ruling", "ruled-at", "state",
+            "outcome", "base-sha", "candidate-sha", "target-diff-sha256",
+            "targets", "status", "access-scope", "write-class",
+        }
+        missing = sorted(required - set(fm))
+        if missing:
+            finding("decision-receipt", path,
+                    f"missing required binding fields: {', '.join(missing)}")
+            continue
+
+        candidate = fm["candidate-sha"]
+        base = fm["base-sha"]
+        digest = fm["target-diff-sha256"]
+        ruling = fm["ruling"]
+        outcome = fm["outcome"]
+        identity = FOUNDER_IDENTITY.fullmatch(fm["ruled-by"])
+        targets = targets_value if isinstance(targets_value, list) else []
+        expected_pair = {"yes": "approved", "no": "rejected"}
+        expected_id = f"mainmind-{name_match.group(1)}"
+
+        checks = [
+            (fm["id"] == expected_id, "id and filename must use the candidate SHA prefix"),
+            (SHA40.fullmatch(candidate) and candidate.startswith(name_match.group(1)),
+             "candidate-sha must be lowercase, complete, and match the filename"),
+            (SHA40.fullmatch(base) and base != candidate,
+             "base-sha must be a distinct complete lowercase commit ID"),
+            (SHA256.fullmatch(digest), "target-diff-sha256 must be a lowercase SHA-256 digest"),
+            (ruling in expected_pair and expected_pair.get(ruling) == outcome,
+             "ruling and outcome must be exactly yes/approved or no/rejected"),
+            (fm["type"] == "decision" and fm["state"] == "ruled" and fm["status"] == "stable",
+             "type, state, and status must be decision, ruled, and stable"),
+            (fm["write-class"] == "ledger", "a Decision receipt must use write-class ledger"),
+            (fm["access-scope"] in {"core", "support", "finance", "founder"},
+             "a Decision receipt must use one frozen pilot access scope"),
+            (bool(identity), "ruled-by must identify an authenticated Mainmind Founder session"),
+            (valid_utc_instant(fm["ruled-at"]) and fm["date"] == fm["ruled-at"][:10],
+             "date and ruled-at must name the same valid UTC ruling day"),
+            (bool(targets) and len(targets) == len(set(targets)) and all(
+                isinstance(target, str) and target and not target.startswith("/")
+                and "\0" not in target and ".." not in target.split("/")
+                and target.endswith(".md") for target in targets
+             ), "targets must be a non-empty distinct set of safe root-relative Markdown paths"),
+            (not ({"receipt-commit", "decision-sha", "integration-commit"} & set(fm)),
+             "the receipt must not contain a circular hash of itself or its later integration"),
+        ]
+        for valid, message in checks:
+            if not valid:
+                finding("decision-receipt", path, message)
+
+        founder = identity.group(1) if identity else ""
+        verdict = "Yes" if ruling == "yes" else "No"
+        exact_heading = "Exact candidate" if outcome == "approved" else "Exact candidate refused"
+        becomes_heading = "What becomes true" if outcome == "approved" else "What would have become true"
+        target_label = "Target" if outcome == "approved" else "Target left unchanged"
+        body_checks = [
+            (re.search(rf"^## Ruling\s*$[\s\S]*?^> {verdict}\.\s*$", text, re.M),
+             "body must preserve the exact yes/no ruling"),
+            (re.search(rf"^— Founder \(@{re.escape(founder)}\), {re.escape(fm['ruled-at'])}$", text, re.M),
+             "body attribution must match the authenticated Founder and ruling time"),
+            (re.search(rf"^## {re.escape(becomes_heading)}\s*$", text, re.M),
+             "body must preserve what the ruling would make true"),
+            (re.search(rf"^## {re.escape(exact_heading)}\s*$", text, re.M),
+             "body must name the approved or refused exact candidate"),
+            (f"- Base commit: `{base}`" in text, "body base commit must match frontmatter"),
+            (f"- Candidate commit: `{candidate}`" in text,
+             "body candidate commit must match frontmatter"),
+            (f"- Target diff SHA-256: `{digest}`" in text,
+             "body target digest must match frontmatter"),
+            (all(f"- {target_label}: `{target}`" in text for target in targets),
+             "body target list must match frontmatter"),
+        ]
+        for valid, message in body_checks:
+            if not valid:
+                finding("decision-receipt", path, message)
+
+# Legacy Instance compatibility only. The Seed no longer ships or documents
+# the fast-track ledger; old Instances can still be checked while they migrate.
 ledger = os.path.join(ROOT, "decisions", "fast-track.md")
 if os.path.exists(ledger):
     for i, ln in enumerate(open(ledger, encoding="utf-8"), 1):
@@ -377,8 +520,6 @@ else:
         f"{knowledge_prefix}/CONTEXT.md", f"{knowledge_prefix}/AUTHORITY.md",
         f"{knowledge_prefix}/AUTHORING.md", f"{knowledge_prefix}/processes/",
         f"{knowledge_prefix}/roles/", f"{knowledge_prefix}/**/_kind.md",
-        f"{knowledge_prefix}/proposals/0000-proposal-template.md",
-        f"{knowledge_prefix}/decisions/fast-track.md",
         f"{knowledge_prefix}/docs/write-discipline.md", "/.github/CODEOWNERS",
     }
     if os.path.isfile(os.path.join(ROOT, "ACCESS.md")):
@@ -405,6 +546,14 @@ if os.path.isfile(access_policy):
         value.strip() for value in policy_fields.get("write-classes", "").split(",")
         if value.strip()
     }
+    frozen_access_scopes = {"core", "support", "finance", "founder"}
+    frozen_write_classes = {"conserved", "ruled", "ledger"}
+    if valid_access_scopes != frozen_access_scopes:
+        finding("access-policy", access_policy,
+                "access-scopes must be exactly core, support, finance, founder during the pilot")
+    if valid_write_classes != frozen_write_classes:
+        finding("access-policy", access_policy,
+                "write-classes must be exactly conserved, ruled, ledger during the pilot")
     if not valid_access_scopes:
         finding("access-policy", access_policy,
                 "access-scopes must declare the policy vocabulary")

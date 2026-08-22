@@ -159,8 +159,9 @@ read, search, or infer from projections; it never grants Authority to act.
 _Avoid_: permission, Role, team, folder visibility
 
 **Write class**:
-The mutation ceremony declared on a Knowledge node: `ledger`, `conserved`,
-`ruled`, or `derived`. It selects how a write must land, not who may perform it.
+The mutation ceremony declared on a Knowledge node: `ledger`, `conserved`, or
+`ruled`. It selects how a write must land, not who may perform it. Generated
+indexes are Machinery and carry no Knowledge write class.
 _Avoid_: access level, filesystem mode, edit permission
 
 **Role**:
@@ -176,10 +177,10 @@ organization intact.
 _Avoid_: integration, plugin, wrapper
 
 **Decision**:
-A recorded exercise of Authority: who ruled, what, when, and why. Lives in the
-artifact it rules on (task verdicts in the Task, proposal rulings in the Proposal);
-only decisions that rule on the organization itself get a standalone file in
-`decisions/`.
+A recorded exercise of Authority: who ruled, what, when, why, and — for a
+governed repository mutation — the exact base commit, candidate commit, target
+set, and target-diff digest. Task verdicts remain in the Task; rulings on the
+organization live as repository-native receipts in `decisions/`.
 _Avoid_: approval log, minutes
 
 **Lesson**:
@@ -192,17 +193,16 @@ standing weight must track its evidence: recurring evidence upgrades it; a
 closed one-off decays.
 _Avoid_: learning, insight, retro note
 
-**Proposal**:
-A requested change to Standing Knowledge, carrying
-reason, evidence, expected benefit, validation method, and rollback method. Free to
-write; applying it requires a Founder Decision recorded in the Proposal. A Lesson
-may motivate a Proposal, but remains separate evidence.
-_Avoid_: change request, RFC, PR (the mechanism, not the artifact), mutation (the
-biological reading of the same thing)
+**Governed candidate**:
+An exact target-only Git commit prepared for a Standing Knowledge change. It is
+Working State, carries no Authority, and becomes current only when an
+authenticated Founder Decision binds its complete target diff and ordinary Git
+history retains both candidate and receipt.
+_Avoid_: Proposal artifact, unbound branch, mutable draft
 
 **Conserved**:
 A change rule applied to Standing Knowledge: its current form changes only
-through the Instance's Founder-approved full Proposal or fast-track path.
+through an exact governed candidate and authenticated Founder Decision.
 Conserved is not a folder or a separate Knowledge class.
 _Avoid_: conserved core, locked files, protected configuration
 
@@ -217,11 +217,6 @@ A session's advisory claim on mutation scopes, held as a file in
 `work/_active/`. Heartbeat-kept, stale-breakable, fenced by self-re-read.
 Collision *avoidance*; the write discipline is collision *safety*.
 _Avoid_: distributed lock, mutex (implies enforcement that files cannot give)
-
-**Fast-track**:
-The light governance tier: a conserved change that expands no authority,
-applied on the Founder's verbatim in-session yes + one commit + a ledger line.
-_Avoid_: rubber stamp (it is still a ruling, still reviewed weekly)
 
 **Steward**:
 A chartered Role occupied by agents: narrow enumerated grants, hard never-

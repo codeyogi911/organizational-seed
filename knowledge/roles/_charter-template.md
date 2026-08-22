@@ -2,7 +2,7 @@
 id: "{role-slug}"
 type: role
 state: active — on probation
-chartered-by: proposals/{NNNN}-charter-{role-slug}.md
+chartered-by: decisions/mainmind-{candidate-sha-prefix}.md
 date: {YYYY-MM-DD}
 status: stable
 access-scope: core

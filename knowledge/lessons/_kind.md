@@ -53,8 +53,9 @@ normally grouped by `applies-to`. Each Lesson receives one outcome:
   `lesson-file.md#closure-reason`.
 
 For absorption, [change Standing Knowledge](../processes/change-standing-knowledge.md)
-supplies either an applied Proposal with a Founder-ruled approved Ruling or the
-exact row in the fast-track ledger. Closure may also use a standalone
-Founder-ruled Decision. Absorption and closure are valid only when the receipt
-approves the exact Lesson outcome. Age, a filename mention, or an unapproved
-field never removes a Lesson from the queue.
+supplies a repository-native Founder Decision bound to the exact candidate and
+target-diff digest. Closure uses the same Decision receipt without integrating a
+Standing Knowledge target when no governed mutation is needed. Absorption and
+closure are valid only when the receipt approves the exact Lesson outcome. Age,
+a filename mention, or an unapproved field never removes a Lesson from the
+queue.

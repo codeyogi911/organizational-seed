@@ -9,8 +9,6 @@
 /knowledge/processes/        @founder-handle
 /knowledge/roles/            @founder-handle
 /knowledge/**/_kind.md       @founder-handle
-/knowledge/proposals/0000-proposal-template.md @founder-handle
-/knowledge/decisions/fast-track.md @founder-handle
 /knowledge/docs/write-discipline.md @founder-handle
 /.mainmind.json @founder-handle
 /.github/CODEOWNERS @founder-handle

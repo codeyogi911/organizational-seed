@@ -15,7 +15,6 @@ okf_version: "0.2"
 - [goals](goals/)
 - [lessons](lessons/)
 - [processes](processes/)
-- [proposals](proposals/)
 - [records](records/)
 - [roles](roles/)
 - [work](work/)

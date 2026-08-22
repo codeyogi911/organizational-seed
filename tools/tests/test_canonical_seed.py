@@ -15,10 +15,47 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 COMMAND = ROOT / "tools" / "knowledge-bundle"
 sys.path.insert(0, str(ROOT / "tools"))
-from knowledge_bundle import parse_concept  # noqa: E402
+from knowledge_bundle import parse_concept, target_diff_sha256  # noqa: E402
 
 
 class CanonicalSeedTest(unittest.TestCase):
+    def test_target_diff_digest_matches_the_mainmind_cross_runtime_vector(self):
+        digest = target_diff_sha256(
+            [
+                {
+                    "operation": "create",
+                    "path": "records/😀.md",
+                    "was": None,
+                    "now": "created\n",
+                },
+                {
+                    "operation": "update",
+                    "path": "records/\ue000.md",
+                    "was": "before\n",
+                    "now": "after\n",
+                },
+                {
+                    "operation": "update",
+                    "path": "ORG.md",
+                    "was": "old\n",
+                    "now": "new\n",
+                },
+            ]
+        )
+
+        self.assertEqual(
+            digest,
+            "f4ba5e40856c5a71a9233dfb9c59789ceed564e059412e4480e33b8b1ac6f3e7",
+        )
+
+    def test_repository_native_decisions_replace_proposal_and_fast_track_artifacts(self):
+        self.assertTrue((ROOT / "knowledge" / "decisions" / "_kind.md").is_file())
+        self.assertFalse((ROOT / "knowledge" / "decisions" / "fast-track.md").exists())
+        self.assertEqual(list((ROOT / "knowledge" / "proposals").glob("*.md")), [])
+
+        manifest = json.loads((ROOT / ".mainmind.json").read_text(encoding="utf-8"))
+        self.assertNotIn("proposals", manifest["projection"]["dirs"])
+
     def test_mainmind_deposit_is_valid_inside_a_real_instance(self):
         with tempfile.TemporaryDirectory() as directory:
             instance = Path(directory)
@@ -143,6 +180,97 @@ class CanonicalSeedTest(unittest.TestCase):
             self.assertFalse(parsed.raw_fields["source-process"].lstrip().startswith("["))
             self.assertFalse(parsed.raw_fields["applies-to"].lstrip().startswith("["))
 
+    def test_repository_native_decision_validates_from_a_depth_one_plain_clone(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "fixture"
+            clone = Path(directory) / "clone"
+            shutil.copytree(ROOT / "knowledge", fixture / "knowledge")
+            shutil.copytree(ROOT / ".github", fixture / ".github")
+            shutil.copy2(ROOT / ".mainmind.json", fixture / ".mainmind.json")
+            org = fixture / "knowledge" / "ORG.md"
+            org.write_text(
+                org.read_text(encoding="utf-8").replace(
+                    "# {Organization Name} — the Organization",
+                    "# Clone Company — the Organization",
+                ),
+                encoding="utf-8",
+            )
+            candidate = "2" * 40
+            base = "1" * 40
+            digest = "3" * 64
+            decision = fixture / "knowledge" / "decisions" / f"mainmind-{candidate[:12]}.md"
+            decision.write_text(
+                textwrap.dedent(
+                    f'''\
+                    ---
+                    id: "mainmind-{candidate[:12]}"
+                    type: decision
+                    date: 2026-08-22
+                    ruled-by: "Founder (@founder-user), authenticated Mainmind session"
+                    ruling: "no"
+                    ruled-at: "2026-08-22T10:11:12.000Z"
+                    state: ruled
+                    outcome: rejected
+                    base-sha: "{base}"
+                    candidate-sha: "{candidate}"
+                    target-diff-sha256: "{digest}"
+                    targets:
+                      - "processes/review-lessons.md"
+                    status: stable
+                    access-scope: core
+                    write-class: ledger
+                    ---
+
+                    # Decision: refuse a candidate
+
+                    ## Ruling
+
+                    > No.
+
+                    — Founder (@founder-user), 2026-08-22T10:11:12.000Z
+
+                    ## What would have become true
+
+                    - A refused rule would have changed.
+
+                    ## Exact candidate refused
+
+                    - Base commit: `{base}`
+                    - Candidate commit: `{candidate}`
+                    - Target diff SHA-256: `{digest}`
+                    - Target left unchanged: `processes/review-lessons.md`
+
+                    ## Integration
+
+                    Only this Decision receipt lands on the canonical branch.
+                    '''
+                ),
+                encoding="utf-8",
+            )
+            commands = [
+                ["git", "init", "-b", "main"],
+                ["git", "config", "user.name", "Acceptance"],
+                ["git", "config", "user.email", "acceptance@example.invalid"],
+                ["git", "add", "."],
+                ["git", "commit", "-m", "synthetic instance"],
+            ]
+            for command in commands:
+                subprocess.run(command, cwd=fixture, check=True, capture_output=True)
+            subprocess.run(
+                ["git", "clone", "--depth=1", f"file://{fixture}", str(clone)],
+                check=True,
+                capture_output=True,
+            )
+
+            result = subprocess.run(
+                [str(ROOT / "tools" / "doctor"), str(clone)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_optional_mainmind_mount_projects_every_policy_bearing_node(self):
         manifest = json.loads((ROOT / ".mainmind.json").read_text(encoding="utf-8"))
         projection = manifest["projection"]
@@ -206,6 +334,9 @@ class CanonicalSeedTest(unittest.TestCase):
         allowed_write_classes = {
             value.strip() for value in access["write-classes"].split(",")
         }
+
+        self.assertEqual(allowed_scopes, {"core", "support", "finance", "founder"})
+        self.assertEqual(allowed_write_classes, {"conserved", "ruled", "ledger"})
 
         for path in (ROOT / "knowledge").rglob("*.md"):
             relative = path.relative_to(ROOT / "knowledge").as_posix()

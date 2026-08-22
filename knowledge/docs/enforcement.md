@@ -27,8 +27,6 @@ handle:
 /knowledge/processes/        @founder-handle
 /knowledge/roles/            @founder-handle
 /knowledge/**/_kind.md       @founder-handle
-/knowledge/proposals/0000-proposal-template.md @founder-handle
-/knowledge/decisions/fast-track.md @founder-handle
 /knowledge/docs/write-discipline.md @founder-handle
 /.mainmind.json @founder-handle
 /.github/CODEOWNERS @founder-handle
@@ -36,10 +34,11 @@ handle:
 
 ## Branch protection
 
-On the hosted repo: protect `main`, require code-owner review for the paths
-above. Agents then work Standing Knowledge changes on branches; the merge button *is*
-the Founder's ruling (record the verbatim in the PR — the PR becomes the
-fast-track ledger entry or the proposal's Ruling).
+On the hosted repo: protect `main` and require code-owner review for the paths
+above. Agents prepare exact target-only candidates on branches. The Founder
+rules through an authenticated surface that displays the complete before/after
+bytes and candidate SHA. The durable ruling is the repository-native Decision,
+not the merge button or mutable pull-request metadata.
 
 ## What this does and doesn't do
 
@@ -51,9 +50,9 @@ fast-track ledger entry or the proposal's Ruling).
 - Doesn't: replace AUTHORITY.md (external systems don't read CODEOWNERS),
   or the leases (concurrency is a different failure), or Judgment (a merge
   without reading is still a ruling — just a bad one).
-- Trade-off: direct-to-main workflows (a Founder ruling in-chat, applied
-  same-session) need either the Founder's own push, an admin bypass, or a
-  short-lived PR. Choose per instance; record the choice in ORG.md.
+- Trade-off: the write path needs a GitHub App or equivalent service that can
+  append the deterministic receipt and perform an ordinary merge without
+  giving working agents repository credentials.
 
 The doctor's D6 check flags a missing CODEOWNERS file or a Standing Knowledge path that
 the file does not cover.
