@@ -1,5 +1,6 @@
 # Copy to .github/CODEOWNERS and set the Founder's handle.
 # Standing Knowledge — changes require the Founder's review.
+/knowledge/ACCESS.md         @founder-handle
 /knowledge/ORG.md            @founder-handle
 /knowledge/KNOWLEDGE.md      @founder-handle
 /knowledge/CONTEXT.md        @founder-handle
@@ -11,4 +12,5 @@
 /knowledge/proposals/0000-proposal-template.md @founder-handle
 /knowledge/decisions/fast-track.md @founder-handle
 /knowledge/docs/write-discipline.md @founder-handle
+/.mainmind.json @founder-handle
 /.github/CODEOWNERS @founder-handle

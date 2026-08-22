@@ -2,6 +2,8 @@
 id: 0005-make-goals-explicit
 type: Architecture Decision
 status: stable
+access-scope: core
+write-class: ruled
 title: Make Goals explicit and remove the singleton current view
 description: Model organizational direction as plural Goal artifacts joined to Processes by Tasks instead of one mutable current view.
 ---

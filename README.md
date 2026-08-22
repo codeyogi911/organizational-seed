@@ -142,6 +142,24 @@ runtime rules become live when the Seed is instantiated.
    Authority, Goals, Tasks, and Processes. Switch harnesses any time — the
    folder is the organization.
 
+### Optional: serve scoped knowledge through Mainmind
+
+This repository is also the one canonical starter for a Mainmind-backed team;
+there is no separate Mainmind company seed. The included `.mainmind.json` Mount
+projects every policy-bearing node in the `knowledge/` bundle, while
+[`knowledge/ACCESS.md`](knowledge/ACCESS.md) defines repository-native access
+scopes and write classes. Install Mainmind on an Instance when teammates should
+work through scoped MCP tools without receiving a Git checkout or GitHub
+credential.
+
+Mainmind is Machinery, not the organization. Removing `.mainmind.json` or the
+GitHub App disconnects that Mount without deleting Knowledge. Conversely,
+installing it grants no operational Authority: `knowledge/AUTHORITY.md` and the
+active Process remain binding. Run `tools/doctor` before connecting an Instance;
+once `ACCESS.md` exists, every Markdown node in the canonical bundle must carry
+an explicit `access-scope` and `write-class`. Reserved generated indexes remain
+Machinery and are not served as Knowledge.
+
 ## Migrating an existing business
 
 Don't migrate. **Federate.** Your systems keep running; the seed starts as the
@@ -157,11 +175,13 @@ the gaps you find. The conserved home outlives every tool that visits it.
 
 ```
 knowledge/ORG.md                      ← your canonical entry (template)
+knowledge/ACCESS.md                   ← discovery scopes and mutation ceremonies
 knowledge/KNOWLEDGE.md                ← three Knowledge classes, Machinery boundary, evolution map
 knowledge/AUTHORITY.md                ← the rulebook (template; reserved powers ready)
 knowledge/CONTEXT.md                  ← the glossary of seed terms (keep it)
 knowledge/goals/_kind.md              ← Goal definition; Instances create their own Goals
 AGENTS.md / CLAUDE.md       ← thin mounts for any coding agent
+.mainmind.json              ← optional scoped MCP Mount over knowledge/
 knowledge/processes/example-weekly-review.md   ← a worked example process
 knowledge/processes/handle-uncovered-work.md    ← safe route when no Process fits
 knowledge/processes/review-lessons.md           ← Lesson disposition without queue pressure

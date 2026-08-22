@@ -1,6 +1,8 @@
 ---
 type: Glossary
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # Organizational Seed
 
@@ -149,6 +151,17 @@ freely and what requires Founder approval. Enforced by compliance first, review 
 diffs second, Mount-level backstops third; access to a tool never implies permission
 to use it.
 _Avoid_: permissions, ACL, policy file
+
+**Access scope**:
+A repository-native discovery compartment declared on each Knowledge node and
+granted to a Role through a trusted Mount. It controls what the Role may find,
+read, search, or infer from projections; it never grants Authority to act.
+_Avoid_: permission, Role, team, folder visibility
+
+**Write class**:
+The mutation ceremony declared on a Knowledge node: `ledger`, `conserved`,
+`ruled`, or `derived`. It selects how a write must land, not who may perform it.
+_Avoid_: access level, filesystem mode, edit permission
 
 **Role**:
 A durable position in the organization — responsibilities plus authority — that a

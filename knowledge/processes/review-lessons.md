@@ -5,6 +5,8 @@ state: active
 judge: Founder
 description: Decide whether pending Lessons should be absorbed, kept, rerouted, or closed.
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Process: review Lessons

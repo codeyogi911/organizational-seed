@@ -93,7 +93,7 @@ def standing_knowledge_home(path):
         return False
     exact_homes = {
         os.path.join(ROOT, name) for name in
-        ("ORG.md", "KNOWLEDGE.md", "CONTEXT.md", "AUTHORITY.md", "AUTHORING.md")
+        ("ACCESS.md", "ORG.md", "KNOWLEDGE.md", "CONTEXT.md", "AUTHORITY.md", "AUTHORING.md")
     }
     exact_homes.update({
         os.path.join(ROOT, "processes", "_contract.md"),
@@ -381,9 +381,64 @@ else:
         f"{knowledge_prefix}/decisions/fast-track.md",
         f"{knowledge_prefix}/docs/write-discipline.md", "/.github/CODEOWNERS",
     }
+    if os.path.isfile(os.path.join(ROOT, "ACCESS.md")):
+        required_owners.add(f"{knowledge_prefix}/ACCESS.md")
+    if os.path.isfile(os.path.join(REPO_ROOT, ".mainmind.json")):
+        required_owners.add("/.mainmind.json")
     for missing in sorted(required_owners - covered):
         finding("enforce", codeowner_paths[0],
                 f"conserved path '{missing}' is missing from CODEOWNERS")
+
+# D6a — an ACCESS.md policy activates explicit classification for every
+# canonical Knowledge node. Missing metadata fails closed in enforcing Mounts,
+# so the doctor reports it before a teammate discovers a mysteriously empty
+# result. The vocabulary belongs to ACCESS.md; these are its mechanically
+# valid field values.
+access_policy = os.path.join(ROOT, "ACCESS.md")
+if os.path.isfile(access_policy):
+    policy_fields = frontmatter(access_policy) or {}
+    valid_access_scopes = {
+        value.strip() for value in policy_fields.get("access-scopes", "").split(",")
+        if value.strip()
+    }
+    valid_write_classes = {
+        value.strip() for value in policy_fields.get("write-classes", "").split(",")
+        if value.strip()
+    }
+    if not valid_access_scopes:
+        finding("access-policy", access_policy,
+                "access-scopes must declare the policy vocabulary")
+    if not valid_write_classes:
+        finding("access-policy", access_policy,
+                "write-classes must declare the policy vocabulary")
+    reserved_machinery = {
+        os.path.join(ROOT, "index.md"),
+        os.path.join(ROOT, "processes", "index.md"),
+    }
+    for dirpath, dirnames, filenames in os.walk(ROOT):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        for filename in filenames:
+            path = os.path.join(dirpath, filename)
+            if not filename.endswith(".md") or path in reserved_machinery:
+                continue
+            fm = frontmatter(path) or {}
+            scope = fm.get("access-scope", "")
+            write_class = fm.get("write-class", "")
+            missing = [
+                field for field, value in (
+                    ("access-scope", scope), ("write-class", write_class)
+                ) if not value
+            ]
+            if missing:
+                finding("access-policy", path,
+                        f"missing {' and '.join(missing)}; ACCESS.md requires explicit classification")
+                continue
+            if scope not in valid_access_scopes:
+                finding("access-policy", path,
+                        f"unknown access-scope '{scope}'")
+            if write_class not in valid_write_classes:
+                finding("access-policy", path,
+                        f"unknown write-class '{write_class}'")
 
 # D7 — Process identity, shape, lifecycle, and discovery stay aligned. This
 # catches mechanical drift only; AUTHORING.md still requires semantic review.

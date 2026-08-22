@@ -7,6 +7,8 @@ state: proposed
 targets: {which Standing Knowledge homes this would change}
 operation: {create / correct / improve / merge / rename / retire}
 status: draft
+access-scope: core
+write-class: conserved
 ---
 
 > **Template note:** copy this file to `NNNN-short-slug.md` (next number), fill

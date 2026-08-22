@@ -1,6 +1,8 @@
 ---
 type: Authoring Rules
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # Authoring durable knowledge
 
@@ -18,6 +20,9 @@ extension, determines its change route.
    either may change.
 5. **Keep machinery replaceable.** A tool or Mount may check durable knowledge;
    it may not become its canonical home.
+6. **Classify before exposure.** When [ACCESS.md](ACCESS.md) is active, every
+   Knowledge node declares one `access-scope` and one `write-class`. Missing or
+   unknown classification must fail closed for non-Founder readers.
 
 ## Standing Knowledge review
 

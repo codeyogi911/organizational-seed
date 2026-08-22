@@ -4,6 +4,8 @@ type: kind-definition
 of: lesson
 state: active
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Kind: Lesson

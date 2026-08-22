@@ -4,6 +4,8 @@ state: stable
 title: Organizational Seed OKF canonical contract
 description: The shared, service-independent bundle contract instantiated by an organization grown from this Seed.
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Organizational Seed OKF canonical contract
@@ -44,6 +46,7 @@ repository at runtime.
   "source": {
     "root": "knowledge",
     "files": [
+      "ACCESS.md",
       "AUTHORING.md",
       "AUTHORITY.md",
       "CONTEXT.md",
@@ -63,6 +66,7 @@ repository at runtime.
     ]
   },
   "type_rules": [
+    {"glob": "ACCESS.md", "type": "Access Policy"},
     {"glob": "AUTHORING.md", "type": "Authoring Rules"},
     {"glob": "AUTHORITY.md", "type": "Authority"},
     {"glob": "CONTEXT.md", "type": "Glossary"},

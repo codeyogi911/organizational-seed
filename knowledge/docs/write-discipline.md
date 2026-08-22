@@ -1,6 +1,8 @@
 ---
 type: Reference
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # The write discipline — how external mutations survive crashes and collisions
 

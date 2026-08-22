@@ -4,6 +4,7 @@ okf_version: "0.2"
 
 # Organizational Seed knowledge bundle
 
+- [ACCESS.md](ACCESS.md)
 - [AUTHORING.md](AUTHORING.md)
 - [AUTHORITY.md](AUTHORITY.md)
 - [CONTEXT.md](CONTEXT.md)

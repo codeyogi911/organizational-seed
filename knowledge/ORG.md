@@ -1,6 +1,8 @@
 ---
 type: Organization
 status: stable
+access-scope: core
+write-class: ruled
 ---
 # {Organization Name} — the Organization
 
@@ -9,8 +11,10 @@ status: stable
 > stated here once or linked from here — never mirrored.
 
 This file is the canonical entry point. If you are new here — human or agent — read
-this file top to bottom, then obey [AUTHORITY.md](AUTHORITY.md). Everything else
-links from here. The glossary of terms is [CONTEXT.md](CONTEXT.md).
+this file top to bottom, then obey [AUTHORITY.md](AUTHORITY.md). When a scoped
+Mount is in use, [ACCESS.md](ACCESS.md) limits what the current Role may
+discover; it never grants Authority. Everything else links from here. The
+glossary of terms is [CONTEXT.md](CONTEXT.md).
 
 ## Purpose
 
@@ -74,7 +78,8 @@ tracks. It includes:
 
 - this file's Purpose, Roles, knowledge-change rules, and map;
 - [KNOWLEDGE.md](KNOWLEDGE.md), [CONTEXT.md](CONTEXT.md),
-  [AUTHORITY.md](AUTHORITY.md), and [AUTHORING.md](AUTHORING.md);
+  [AUTHORITY.md](AUTHORITY.md), [ACCESS.md](ACCESS.md), and
+  [AUTHORING.md](AUTHORING.md);
 - active Processes, Process contracts, Role charters, and every `_kind.md`
   definition;
 - the Proposal template and fast-track ledger definition that shape governed
@@ -119,6 +124,7 @@ Ordinary work may therefore:
 | `ORG.md` | this file — canonical entry |
 | `KNOWLEDGE.md` | Knowledge classes, Machinery boundary, ownership, and evolution map |
 | `AUTHORITY.md` | the rulebook |
+| `ACCESS.md` | repository-native discovery scopes and write ceremonies; never an Authority grant |
 | `CONTEXT.md` | glossary of seed terms |
 | `goals/` | Founder-set outcomes; active Goals are Working State, terminal Goals are Organizational Memory |
 | `processes/` | how kinds of work are done; active definitions are Standing Knowledge |
@@ -132,7 +138,7 @@ Ordinary work may therefore:
 | `proposals/` | governed changes awaiting Judgment, then memory of their ruling |
 | `docs/adr/` | design decisions about the pattern itself |
 | `tools/` | machinery — replaceable check scripts |
-| `AGENTS.md`, `CLAUDE.md`, `.claude/` | Mounts — harness bindings, disposable |
+| `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.mainmind.json` | Mounts — harness bindings, disposable |
 
 ## For harnesses
 

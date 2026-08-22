@@ -1,11 +1,15 @@
 ---
 type: Authority
 status: stable
+access-scope: core
+write-class: ruled
 ---
 # Authority
 
 The rulebook of this organization. **Access to a tool never implies permission to
-use it.** Roles are defined in [ORG.md](ORG.md).
+use it.** Roles are defined in [ORG.md](ORG.md). [ACCESS.md](ACCESS.md) may
+narrow what a Role can discover through a Mount; it never widens this file's
+grants.
 
 ## Reserved powers — Founder approval required, no exceptions
 

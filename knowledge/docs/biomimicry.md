@@ -1,6 +1,8 @@
 ---
 type: Reference
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # Biomimicry — the seed's design vocabulary
 

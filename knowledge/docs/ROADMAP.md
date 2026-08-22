@@ -1,6 +1,8 @@
 ---
 type: Reference
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # Seed roadmap
 

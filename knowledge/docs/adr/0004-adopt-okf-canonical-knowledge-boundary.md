@@ -2,6 +2,8 @@
 id: 0004-adopt-okf-canonical-knowledge-boundary
 type: Architecture Decision
 status: stable
+access-scope: core
+write-class: ruled
 title: Adopt an OKF-canonical knowledge boundary
 description: Keep organizational Knowledge under one portable bundle while repository Machinery remains replaceable.
 ---

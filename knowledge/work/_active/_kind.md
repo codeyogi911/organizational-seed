@@ -3,6 +3,8 @@ id: _kind
 type: kind-definition
 of: session-lease
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Kind: session-lease

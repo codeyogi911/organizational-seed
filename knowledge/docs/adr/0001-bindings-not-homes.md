@@ -2,6 +2,8 @@
 state: accepted
 type: Architecture Decision
 status: stable
+access-scope: core
+write-class: ruled
 ---
 
 # Bindings, not homes

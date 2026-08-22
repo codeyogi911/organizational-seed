@@ -5,6 +5,8 @@ state: active
 judge: Founder
 description: Create, correct, improve, merge, rename, or retire knowledge that future work must follow.
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Process: change Standing Knowledge

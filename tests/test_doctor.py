@@ -195,6 +195,97 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn("lesson queue: 1 pending", result.stdout)
 
+    def test_active_access_policy_fails_closed_on_unclassified_nodes(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "ACCESS.md",
+            """
+            ---
+            type: Access Policy
+            access-scope: core
+            write-class: ruled
+            ---
+
+            # Knowledge access
+            """,
+        )
+        self.write(
+            root,
+            "records/audit/log.md",
+            """
+            ---
+            type: Audit Record
+            ---
+
+            # Audit log
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[access-policy]", result.stdout)
+        self.assertIn("lessons/_kind.md", result.stdout)
+        self.assertIn("records/audit/log.md", result.stdout)
+        self.assertIn("missing access-scope and write-class", result.stdout)
+
+    def test_access_policy_frontmatter_owns_the_allowed_vocabulary(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        access = self.write(
+            root,
+            "ACCESS.md",
+            """
+            ---
+            type: Access Policy
+            access-scope: legal
+            write-class: ruled
+            access-scopes:
+              - core
+              - legal
+            write-classes:
+              - conserved
+              - ruled
+            ---
+
+            # Knowledge access
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertNotIn(
+            f"{access.relative_to(root)}: unknown access-scope 'legal'",
+            result.stdout,
+        )
+
+    def test_active_access_policy_rejects_unknown_policy_values(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        access = self.write(
+            root,
+            "ACCESS.md",
+            """
+            ---
+            type: Access Policy
+            access-scope: everyone
+            write-class: editable
+            ---
+
+            # Knowledge access
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[access-policy]", result.stdout)
+        self.assertIn(str(access.relative_to(root)), result.stdout)
+        self.assertIn("unknown access-scope 'everyone'", result.stdout)
+        self.assertIn("unknown write-class 'editable'", result.stdout)
+
     def test_process_filename_must_match_id(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)

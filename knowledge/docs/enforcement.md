@@ -1,6 +1,8 @@
 ---
 type: Reference
 status: stable
+access-scope: core
+write-class: conserved
 ---
 # Mechanical enforcement of Standing Knowledge
 
@@ -16,17 +18,19 @@ handle:
 
 ```
 # Standing Knowledge — changes require the Founder's review
-/ORG.md            @founder-handle
-/KNOWLEDGE.md      @founder-handle
-/CONTEXT.md        @founder-handle
-/AUTHORITY.md      @founder-handle
-/AUTHORING.md      @founder-handle
-/processes/        @founder-handle
-/roles/            @founder-handle
-/**/_kind.md       @founder-handle
-/proposals/0000-proposal-template.md @founder-handle
-/decisions/fast-track.md @founder-handle
-/docs/write-discipline.md @founder-handle
+/knowledge/ACCESS.md         @founder-handle
+/knowledge/ORG.md            @founder-handle
+/knowledge/KNOWLEDGE.md      @founder-handle
+/knowledge/CONTEXT.md        @founder-handle
+/knowledge/AUTHORITY.md      @founder-handle
+/knowledge/AUTHORING.md      @founder-handle
+/knowledge/processes/        @founder-handle
+/knowledge/roles/            @founder-handle
+/knowledge/**/_kind.md       @founder-handle
+/knowledge/proposals/0000-proposal-template.md @founder-handle
+/knowledge/decisions/fast-track.md @founder-handle
+/knowledge/docs/write-discipline.md @founder-handle
+/.mainmind.json @founder-handle
 /.github/CODEOWNERS @founder-handle
 ```
 
@@ -41,6 +45,9 @@ fast-track ledger entry or the proposal's Ruling).
 
 - Does: make the Standing Knowledge boundary physical. A crashed, confused, or
   malicious operator cannot land a governed change without the Founder.
+- Does: keep an optional Mainmind projection change behind the same review,
+  because changing what is served changes an enforcement boundary even though
+  the manifest remains replaceable Machinery.
 - Doesn't: replace AUTHORITY.md (external systems don't read CODEOWNERS),
   or the leases (concurrency is a different failure), or Judgment (a merge
   without reading is still a ruling — just a bad one).

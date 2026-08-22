@@ -16,6 +16,55 @@ from knowledge_bundle import parse_concept  # noqa: E402
 
 
 class CanonicalSeedTest(unittest.TestCase):
+    def test_optional_mainmind_mount_projects_every_policy_bearing_node(self):
+        manifest = json.loads((ROOT / ".mainmind.json").read_text(encoding="utf-8"))
+        projection = manifest["projection"]
+
+        self.assertTrue(projection["replace"])
+        self.assertEqual(projection["prefix"], "knowledge")
+        projected = {
+            path.relative_to(ROOT / "knowledge").as_posix()
+            for path in (ROOT / "knowledge").rglob("*.md")
+            if (
+                path.relative_to(ROOT / "knowledge").as_posix()
+                in projection["root"]
+                or path.relative_to(ROOT / "knowledge").parts[0]
+                in projection["dirs"]
+            )
+        }
+        canonical = {
+            path.relative_to(ROOT / "knowledge").as_posix()
+            for path in (ROOT / "knowledge").rglob("*.md")
+            if path.relative_to(ROOT / "knowledge").as_posix()
+            not in {"index.md", "processes/index.md"}
+        }
+        self.assertEqual(projected, canonical)
+
+    def test_every_canonical_node_declares_access_and_write_policy(self):
+        access = parse_concept(
+            (ROOT / "knowledge" / "ACCESS.md").read_text(encoding="utf-8")
+        ).fields
+        allowed_scopes = {
+            value.strip() for value in access["access-scopes"].split(",")
+        }
+        allowed_write_classes = {
+            value.strip() for value in access["write-classes"].split(",")
+        }
+
+        for path in (ROOT / "knowledge").rglob("*.md"):
+            relative = path.relative_to(ROOT / "knowledge").as_posix()
+            if relative in {"index.md", "processes/index.md"}:
+                continue
+            with self.subTest(path=path.relative_to(ROOT)):
+                fields = parse_concept(path.read_text(encoding="utf-8")).fields
+                self.assertIsNotNone(fields)
+                self.assertIn(fields.get("access-scope"), allowed_scopes)
+                self.assertIn(fields.get("write-class"), allowed_write_classes)
+                self.assertEqual(fields["access-scope"], "core")
+
+        self.assertEqual(access["access-scope"], "core")
+        self.assertEqual(access["write-class"], "ruled")
+
     def test_shared_parser_resolves_canonical_yaml_for_consumers(self):
         parsed = parse_concept(
             "---\n"

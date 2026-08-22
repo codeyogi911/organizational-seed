@@ -1,6 +1,8 @@
 ---
 type: Decision Ledger
 status: stable
+access-scope: core
+write-class: ruled
 ---
 # Fast-track ledger — append-only
 

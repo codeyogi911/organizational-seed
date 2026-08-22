@@ -5,6 +5,8 @@ state: active — on probation
 chartered-by: proposals/{NNNN}-charter-{role-slug}.md
 date: {YYYY-MM-DD}
 status: stable
+access-scope: core
+write-class: conserved
 ---
 
 # Role: {Name} — {one-line mission}
