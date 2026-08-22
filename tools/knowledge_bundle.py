@@ -92,7 +92,7 @@ def target_diff_sha256(changes: Iterable[dict[str, Any]]) -> str:
     """Digest complete governed before/after bytes using Mainmind's contract.
 
     Paths sort by Unicode code point. Each complete file is reduced to its
-    operation, path, before SHA-256 (or null), and after SHA-256. That list is
+    operation, path, before SHA-256 (or null), and after SHA-256 (or null). That list is
     encoded as compact UTF-8 JSON without a trailing newline and hashed once
     more. The field insertion order is part of the cross-runtime contract.
     """
@@ -105,18 +105,22 @@ def target_diff_sha256(changes: Iterable[dict[str, Any]]) -> str:
         before = change.get("was")
         after = change.get("now")
         valid = (
-            operation in {"create", "update"}
+            operation in {"create", "update", "delete"}
             and isinstance(path, str)
             and bool(path)
-            and isinstance(after, str)
             and (
-                (operation == "create" and before is None)
-                or (operation == "update" and isinstance(before, str))
+                (operation == "create" and before is None and isinstance(after, str))
+                or (
+                    operation == "update"
+                    and isinstance(before, str)
+                    and isinstance(after, str)
+                )
+                or (operation == "delete" and isinstance(before, str) and after is None)
             )
         )
         if not valid:
             raise KnowledgeBundleError(
-                "governed target diff requires complete create/update bytes"
+                "governed target diff requires complete create/update/delete bytes"
             )
         if path in paths:
             raise KnowledgeBundleError(
@@ -132,7 +136,11 @@ def target_diff_sha256(changes: Iterable[dict[str, Any]]) -> str:
                     if before is None
                     else hashlib.sha256(before.encode("utf-8")).hexdigest()
                 ),
-                "after_sha256": hashlib.sha256(after.encode("utf-8")).hexdigest(),
+                "after_sha256": (
+                    None
+                    if after is None
+                    else hashlib.sha256(after.encode("utf-8")).hexdigest()
+                ),
             }
         )
     if not canonical:

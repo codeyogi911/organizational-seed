@@ -85,10 +85,12 @@ candidate contract. It includes:
 - the repository-native Decision definition that shapes governed change.
 
 Every Standing Knowledge change uses one contract, whether it expands power or
-only corrects wording: prepare one exact target-only candidate `A`, display its
-complete before/after bytes and target-diff digest, and obtain an authenticated
-Founder yes or no for that immutable candidate. Approval appends a deterministic
-Decision-only child `B` and uses an ordinary merge retaining `A` and `B`.
+only corrects wording: bind the immutable repository and base ref, preallocate
+the stable Decision path, prepare one exact target-only candidate `A`, display
+its complete before/after bytes and target-diff digest, and obtain an
+authenticated Founder yes or no for that immutable candidate. Approval appends
+a deterministic Decision-only child `B` and uses an ordinary merge retaining
+`A` and `B`.
 Rejection keeps `A` out of canonical history and appends only the refusal
 Decision to the canonical branch. A changed byte, target, branch, repository,
 or candidate requires a fresh ruling. See [the Decision Kind](decisions/_kind.md).

@@ -14,14 +14,17 @@ Every Instance Standing Knowledge mutation uses one exact-candidate Founder
 Decision contract. The candidate is a target-only commit `A` whose parent,
 complete path set, and before/after bytes are preserved in Git. The Founder surface
 shows that immutable candidate and rules yes or no. The repository-native
-Decision binds the base SHA, candidate SHA, target set, and canonical
-target-diff SHA-256.
+Decision binds the immutable repository identity, fully qualified base ref,
+base SHA, candidate SHA, target set, and canonical target-diff SHA-256.
 
 Approval appends deterministic Decision-only child `B` to `A` and uses an
 ordinary merge retaining both. Rejection never integrates `A`; it closes the
 candidate unmerged and appends only the refusal Decision to the canonical
-branch. The receipt contains no hash of `B` or the later merge, so its own bytes
-do not depend on a Git object that cannot exist yet.
+branch. Mainmind allocates the stable Decision path before `A`, allowing a
+terminal Lesson in `A` to point to it while `B` still changes only the Decision
+file. The receipt contains no hash of `B` or the later merge, so its own bytes
+do not depend on a Git object that cannot exist yet. Governed deletion uses
+complete before bytes and a null after hash; rename is a create plus delete.
 
 ## Why
 

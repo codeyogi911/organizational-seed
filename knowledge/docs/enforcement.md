@@ -36,8 +36,9 @@ handle:
 
 On the hosted repo: protect `main` and require code-owner review for the paths
 above. Agents prepare exact target-only candidates on branches. The Founder
-rules through an authenticated surface that displays the complete before/after
-bytes and candidate SHA. The durable ruling is the repository-native Decision,
+rules through an authenticated surface that displays the immutable repository
+and base ref, complete before/after bytes, and candidate SHA. The durable ruling
+is the repository-native Decision,
 not the merge button or mutable pull-request metadata.
 
 ## What this does and doesn't do

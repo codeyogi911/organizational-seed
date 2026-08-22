@@ -193,56 +193,101 @@ class DoctorTests(unittest.TestCase):
         digest="3" * 64,
         ruling="yes",
         outcome="approved",
+        repository="example/organization",
+        base_ref="refs/heads/main",
+        targets=None,
+        lesson_outcome=None,
+        lesson="lessons/2026-08-21-visible-teaching.md",
+        receiver=None,
+        include_lifecycle_links=True,
+        decision_id=None,
     ):
-        suffix = candidate[:12]
+        decision_id = decision_id or f"mainmind-{candidate[:12]}"
+        if targets is None:
+            if lesson_outcome == "absorb":
+                targets = [lesson] + ([receiver] if receiver else [])
+            elif lesson_outcome == "close":
+                targets = [lesson]
+            else:
+                targets = ["processes/review-lessons.md"]
+        frontmatter = [
+            "---",
+            f'id: "{decision_id}"',
+            "type: decision",
+            "date: 2026-08-22",
+            'ruled-by: "Founder (@founder-user), authenticated Mainmind session"',
+            f'ruling: "{ruling}"',
+            'ruled-at: "2026-08-22T10:11:12.000Z"',
+            "state: ruled",
+            f"outcome: {outcome}",
+            f'repository: "{repository}"',
+            f'base-ref: "{base_ref}"',
+            f'base-sha: "{base}"',
+            f'candidate-sha: "{candidate}"',
+            f'target-diff-sha256: "{digest}"',
+            "targets:",
+            *[f'  - "{target}"' for target in targets],
+        ]
+        lifecycle_body = "- Lesson dispositions have a repository-native receipt."
+        if lesson_outcome:
+            frontmatter.extend(
+                [f"lesson-outcome: {lesson_outcome}", f'lesson: "{lesson}"']
+            )
+            if receiver:
+                frontmatter.append(f'receiver: "{receiver}"')
+            if lesson_outcome == "absorb":
+                lifecycle_body = (
+                    f"- Lesson outcome: absorb [Lesson](../{lesson}) into "
+                    f"[receiver](../{receiver})."
+                )
+            else:
+                lifecycle_body = (
+                    f"- Lesson outcome: close "
+                    f"[Lesson closure reason](../{lesson}#closure-reason)."
+                )
+            if not include_lifecycle_links:
+                lifecycle_body = f"- Lesson outcome: {lesson_outcome}."
+        frontmatter.extend(
+            ["status: stable", "access-scope: core", "write-class: ledger", "---"]
+        )
+        target_body = "\n".join(
+            f'- {"Target" if outcome == "approved" else "Target left unchanged"}: `{target}`'
+            for target in targets
+        )
+        content = "\n".join(frontmatter) + f'''\
+
+
+# Decision: make Lesson receipts portable
+
+## Ruling
+
+> {"Yes" if ruling == "yes" else "No"}.
+>
+> Keep the exact candidate auditable.
+
+— Founder (@founder-user), 2026-08-22T10:11:12.000Z
+
+## {"What becomes true" if outcome == "approved" else "What would have become true"}
+
+{lifecycle_body}
+
+## {"Exact candidate" if outcome == "approved" else "Exact candidate refused"}
+
+- Repository: `{repository}`
+- Base ref: `{base_ref}`
+- Base commit: `{base}`
+- Candidate commit: `{candidate}`
+- Target diff SHA-256: `{digest}`
+{target_body}
+
+## Integration
+
+{"Mainmind may land only an ordinary merge commit that retains the approved candidate and this Decision child commit in repository ancestry." if outcome == "approved" else "Only this Decision receipt lands on the canonical branch. The refused candidate remains outside canonical history."}
+'''
         return self.write(
             root,
-            f"decisions/mainmind-{suffix}.md",
-            f'''
-            ---
-            id: "mainmind-{suffix}"
-            type: decision
-            date: 2026-08-22
-            ruled-by: "Founder (@founder-user), authenticated Mainmind session"
-            ruling: "{ruling}"
-            ruled-at: "2026-08-22T10:11:12.000Z"
-            state: ruled
-            outcome: {outcome}
-            base-sha: "{base}"
-            candidate-sha: "{candidate}"
-            target-diff-sha256: "{digest}"
-            targets:
-              - "processes/review-lessons.md"
-            status: stable
-            access-scope: core
-            write-class: ledger
-            ---
-
-            # Decision: make Lesson receipts portable
-
-            ## Ruling
-
-            > {"Yes" if ruling == "yes" else "No"}.
-            >
-            > Keep the exact candidate auditable.
-
-            — Founder (@founder-user), 2026-08-22T10:11:12.000Z
-
-            ## {"What becomes true" if outcome == "approved" else "What would have become true"}
-
-            - Lesson dispositions have a repository-native receipt.
-
-            ## {"Exact candidate" if outcome == "approved" else "Exact candidate refused"}
-
-            - Base commit: `{base}`
-            - Candidate commit: `{candidate}`
-            - Target diff SHA-256: `{digest}`
-            - {"Target" if outcome == "approved" else "Target left unchanged"}: `processes/review-lessons.md`
-
-            ## Integration
-
-            {"Mainmind may land only an ordinary merge commit that retains the approved candidate and this Decision child commit in repository ancestry." if outcome == "approved" else "Only this Decision receipt lands on the canonical branch. The refused candidate remains outside canonical history."}
-            ''',
+            f"decisions/{decision_id}.md",
+            content,
         )
 
     def test_mainmind_decision_receipt_is_valid_in_a_plain_instance(self):
@@ -263,9 +308,22 @@ class DoctorTests(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
+    def test_mainmind_decision_accepts_a_stable_preallocated_receipt_id(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_mainmind_decision(
+            root, decision_id="mainmind-ruling-20260822-abc123"
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
     def test_mainmind_decision_receipt_requires_exact_binding_fields(self):
         cases = {
-            "candidate suffix": ("candidate-sha: \"" + "2" * 40 + "\"", "candidate-sha: \"" + "4" * 40 + "\""),
+            "id mismatch": ('id: "mainmind-' + "2" * 12 + '"', 'id: "mainmind-other"'),
+            "repository identity": ('repository: "example/organization"', 'repository: "not-a-repository"'),
+            "fully qualified base ref": ('base-ref: "refs/heads/main"', 'base-ref: "main"'),
             "target digest": ("target-diff-sha256: \"" + "3" * 64 + "\"", "target-diff-sha256: \"short\""),
             "ruling outcome": ("outcome: approved", "outcome: rejected"),
             "circular receipt hash": ("state: ruled", "state: ruled\nreceipt-commit: \"" + "5" * 40 + "\""),
@@ -289,13 +347,96 @@ class DoctorTests(unittest.TestCase):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         decision = self.add_mainmind_decision(root)
-        decision.rename(decision.with_name("mainmind-not-a-candidate.md"))
+        decision.rename(decision.with_name("arbitrary.md"))
 
         result = self.run_doctor(root)
 
         self.assertEqual(1, result.returncode)
         self.assertIn("[decision-receipt]", result.stdout)
         self.assertIn("filename", result.stdout)
+
+    def test_decision_kind_cannot_evade_exact_receipt_validation(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "decisions/arbitrary.md",
+            """
+            ---
+            type: decision
+            outcome: approved
+            ---
+
+            # Decision
+            """,
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[decision-receipt]", result.stdout)
+
+    def test_mainmind_decision_can_complete_an_exact_lesson_absorption(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        decision = self.add_mainmind_decision(
+            root,
+            lesson_outcome="absorb",
+            receiver="processes/review-lessons.md",
+        )
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: absorbed\nabsorbed-into: processes/review-lessons.md\ndecided-by: decisions/" + decision.name,
+            "Absorbed into [the Process](../processes/review-lessons.md) by "
+            f"[the exact Decision](../decisions/{decision.name}).",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_mainmind_decision_can_complete_an_exact_lesson_closure(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        lesson = "lessons/2026-08-21-visible-teaching.md"
+        decision = self.add_mainmind_decision(
+            root,
+            lesson_outcome="close",
+            targets=[lesson],
+        )
+        self.add_lesson(
+            root,
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/" + decision.name,
+            f"See [the exact Decision](../decisions/{decision.name}).\n\n"
+            "## Closure reason\n\nThe teaching no longer applies.",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_lesson_lifecycle_fields_are_exact_and_approved_only(self):
+        cases = (
+            {"lesson_outcome": "absorb", "receiver": None},
+            {"lesson_outcome": "close", "receiver": "processes/review-lessons.md"},
+            {"lesson_outcome": "absorb", "receiver": "processes/review-lessons.md",
+             "ruling": "no", "outcome": "rejected"},
+            {"lesson_outcome": "absorb", "receiver": "processes/review-lessons.md",
+             "include_lifecycle_links": False},
+        )
+        for options in cases:
+            with self.subTest(options=options):
+                tmp, root = self.make_instance()
+                self.addCleanup(tmp.cleanup)
+                self.add_process(root)
+                self.add_mainmind_decision(root, **options)
+
+                result = self.run_doctor(root)
+
+                self.assertEqual(1, result.returncode)
+                self.assertIn("[decision-receipt]", result.stdout)
 
     def test_access_policy_uses_the_frozen_mainmind_pilot_vocabulary(self):
         tmp, root = self.make_instance()
@@ -923,28 +1064,15 @@ class DoctorTests(unittest.TestCase):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         self.add_process(root)
-        self.write(
+        decision = self.add_mainmind_decision(
             root,
-            "decisions/0002-close.md",
-            """
-            ---
-            kind: decision
-            date: 2026-08-21
-            status: ruled
-            ruled-by: Founder
-            outcome: approved
-            lesson-outcome: close
-            ---
-
-            # Decision
-
-            Close [this Lesson](../lessons/2026-08-21-visible-teaching.md#closure-reason).
-            """,
+            lesson_outcome="close",
+            targets=["lessons/2026-08-21-visible-teaching.md"],
         )
         self.add_lesson(
             root,
-            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/0002-close.md",
-            "See [Decision](../decisions/0002-close.md).\n\n## Closure reason\n\nThe teaching no longer applies.",
+            "source-process: review-lessons\napplies-to: processes/review-lessons.md\nstatus: retired\nclosed-by: decisions/" + decision.name,
+            f"See [Decision](../decisions/{decision.name}).\n\n## Closure reason\n\nThe teaching no longer applies.",
         )
 
         result = self.run_doctor(root)

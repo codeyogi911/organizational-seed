@@ -16,17 +16,21 @@ The candidate branch is Working State and the pull request is Machinery that
 presents it; the Decision is the ruling that survives when Mainmind, GitHub's
 UI, or any agent harness is removed.
 
-Mainmind Decision members are named
-`mainmind-<first-12-candidate-sha>.md`. **Required frontmatter:** `id`, `type`,
+Mainmind preallocates a stable server-owned member path before it builds the
+candidate: `mainmind-<safe-id>.md`. Existing candidate-prefix IDs remain valid.
+**Required frontmatter:** `id`, `type`,
 `date`, `ruled-by`, `ruling`, `ruled-at`, `state`, `outcome`, `base-sha`,
-`candidate-sha`, `target-diff-sha256`, `targets`, `status`, `access-scope`, and
-`write-class`.
+`repository`, `base-ref`, `candidate-sha`, `target-diff-sha256`, `targets`,
+`status`, `access-scope`, and `write-class`.
 
 - `type` is `decision`, `state` is `ruled`, `status` is `stable`, and
   `write-class` is `ledger`.
 - `ruled-by` names the Founder and the authenticated Mainmind session identity.
   `ruling` is exactly `yes` or `no`; `outcome` is respectively `approved` or
   `rejected`. The body preserves the ruling and any optional Founder words.
+- `repository` is the immutable lowercase `owner/repository` identity and
+  `base-ref` is the fully qualified `refs/heads/<branch>` target. The body
+  repeats both exactly.
 - `base-sha` and `candidate-sha` are complete lowercase Git commit IDs.
   `targets` is the complete non-empty set of governed paths shown to the
   Founder.
@@ -34,7 +38,23 @@ Mainmind Decision members are named
   the complete before and after UTF-8 bytes, form objects in the field order
   `operation`, `path`, `before_sha256`, `after_sha256`, sort paths by Unicode
   code point, encode the array as compact UTF-8 JSON with no trailing newline,
-  and SHA-256 that envelope. A creation has a null before hash.
+  and SHA-256 that envelope. A creation has a null before hash; a deletion has
+  a null after hash. Rename is one create plus one delete in the same candidate.
+
+## Lesson outcomes
+
+Lifecycle fields may appear only on a `yes` / `approved` Decision:
+
+- Absorb requires `lesson-outcome: absorb`, the exact root-relative `lesson`
+  and `receiver`, both paths in `targets`, and body links to both. Candidate A
+  sets the Lesson to `absorbed`, with `absorbed-into` equal to the receiver and
+  `decided-by` equal to this preallocated Decision path.
+- Close requires `lesson-outcome: close` and the exact `lesson` in `targets`,
+  omits `receiver`, and links `lesson-file.md#closure-reason`. Candidate A sets
+  the Lesson to `retired` and `closed-by` to this Decision path.
+
+A rejected Decision omits all three lifecycle fields because candidate A,
+including any terminal Lesson bytes, never lands.
 
 ## Approval history
 
@@ -44,9 +64,10 @@ one deterministic Decision-only child `B` to `A`. It then uses an ordinary
 merge that retains `A` and `B` in ancestry. Squash, rebase, changed targets, or
 changed bytes require a fresh ruling.
 
-The Decision does not contain `B`'s own commit ID. The candidate SHA and target
-digest determine its path and bytes before `B` exists, avoiding a circular
-self-hash.
+The Decision does not contain `B`'s own commit ID. Its stable path is allocated
+before `A`, so a terminal Lesson can point to it without depending on either
+commit hash; the exact candidate SHA and target digest then bind the receipt
+without a circular self-hash.
 
 ## Rejection history
 

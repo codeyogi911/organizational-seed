@@ -47,6 +47,20 @@ def frontmatter(path):
         return None
     return dict(parsed.fields) if parsed.fields is not None else None
 
+def parsed_frontmatter(path):
+    """Return scalar fields plus exact structured target values."""
+    try:
+        parsed = parse_concept(open(path, encoding="utf-8").read())
+        fields = dict(parsed.fields or {})
+        raw_targets = parsed.raw_fields.get("targets", "")
+        targets_yaml = "targets:\n" + "".join(
+            "  " + line.lstrip() for line in raw_targets.splitlines(keepends=True)
+        )
+        targets = yaml_safe_load_unique(targets_yaml).get("targets")
+        return fields, targets
+    except Exception:
+        return {}, None
+
 def operational_state(fm):
     """Read the domain lifecycle without confusing it with OKF status."""
     return fm.get("state", fm.get("status", ""))
@@ -188,6 +202,40 @@ def approval_receipt_date(path, lesson, disposition, receiver=None):
     body = open(path, encoding="utf-8").read()
     links = markdown_targets(path)
 
+    if (inside(decisions_dir, path)
+            and MAINMIND_DECISION.fullmatch(os.path.basename(path))):
+        fm, targets_value = parsed_frontmatter(path)
+        targets = targets_value if isinstance(targets_value, list) else []
+        lesson_value = os.path.relpath(lesson, ROOT)
+        receiver_value = os.path.relpath(receiver, ROOT) if receiver else None
+        exact_fields = (
+            concept_type(fm) == "decision"
+            and operational_state(fm) == "ruled"
+            and fm.get("ruling") == "yes"
+            and fm.get("outcome") == "approved"
+            and FOUNDER_IDENTITY.fullmatch(fm.get("ruled-by", ""))
+            and fm.get("lesson-outcome") == disposition
+            and fm.get("lesson") == lesson_value
+            and lesson_value in targets
+            and valid_date(fm.get("date"))
+        )
+        if disposition == "absorb":
+            exact_fields = bool(
+                exact_fields
+                and receiver_value
+                and fm.get("receiver") == receiver_value
+                and receiver_value in targets
+                and has_markdown_link(path, lesson)
+                and has_markdown_link(path, receiver)
+            )
+        else:
+            exact_fields = bool(
+                exact_fields
+                and "receiver" not in fm
+                and has_markdown_link(path, lesson, "closure-reason")
+            )
+        return fm.get("date") if exact_fields else None
+
     if path == os.path.join(decisions_dir, "fast-track.md"):
         for row in body.splitlines():
             if not row.startswith("|") or set(row.strip()) <= {"|", "-", " "}:
@@ -311,9 +359,11 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
 # envelope. The receipt intentionally omits its own commit SHA: its bytes must
 # be deterministic before Git creates the receipt commit.
 decision_dir = os.path.join(ROOT, "decisions")
-MAINMIND_DECISION = re.compile(r"^mainmind-([a-f0-9]{12})\.md$")
+MAINMIND_DECISION = re.compile(r"^mainmind-([a-z0-9](?:[a-z0-9-]{0,127}))\.md$")
 SHA40 = re.compile(r"^[a-f0-9]{40}$")
 SHA256 = re.compile(r"^[a-f0-9]{64}$")
+REPOSITORY = re.compile(r"^[a-z0-9_.-]+/[a-z0-9_.-]+$")
+BASE_REF = re.compile(r"^refs/heads/[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$")
 UTC_INSTANT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$")
 FOUNDER_IDENTITY = re.compile(
     r"^Founder \(@([a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?)\), "
@@ -334,46 +384,31 @@ try:
         {"operation": "create", "path": "records/😀.md", "was": None, "now": "created\n"},
         {"operation": "update", "path": "records/\ue000.md", "was": "before\n", "now": "after\n"},
         {"operation": "update", "path": "ORG.md", "was": "old\n", "now": "new\n"},
+        {"operation": "delete", "path": "records/old.md", "was": "retired\n", "now": None},
     ])
 except KnowledgeBundleError:
     vector_digest = ""
-if vector_digest != "f4ba5e40856c5a71a9233dfb9c59789ceed564e059412e4480e33b8b1ac6f3e7":
+if vector_digest != "758928cf3727e0bcc8d38e58e70da389fa01791ea9176858f5f59e7dd5c1154a":
     finding("decision-contract", ROOT,
             "target-diff SHA-256 implementation differs from the Mainmind cross-runtime vector")
 
 if os.path.isdir(decision_dir):
-    for filename in os.listdir(decision_dir):
-        if not filename.endswith(".md") or filename in {"_kind.md", "fast-track.md"}:
-            continue
-        path = os.path.join(decision_dir, filename)
+    for path in md_files():
+        filename = os.path.basename(path)
         text = open(path, encoding="utf-8").read()
         summary = frontmatter(path) or {}
-        is_mainmind_receipt = (
-            filename.startswith("mainmind-")
-            or "authenticated Mainmind session" in summary.get("ruled-by", "")
-        )
-        if not is_mainmind_receipt:
+        if concept_type(summary) != "decision":
             continue
         name_match = MAINMIND_DECISION.fullmatch(filename)
-        if not name_match:
+        if os.path.dirname(path) != decision_dir or not name_match:
             finding("decision-receipt", path,
-                    "Mainmind Decision filename must contain the first 12 lowercase candidate SHA characters")
+                    "Decision filename must use a top-level safe server-owned decisions/mainmind-<id>.md path")
             continue
-        try:
-            parsed = parse_concept(text)
-            fm = dict(parsed.fields or {})
-            raw_targets = parsed.raw_fields.get("targets", "")
-            targets_yaml = "targets:\n" + "".join(
-                "  " + line for line in raw_targets.splitlines(keepends=True)
-            )
-            targets_value = yaml_safe_load_unique(targets_yaml).get("targets")
-        except Exception:
-            fm = {}
-            targets_value = None
+        fm, targets_value = parsed_frontmatter(path)
 
         required = {
             "id", "type", "date", "ruled-by", "ruling", "ruled-at", "state",
-            "outcome", "base-sha", "candidate-sha", "target-diff-sha256",
+            "outcome", "repository", "base-ref", "base-sha", "candidate-sha", "target-diff-sha256",
             "targets", "status", "access-scope", "write-class",
         }
         missing = sorted(required - set(fm))
@@ -387,17 +422,26 @@ if os.path.isdir(decision_dir):
         digest = fm["target-diff-sha256"]
         ruling = fm["ruling"]
         outcome = fm["outcome"]
+        repository = fm["repository"]
+        base_ref = fm["base-ref"]
         identity = FOUNDER_IDENTITY.fullmatch(fm["ruled-by"])
         targets = targets_value if isinstance(targets_value, list) else []
         expected_pair = {"yes": "approved", "no": "rejected"}
-        expected_id = f"mainmind-{name_match.group(1)}"
+        expected_id = os.path.splitext(filename)[0]
+        ref_tail = base_ref.removeprefix("refs/heads/")
 
         checks = [
-            (fm["id"] == expected_id, "id and filename must use the candidate SHA prefix"),
-            (SHA40.fullmatch(candidate) and candidate.startswith(name_match.group(1)),
-             "candidate-sha must be lowercase, complete, and match the filename"),
+            (fm["id"] == expected_id, "id must match the stable server-owned filename"),
+            (SHA40.fullmatch(candidate),
+             "candidate-sha must be a complete lowercase commit ID"),
             (SHA40.fullmatch(base) and base != candidate,
              "base-sha must be a distinct complete lowercase commit ID"),
+            (REPOSITORY.fullmatch(repository),
+             "repository must be a canonical lowercase owner/repository identity"),
+            (BASE_REF.fullmatch(base_ref) and all(
+                part not in {"", ".", ".."} for part in ref_tail.split("/")
+             ) and not ref_tail.endswith((".", ".lock", "/")),
+             "base-ref must be a safe immutable fully qualified branch ref"),
             (SHA256.fullmatch(digest), "target-diff-sha256 must be a lowercase SHA-256 digest"),
             (ruling in expected_pair and expected_pair.get(ruling) == outcome,
              "ruling and outcome must be exactly yes/approved or no/rejected"),
@@ -421,6 +465,69 @@ if os.path.isdir(decision_dir):
             if not valid:
                 finding("decision-receipt", path, message)
 
+        lifecycle_keys = {"lesson-outcome", "lesson", "receiver"}
+        lifecycle_present = lifecycle_keys & set(fm)
+        if lifecycle_present:
+            disposition = fm.get("lesson-outcome", "")
+            lesson_value = fm.get("lesson", "")
+            receiver_value = fm.get("receiver", "")
+            lesson = rooted_path(lesson_value)
+            receiver = rooted_path(receiver_value)
+            decision_value = os.path.relpath(path, ROOT)
+            lesson_fm = frontmatter(lesson) if lesson and os.path.isfile(lesson) else {}
+            approved_lifecycle = ruling == "yes" and outcome == "approved"
+            lesson_valid = bool(
+                lesson
+                and os.path.isfile(lesson)
+                and inside(os.path.join(ROOT, "lessons"), lesson)
+                and concept_type(lesson_fm or {}) == "lesson"
+            )
+            if disposition == "absorb":
+                exact_lifecycle = (
+                    lifecycle_present == lifecycle_keys
+                    and lesson_valid
+                    and bool(receiver)
+                    and standing_knowledge_home(receiver)
+                    and lesson_value in targets
+                    and receiver_value in targets
+                    and has_markdown_link(path, lesson)
+                    and has_markdown_link(path, receiver)
+                    and operational_state(lesson_fm or {}) == "absorbed"
+                    and lesson_fm.get("absorbed-into") == receiver_value
+                    and lesson_fm.get("decided-by") == decision_value
+                    and has_markdown_link(lesson, receiver)
+                    and has_markdown_link(lesson, path)
+                )
+                lifecycle_message = (
+                    "absorb requires exact Lesson and receiver fields, targets, and body links"
+                )
+            elif disposition == "close":
+                exact_lifecycle = (
+                    lifecycle_present == {"lesson-outcome", "lesson"}
+                    and lesson_valid
+                    and lesson_value in targets
+                    and has_markdown_link(path, lesson, "closure-reason")
+                    and operational_state(lesson_fm or {}) == "retired"
+                    and lesson_fm.get("closed-by") == decision_value
+                    and has_markdown_link(lesson, path)
+                    and bool(re.search(
+                        r"^##\s+Closure reason\s*$[\s\S]*?\S",
+                        open(lesson, encoding="utf-8").read() if lesson_valid else "",
+                        re.M | re.I,
+                    ))
+                )
+                lifecycle_message = (
+                    "close requires an exact Lesson target and closure-reason body link, without receiver"
+                )
+            else:
+                exact_lifecycle = False
+                lifecycle_message = "lesson-outcome must be exactly absorb or close"
+            if not approved_lifecycle:
+                finding("decision-receipt", path,
+                        "Lesson lifecycle fields may appear only on a yes/approved Decision")
+            if not exact_lifecycle:
+                finding("decision-receipt", path, lifecycle_message)
+
         founder = identity.group(1) if identity else ""
         verdict = "Yes" if ruling == "yes" else "No"
         exact_heading = "Exact candidate" if outcome == "approved" else "Exact candidate refused"
@@ -436,6 +543,10 @@ if os.path.isdir(decision_dir):
             (re.search(rf"^## {re.escape(exact_heading)}\s*$", text, re.M),
              "body must name the approved or refused exact candidate"),
             (f"- Base commit: `{base}`" in text, "body base commit must match frontmatter"),
+            (f"- Repository: `{repository}`" in text,
+             "body repository must match frontmatter"),
+            (f"- Base ref: `{base_ref}`" in text,
+             "body base ref must match frontmatter"),
             (f"- Candidate commit: `{candidate}`" in text,
              "body candidate commit must match frontmatter"),
             (f"- Target diff SHA-256: `{digest}`" in text,

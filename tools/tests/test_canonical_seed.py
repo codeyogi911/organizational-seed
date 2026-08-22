@@ -15,7 +15,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 COMMAND = ROOT / "tools" / "knowledge-bundle"
 sys.path.insert(0, str(ROOT / "tools"))
-from knowledge_bundle import parse_concept, target_diff_sha256  # noqa: E402
+from knowledge_bundle import (  # noqa: E402
+    KnowledgeBundleError,
+    parse_concept,
+    target_diff_sha256,
+)
 
 
 class CanonicalSeedTest(unittest.TestCase):
@@ -40,12 +44,18 @@ class CanonicalSeedTest(unittest.TestCase):
                     "was": "old\n",
                     "now": "new\n",
                 },
+                {
+                    "operation": "delete",
+                    "path": "records/old.md",
+                    "was": "retired\n",
+                    "now": None,
+                },
             ]
         )
 
         self.assertEqual(
             digest,
-            "f4ba5e40856c5a71a9233dfb9c59789ceed564e059412e4480e33b8b1ac6f3e7",
+            "758928cf3727e0bcc8d38e58e70da389fa01791ea9176858f5f59e7dd5c1154a",
         )
 
     def test_repository_native_decisions_replace_proposal_and_fast_track_artifacts(self):
@@ -55,6 +65,18 @@ class CanonicalSeedTest(unittest.TestCase):
 
         manifest = json.loads((ROOT / ".mainmind.json").read_text(encoding="utf-8"))
         self.assertNotIn("proposals", manifest["projection"]["dirs"])
+        self.assertFalse(
+            any(path.startswith("processes/") for path in manifest["projection"]["root"])
+        )
+
+    def test_governed_delete_requires_before_bytes_and_a_null_after(self):
+        for change in (
+            {"operation": "delete", "path": "records/old.md", "was": None, "now": None},
+            {"operation": "delete", "path": "records/old.md", "was": "old\n", "now": "new\n"},
+        ):
+            with self.subTest(change=change):
+                with self.assertRaises(KnowledgeBundleError):
+                    target_diff_sha256([change])
 
     def test_mainmind_deposit_is_valid_inside_a_real_instance(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -211,6 +233,8 @@ class CanonicalSeedTest(unittest.TestCase):
                     ruled-at: "2026-08-22T10:11:12.000Z"
                     state: ruled
                     outcome: rejected
+                    repository: "example/clone-company"
+                    base-ref: "refs/heads/main"
                     base-sha: "{base}"
                     candidate-sha: "{candidate}"
                     target-diff-sha256: "{digest}"
@@ -235,6 +259,8 @@ class CanonicalSeedTest(unittest.TestCase):
 
                     ## Exact candidate refused
 
+                    - Repository: `example/clone-company`
+                    - Base ref: `refs/heads/main`
                     - Base commit: `{base}`
                     - Candidate commit: `{candidate}`
                     - Target diff SHA-256: `{digest}`

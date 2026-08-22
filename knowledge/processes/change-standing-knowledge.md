@@ -52,8 +52,12 @@ In the Seed source, the reviewed pull request is the approval receipt.
 3. State why it should change using direct evidence, Founder intent, a reviewed
    Lesson, or an evidenced draft.
 4. In an Instance, prepare target-only candidate `A` as one direct child of the
-   recorded base. Record the complete target set and target-diff SHA-256. In the
-   Seed source, use a change-specific branch and maintainer pull request instead.
+   recorded base on the recorded repository and fully qualified base ref.
+   Preallocate its stable Decision path before constructing any terminal Lesson
+   target. Record the complete target set and target-diff SHA-256. Deletion binds
+   complete before bytes to a null after hash; rename binds one create and one
+   delete. In the Seed source, use a change-specific branch and maintainer pull
+   request instead.
 5. Review the diff through [AUTHORING.md](../AUTHORING.md), including the
    target Kind's contract. Run mechanical checks.
 6. Obtain the required Instance ruling or Seed maintainer review for those exact
@@ -61,7 +65,8 @@ In the Seed source, the reviewed pull request is the approval receipt.
    an ordinary merge retaining both commits. On rejection close the candidate
    unmerged and append only its Decision to the canonical branch. Record the
    reason and rollback. Only an integrated change completes linked Lesson
-   absorptions.
+   absorptions. A lifecycle candidate includes the terminal Lesson and receiver
+   targets required by the Decision contract; `B` still adds only its Decision.
 
 ## Done when
 

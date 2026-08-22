@@ -178,8 +178,9 @@ _Avoid_: integration, plugin, wrapper
 
 **Decision**:
 A recorded exercise of Authority: who ruled, what, when, why, and — for a
-governed repository mutation — the exact base commit, candidate commit, target
-set, and target-diff digest. Task verdicts remain in the Task; rulings on the
+governed repository mutation — the immutable repository and base ref, exact
+base commit, candidate commit, target set, and target-diff digest. Task verdicts
+remain in the Task; rulings on the
 organization live as repository-native receipts in `decisions/`.
 _Avoid_: approval log, minutes
 

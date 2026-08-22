@@ -8,12 +8,7 @@
       "AUTHORITY.md",
       "CONTEXT.md",
       "KNOWLEDGE.md",
-      "ORG.md",
-      "processes/_contract.md",
-      "processes/change-standing-knowledge.md",
-      "processes/example-weekly-review.md",
-      "processes/handle-uncovered-work.md",
-      "processes/review-lessons.md"
+      "ORG.md"
     ],
     "dirs": [
       "decisions",
