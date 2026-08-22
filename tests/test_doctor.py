@@ -383,6 +383,21 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("[lesson-route]", result.stdout)
 
+    def test_lesson_source_process_is_an_id_not_a_path(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.add_process(root)
+        self.add_lesson(
+            root,
+            "source-process: processes/review-lessons.md\napplies-to: unresolved\nstatus: pending",
+        )
+
+        result = self.run_doctor(root)
+
+        self.assertEqual(1, result.returncode)
+        self.assertIn("[lesson-route]", result.stdout)
+        self.assertIn("does not name an active or retired Process", result.stdout)
+
     def test_pending_lesson_may_have_an_unresolved_home(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)

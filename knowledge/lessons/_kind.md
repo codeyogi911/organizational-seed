@@ -19,8 +19,11 @@ definition but carries no live Lesson members; Seed-maintenance evidence stays
 in reviewed PRs, Git history, and ADRs.
 
 **Required frontmatter:** `id`, `type`, `date`, `source-process`, `applies-to`,
-and `state`. `type` is **Lesson**; `source-process` names the Process whose
-performance produced the teaching, even if that Process is now retired.
+and `state`.
+
+`type` is **Lesson**; `source-process` is the Process's stable frontmatter
+`id`, not its file path, and may name the Process whose performance produced
+the teaching even when that Process is now retired.
 `applies-to` is a root-relative path
 to the proposed Standing Knowledge home, or `unresolved` when review has not
 found one. `state` is **pending**, **absorbed**, or **retired**. OKF `status`

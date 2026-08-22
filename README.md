@@ -146,7 +146,9 @@ runtime rules become live when the Seed is instantiated.
 
 This repository is also the one canonical starter for a Mainmind-backed team;
 there is no separate Mainmind company seed. The included `.mainmind.json` Mount
-projects every policy-bearing node in the `knowledge/` bundle, while
+projects every policy-bearing node in the `knowledge/` bundle, including the
+whole `processes/` directory so future active and retired Instance Processes do
+not require a Mount edit, while
 [`knowledge/ACCESS.md`](knowledge/ACCESS.md) defines repository-native access
 scopes and write classes. Install Mainmind on an Instance when teammates should
 work through scoped MCP tools without receiving a Git checkout or GitHub
@@ -158,7 +160,10 @@ installing it grants no operational Authority: `knowledge/AUTHORITY.md` and the
 active Process remain binding. Run `tools/doctor` before connecting an Instance;
 once `ACCESS.md` exists, every Markdown node in the canonical bundle must carry
 an explicit `access-scope` and `write-class`. Reserved generated indexes remain
-Machinery and are not served as Knowledge.
+Machinery rather than Knowledge. `processes/index.md` is projected for path
+continuity but has no Knowledge classification, so a scoped Mount must fail
+closed instead of disclosing it. The conserved Process contract and every
+active, retired, or draft Process retain their own explicit classification.
 
 ## Migrating an existing business
 
