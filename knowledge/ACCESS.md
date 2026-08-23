@@ -27,7 +27,16 @@ govern what the Role may do with anything it can read.
 
 ## Access scopes
 
-The `access-scopes` frontmatter list is the mechanically readable vocabulary.
+The `access-scopes` frontmatter list is the mechanically readable vocabulary
+owned by this Instance. `core` and `founder` are reserved and required. An
+Instance may add scopes such as `sales`, `legal`, or `warehouse` through a
+ruled change to this file; the Seed does not own those names.
+
+Each name is a unique lowercase slug beginning with a letter, containing only
+letters, digits, and hyphens, and no longer than 40 characters. One Instance
+may declare at most 40 access scopes. A Mount must compile this exact list and
+must reject an invalid replacement before it changes the last valid serving
+projection.
 
 - `core` — shared purpose, vocabulary, Roles, Processes, and non-sensitive
   operating knowledge.
@@ -37,10 +46,10 @@ The `access-scopes` frontmatter list is the mechanically readable vocabulary.
 - `founder` — strategy, people matters, credentials, and knowledge reserved to
   the Founder.
 
-Every Knowledge node declares exactly one `access-scope`. The Founder may grant
-one or more scopes to a Role through a trusted Mount, but that grant remains a
-discovery boundary only. New scopes or changed scope meanings are changes to
-this ruled policy.
+Every Knowledge node declares exactly one `access-scope` from this Instance's
+list. The Founder may grant one or more scopes to a Role through a trusted
+Mount, but that grant remains a discovery boundary only. New scopes or changed
+scope meanings are changes to this ruled policy.
 
 ## Write classes
 

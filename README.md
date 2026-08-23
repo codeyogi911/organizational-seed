@@ -159,11 +159,11 @@ GitHub App disconnects that Mount without deleting Knowledge. Conversely,
 installing it grants no operational Authority: `knowledge/AUTHORITY.md` and the
 active Process remain binding. Run `tools/doctor` before connecting an Instance;
 once `ACCESS.md` exists, every Markdown node in the canonical bundle must carry
-an explicit `access-scope` and `write-class`. Reserved generated indexes remain
-Machinery rather than Knowledge. `processes/index.md` is projected for path
-continuity but has no Knowledge classification, so a scoped Mount must fail
-closed instead of disclosing it. The conserved Process contract and every
-active, retired, or draft Process retain their own explicit classification.
+an explicit `access-scope`; every Knowledge node also carries a `write-class`.
+Reserved generated indexes remain Machinery rather than Knowledge: they carry
+projection-only `access-scope` metadata for filtered discovery and no Knowledge
+write class. The conserved Process contract and every active, retired, or draft
+Process retain both explicit classifications.
 
 ## Migrating an existing business
 

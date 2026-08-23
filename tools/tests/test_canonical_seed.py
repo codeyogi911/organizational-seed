@@ -324,9 +324,9 @@ class CanonicalSeedTest(unittest.TestCase):
 
         # The directory declaration is the future-proof contract: a new
         # Instance Process is projected without editing this Mount. The
-        # generated index is included too, but remains fail-closed because it
-        # carries no discovery classification; the Process contract is an
-        # explicitly classified conserved node.
+        # generated index is included too and carries projection-only access
+        # classification; the Process contract is an explicitly classified
+        # conserved Knowledge node.
         def is_projected(path):
             return path in projection["root"] or any(
                 path.startswith(f"{directory}/")
@@ -348,7 +348,7 @@ class CanonicalSeedTest(unittest.TestCase):
         contract = parse_concept(
             (ROOT / "knowledge" / "processes" / "_contract.md").read_text(encoding="utf-8")
         )
-        self.assertIsNone(index.fields)
+        self.assertEqual(index.fields["access-scope"], "core")
         self.assertEqual(contract.fields["write-class"], "conserved")
 
     def test_every_canonical_node_declares_access_and_write_policy(self):
@@ -368,6 +368,9 @@ class CanonicalSeedTest(unittest.TestCase):
         for path in (ROOT / "knowledge").rglob("*.md"):
             relative = path.relative_to(ROOT / "knowledge").as_posix()
             if relative in {"index.md", "processes/index.md"}:
+                fields = parse_concept(path.read_text(encoding="utf-8")).fields
+                self.assertEqual(fields["access-scope"], "core")
+                self.assertNotIn("write-class", fields)
                 continue
             with self.subTest(path=path.relative_to(ROOT)):
                 fields = parse_concept(path.read_text(encoding="utf-8")).fields
@@ -470,6 +473,34 @@ class CanonicalSeedTest(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertTrue(payload["ok"])
         self.assertEqual(payload["unmapped"], [])
+
+    def test_shadow_compile_preserves_projection_scope_on_reserved_indexes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "knowledge"
+            result = subprocess.run(
+                [
+                    str(COMMAND),
+                    "--root",
+                    str(ROOT),
+                    "compile",
+                    "--output",
+                    str(output),
+                    "--json",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn(
+                'access-scope: "core"\n',
+                (output / "index.md").read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "access-scope: core\n",
+                (output / "processes" / "index.md").read_text(encoding="utf-8"),
+            )
+            self.assertFalse((output / "processes" / "_index.md").exists())
 
 
 if __name__ == "__main__":

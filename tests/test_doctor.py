@@ -20,6 +20,7 @@ class DoctorTests(unittest.TestCase):
             "/CONTEXT.md @founder\n"
             "/AUTHORITY.md @founder\n"
             "/AUTHORING.md @founder\n"
+            "/ACCESS.md @founder\n"
             "/processes/ @founder\n"
             "/roles/ @founder\n"
             "/**/_kind.md @founder\n"
@@ -30,7 +31,8 @@ class DoctorTests(unittest.TestCase):
         )
         (root / "processes").mkdir()
         (root / "processes" / "index.md").write_text(
-            "# Processes\n\n| Process | Use it when |\n|---|---|\n"
+            "---\naccess-scope: core\n---\n# Processes\n\n"
+            "| Process | Use it when |\n|---|---|\n"
         )
         (root / "lessons").mkdir()
         (root / "decisions").mkdir()
@@ -52,9 +54,9 @@ class DoctorTests(unittest.TestCase):
         path.write_text(textwrap.dedent(body).lstrip())
         return path
 
-    def run_doctor(self, root):
+    def run_doctor(self, root, *args):
         return subprocess.run(
-            [sys.executable, str(DOCTOR), str(root)],
+            [sys.executable, str(DOCTOR), *args, str(root)],
             text=True,
             capture_output=True,
             check=False,
@@ -201,6 +203,7 @@ class DoctorTests(unittest.TestCase):
         receiver=None,
         include_lifecycle_links=True,
         decision_id=None,
+        access_scope="core",
     ):
         decision_id = decision_id or f"mainmind-{candidate[:12]}"
         if targets is None:
@@ -249,7 +252,7 @@ class DoctorTests(unittest.TestCase):
             if not include_lifecycle_links:
                 lifecycle_body = f"- Lesson outcome: {lesson_outcome}."
         frontmatter.extend(
-            ["status: stable", "access-scope: core", "write-class: ledger", "---"]
+            ["status: stable", f"access-scope: {access_scope}", "write-class: ledger", "---"]
         )
         target_body = "\n".join(
             f'- {"Target" if outcome == "approved" else "Target left unchanged"}: `{target}`'
@@ -558,9 +561,20 @@ class DoctorTests(unittest.TestCase):
                 self.assertEqual(1, result.returncode)
                 self.assertIn("[decision-receipt]", result.stdout)
 
-    def test_access_policy_uses_the_frozen_mainmind_pilot_vocabulary(self):
+    def test_access_policy_accepts_instance_declared_scope_vocabulary(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "lessons/_kind.md",
+            """
+            ---
+            access-scope: core
+            write-class: conserved
+            ---
+            # Kind: Lesson
+            """,
+        )
         self.write(
             root,
             "ACCESS.md",
@@ -571,26 +585,89 @@ class DoctorTests(unittest.TestCase):
             write-class: ruled
             access-scopes:
               - core
+              - sales
               - support
               - finance
               - founder
-              - legal
             write-classes:
               - conserved
               - ruled
               - ledger
-              - derived
             ---
 
             # Knowledge access
             """,
         )
+        self.write(
+            root,
+            "records/sales/order.md",
+            """
+            ---
+            type: Sales Order
+            access-scope: sales
+            write-class: conserved
+            ---
+            # Sales order
+            """,
+        )
+        self.add_mainmind_decision(
+            root,
+            access_scope="sales",
+            targets=["records/sales/order.md"],
+        )
 
         result = self.run_doctor(root)
 
-        self.assertEqual(1, result.returncode)
-        self.assertIn("exactly core, support, finance, founder", result.stdout)
-        self.assertIn("exactly conserved, ruled, ledger", result.stdout)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_access_only_mode_validates_a_larger_instance_without_adopting_other_seed_checks(self):
+        tmp, root = self.make_instance()
+        self.addCleanup(tmp.cleanup)
+        self.write(
+            root,
+            "lessons/_kind.md",
+            "---\naccess-scope: core\nwrite-class: conserved\n---\n# Kind: Lesson\n",
+        )
+        self.write(
+            root,
+            "ACCESS.md",
+            """
+            ---
+            type: Access Policy
+            access-scope: core
+            write-class: ruled
+            access-scopes:
+              - core
+              - sales
+              - founder
+            write-classes:
+              - conserved
+              - ruled
+              - ledger
+            ---
+            # Access
+            """,
+        )
+        self.write(
+            root,
+            "processes/intentionally-invalid-shape.md",
+            """
+            ---
+            id: intentionally-invalid-shape
+            type: Process
+            state: active
+            access-scope: sales
+            write-class: conserved
+            ---
+            # Invalid Process shape
+            """,
+        )
+
+        full = self.run_doctor(root)
+        access_only = self.run_doctor(root, "--access-only")
+
+        self.assertEqual(1, full.returncode)
+        self.assertEqual(0, access_only.returncode, access_only.stdout + access_only.stderr)
 
     def test_pending_lesson_is_reported_without_failing(self):
         tmp, root = self.make_instance()
@@ -639,7 +716,7 @@ class DoctorTests(unittest.TestCase):
         self.assertIn("records/audit/log.md", result.stdout)
         self.assertIn("missing access-scope and write-class", result.stdout)
 
-    def test_access_policy_cannot_expand_the_frozen_pilot_vocabulary(self):
+    def test_access_policy_requires_core_and_founder(self):
         tmp, root = self.make_instance()
         self.addCleanup(tmp.cleanup)
         access = self.write(
@@ -665,7 +742,39 @@ class DoctorTests(unittest.TestCase):
         result = self.run_doctor(root)
 
         self.assertEqual(1, result.returncode)
-        self.assertIn("exactly core, support, finance, founder", result.stdout)
+        self.assertIn("must include core and founder", result.stdout)
+
+    def test_access_policy_rejects_malformed_or_duplicate_scope_names(self):
+        cases = (
+            (["core", "sales team", "founder"], "invalid access-scope 'sales team'"),
+            (["core", "sales", "sales", "founder"], "access-scopes must be unique"),
+        )
+        for scopes, message in cases:
+            with self.subTest(scopes=scopes):
+                tmp, root = self.make_instance()
+                self.addCleanup(tmp.cleanup)
+                scope_lines = "\n".join(f'  - "{scope}"' for scope in scopes)
+                self.write(
+                    root,
+                    "ACCESS.md",
+                    "---\n"
+                    "type: Access Policy\n"
+                    "access-scope: core\n"
+                    "write-class: ruled\n"
+                    "access-scopes:\n"
+                    f"{scope_lines}\n"
+                    "write-classes:\n"
+                    "  - conserved\n"
+                    "  - ruled\n"
+                    "  - ledger\n"
+                    "---\n\n"
+                    "# Knowledge access\n",
+                )
+
+                result = self.run_doctor(root)
+
+                self.assertEqual(1, result.returncode)
+                self.assertIn(message, result.stdout)
 
     def test_active_access_policy_rejects_unknown_policy_values(self):
         tmp, root = self.make_instance()

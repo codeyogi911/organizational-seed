@@ -1,5 +1,6 @@
 ---
 okf_version: "0.2"
+access-scope: core
 ---
 
 # Organizational Seed knowledge bundle
