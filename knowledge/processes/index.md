@@ -1,3 +1,6 @@
+---
+access-scope: core
+---
 # Processes
 
 This is a replaceable discovery projection. Each row repeats the linked

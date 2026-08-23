@@ -6,7 +6,7 @@ frontmatter is present, repository-native Decisions carry exact bindings,
 leases are fresh, and governed paths have review gates. Exit 0 = clean,
 1 = findings.
 
-Usage: tools/doctor [path-to-instance-root]
+Usage: tools/doctor [--access-only] [path-to-instance-root]
 """
 import os, re, sys, time
 
@@ -17,7 +17,13 @@ from knowledge_bundle import (
     yaml_safe_load_unique,
 )
 
-REPO_ROOT = os.path.realpath(sys.argv[1] if len(sys.argv) > 1 else ".")
+cli_args = sys.argv[1:]
+ACCESS_ONLY = "--access-only" in cli_args
+cli_args = [arg for arg in cli_args if arg != "--access-only"]
+if len(cli_args) > 1:
+    print("usage: tools/doctor [--access-only] [path-to-instance-root]", file=sys.stderr)
+    sys.exit(2)
+REPO_ROOT = os.path.realpath(cli_args[0] if cli_args else ".")
 canonical_root = os.path.join(REPO_ROOT, "knowledge")
 ROOT = canonical_root if os.path.isfile(os.path.join(canonical_root, "ORG.md")) else REPO_ROOT
 findings = []
@@ -46,6 +52,17 @@ def frontmatter(path):
     except KnowledgeBundleError:
         return None
     return dict(parsed.fields) if parsed.fields is not None else None
+
+DEFAULT_ACCESS_SCOPES = {"core", "support", "finance", "founder"}
+MAX_ACCESS_SCOPES = 40
+ACCESS_SCOPE_NAME = re.compile(r"^[a-z][a-z0-9-]{0,39}$")
+access_policy = os.path.join(ROOT, "ACCESS.md")
+access_policy_fields = frontmatter(access_policy) or {} if os.path.isfile(access_policy) else {}
+access_scope_values = [
+    value.strip() for value in access_policy_fields.get("access-scopes", "").split(",")
+    if value.strip()
+]
+decision_access_scopes = set(access_scope_values) if os.path.isfile(access_policy) else DEFAULT_ACCESS_SCOPES
 
 def parsed_frontmatter(path):
     """Return scalar fields plus exact structured target values."""
@@ -444,8 +461,8 @@ if os.path.isdir(decision_dir):
                  "generic Decision must name who ruled"),
                 (summary.get("write-class") == "ledger",
                  "generic Decision must use write-class ledger"),
-                (summary.get("access-scope") in {"core", "support", "finance", "founder"},
-                 "generic Decision must use one frozen pilot access scope"),
+                (summary.get("access-scope") in decision_access_scopes,
+                 "generic Decision must use one Instance-declared access scope"),
             ]
             for valid, message in generic_checks:
                 if not valid:
@@ -502,8 +519,8 @@ if os.path.isdir(decision_dir):
             (fm["type"] == "decision" and fm["state"] == "ruled" and fm["status"] == "stable",
              "type, state, and status must be decision, ruled, and stable"),
             (fm["write-class"] == "ledger", "a Decision receipt must use write-class ledger"),
-            (fm["access-scope"] in {"core", "support", "finance", "founder"},
-             "a Decision receipt must use one frozen pilot access scope"),
+            (fm["access-scope"] in decision_access_scopes,
+             "a Decision receipt must use one Instance-declared access scope"),
             (bool(identity), "ruled-by must identify an authenticated Mainmind Founder session"),
             (valid_utc_instant(fm["ruled-at"]) and fm["date"] == fm["ruled-at"][:10],
              "date and ruled-at must name the same valid UTC ruling day"),
@@ -700,22 +717,28 @@ else:
 # so the doctor reports it before a teammate discovers a mysteriously empty
 # result. The vocabulary belongs to ACCESS.md; these are its mechanically
 # valid field values.
-access_policy = os.path.join(ROOT, "ACCESS.md")
 if os.path.isfile(access_policy):
-    policy_fields = frontmatter(access_policy) or {}
-    valid_access_scopes = {
-        value.strip() for value in policy_fields.get("access-scopes", "").split(",")
-        if value.strip()
-    }
+    policy_fields = access_policy_fields
+    valid_access_scopes = set(access_scope_values)
     valid_write_classes = {
         value.strip() for value in policy_fields.get("write-classes", "").split(",")
         if value.strip()
     }
-    frozen_access_scopes = {"core", "support", "finance", "founder"}
     frozen_write_classes = {"conserved", "ruled", "ledger"}
-    if valid_access_scopes != frozen_access_scopes:
+    if len(access_scope_values) > MAX_ACCESS_SCOPES:
         finding("access-policy", access_policy,
-                "access-scopes must be exactly core, support, finance, founder during the pilot")
+                f"access-scopes may declare at most {MAX_ACCESS_SCOPES} names")
+    invalid_scope = next(
+        (scope for scope in access_scope_values if not ACCESS_SCOPE_NAME.fullmatch(scope)), None
+    )
+    if invalid_scope is not None:
+        finding("access-policy", access_policy,
+                f"invalid access-scope '{invalid_scope}'; use a lowercase slug of at most 40 characters")
+    if len(valid_access_scopes) != len(access_scope_values):
+        finding("access-policy", access_policy, "access-scopes must be unique")
+    if not {"core", "founder"}.issubset(valid_access_scopes):
+        finding("access-policy", access_policy,
+                "access-scopes must include core and founder")
     if valid_write_classes != frozen_write_classes:
         finding("access-policy", access_policy,
                 "write-classes must be exactly conserved, ruled, ledger during the pilot")
@@ -725,24 +748,19 @@ if os.path.isfile(access_policy):
     if not valid_write_classes:
         finding("access-policy", access_policy,
                 "write-classes must declare the policy vocabulary")
-    reserved_machinery = {
-        os.path.join(ROOT, "index.md"),
-        os.path.join(ROOT, "processes", "index.md"),
-    }
     for dirpath, dirnames, filenames in os.walk(ROOT):
         dirnames[:] = [d for d in dirnames if not d.startswith(".")]
         for filename in filenames:
             path = os.path.join(dirpath, filename)
-            if not filename.endswith(".md") or path in reserved_machinery:
+            if not filename.endswith(".md"):
                 continue
             fm = frontmatter(path) or {}
             scope = fm.get("access-scope", "")
             write_class = fm.get("write-class", "")
-            missing = [
-                field for field, value in (
-                    ("access-scope", scope), ("write-class", write_class)
-                ) if not value
-            ]
+            machinery = filename in {"index.md", "_index.md"}
+            missing = ["access-scope"] if not scope else []
+            if not machinery and not write_class:
+                missing.append("write-class")
             if missing:
                 finding("access-policy", path,
                         f"missing {' and '.join(missing)}; ACCESS.md requires explicit classification")
@@ -750,7 +768,7 @@ if os.path.isfile(access_policy):
             if scope not in valid_access_scopes:
                 finding("access-policy", path,
                         f"unknown access-scope '{scope}'")
-            if write_class not in valid_write_classes:
+            if not machinery and write_class not in valid_write_classes:
                 finding("access-policy", path,
                         f"unknown write-class '{write_class}'")
 
@@ -1081,6 +1099,9 @@ if os.path.isdir(lesson_dir) and not SEED_SOURCE:
 
 pending_count = sum(pending_by_home.values())
 queue_summary = f"lesson queue: {pending_count} pending across {len(pending_by_home)} proposed home(s)"
+
+if ACCESS_ONLY:
+    findings = [item for item in findings if item.startswith("[access-policy]")]
 
 if findings:
     print(f"seed doctor: {len(findings)} finding(s)\n" + "\n".join("  " + f for f in findings))

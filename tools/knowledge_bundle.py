@@ -26,6 +26,7 @@ PROFILE_BLOCK = re.compile(
 TOP_LEVEL_FIELD = re.compile(r"^([A-Za-z0-9_-]+):(?:\s*(.*))?$")
 OKF_STATUSES = {"draft", "stable", "deprecated"}
 RESERVED_NAMES = {"index.md", "log.md"}
+RESERVED_PROJECTION_FIELDS = {"access-scope"}
 VALIDATION_LEVEL = "okf-profile-structural-v0"
 YAML_VALIDATION_LEVEL = "okf-yaml-v0"
 BLOCK_SCALAR_VALUES = {">", ">-", ">+", "|", "|-", "|+"}
@@ -881,6 +882,24 @@ def mapped_type(relative: str, document: MarkdownDocument, profile: dict[str, An
     return None, "no kind, type, or matching type rule"
 
 
+def projection_only_reserved_metadata(
+    relative: str, document: MarkdownDocument
+) -> bool:
+    """Return whether reserved frontmatter only classifies its projection.
+
+    Access classification belongs to the serving projection, not to the OKF
+    concept model. Keeping this narrow exception distinct prevents a generated
+    index from becoming a second Knowledge concept merely because its bytes
+    need a visibility compartment.
+    """
+    if document.frontmatter_lines is None or "access-scope" not in document.fields:
+        return False
+    allowed = set(RESERVED_PROJECTION_FIELDS)
+    if relative == "index.md":
+        allowed.add("okf_version")
+    return set(document.fields).issubset(allowed)
+
+
 def inventory(root: Path, profile: dict[str, Any]) -> dict[str, Any]:
     files, source_errors = source_files(root, profile)
     base = configured_source_root(root, profile)
@@ -945,7 +964,10 @@ def inventory(root: Path, profile: dict[str, Any]) -> dict[str, Any]:
                 continue
             tally_fields(document)
             tally_identity_override(relative, document)
-            if document.frontmatter_lines is not None:
+            if (
+                document.frontmatter_lines is not None
+                and not projection_only_reserved_metadata(relative, document)
+            ):
                 reserved_metadata += 1
                 type_name, source = mapped_type(relative, document, profile)
                 if not type_name:
@@ -1265,7 +1287,12 @@ def companion_document(source_name: str, document: MarkdownDocument) -> Markdown
     return MarkdownDocument(document.frontmatter_lines, document.fields, body)
 
 
-def root_index(profile: dict[str, Any], source_paths: Iterable[Path], root: Path) -> str:
+def root_index(
+    profile: dict[str, Any],
+    source_paths: Iterable[Path],
+    root: Path,
+    access_scope: str | None = None,
+) -> str:
     top_level: set[str] = set()
     for path in source_paths:
         relative = path.relative_to(root)
@@ -1273,9 +1300,10 @@ def root_index(profile: dict[str, Any], source_paths: Iterable[Path], root: Path
     lines = [
         "---\n",
         f"okf_version: {json.dumps(profile['okf_version'])}\n",
-        "---\n",
-        "\n",
     ]
+    if access_scope:
+        lines.append(f"access-scope: {json.dumps(access_scope)}\n")
+    lines.extend(["---\n", "\n"])
     bundle_title = profile.get("bundle_title", "Open Knowledge Format").strip()
     lines.extend([f"# {bundle_title} knowledge bundle\n", "\n"])
     for name in sorted(top_level):
@@ -1328,12 +1356,19 @@ def compile_bundle(root: Path, output: Path, profile: dict[str, Any]) -> dict[st
             text = read_utf8_exact(source)
             document = parse_markdown(text)
             if source.name in RESERVED_NAMES:
-                rendered = document.body if document.frontmatter_lines is not None else text
+                projection_only = projection_only_reserved_metadata(
+                    relative.as_posix(), document
+                )
+                rendered = (
+                    text
+                    if projection_only or document.frontmatter_lines is None
+                    else document.body
+                )
                 write_utf8_exact(target, rendered)
                 target_body = parse_markdown(read_utf8_exact(target)).body
                 if document.body.encode("utf-8") != target_body.encode("utf-8"):
                     body_mismatches.append(relative.as_posix())
-                if document.frontmatter_lines is not None:
+                if document.frontmatter_lines is not None and not projection_only:
                     metadata_target = target.with_name(companion_name(source.name))
                     if metadata_target.exists():
                         raise KnowledgeBundleError(
@@ -1444,7 +1479,16 @@ def compile_bundle(root: Path, output: Path, profile: dict[str, Any]) -> dict[st
                 ):
                     frontmatter_mismatches.append(relative.as_posix())
 
-        write_utf8_exact(staging / "index.md", root_index(profile, files, base))
+        source_root_index = base / "index.md"
+        root_access_scope = None
+        if source_root_index.is_file():
+            root_access_scope = parse_markdown(
+                read_utf8_exact(source_root_index)
+            ).fields.get("access-scope")
+        write_utf8_exact(
+            staging / "index.md",
+            root_index(profile, files, base, root_access_scope),
+        )
         if body_mismatches or resource_mismatches or frontmatter_mismatches:
             mismatch_summary = "; ".join(
                 f"{label}: {', '.join(paths)}"
@@ -1527,11 +1571,14 @@ def validate_bundle(bundle: Path) -> dict[str, Any]:
         if path.name in RESERVED_NAMES:
             reserved += 1
             if document.frontmatter_lines is not None:
+                projection_only = projection_only_reserved_metadata(
+                    relative, document
+                )
                 allowed_root_index = (
                     relative == "index.md"
                     and parsed_frontmatter == {"okf_version": "0.2"}
                 )
-                if not allowed_root_index:
+                if not (allowed_root_index or projection_only):
                     findings.append(
                         {"code": "reserved-frontmatter", "path": relative}
                     )
