@@ -38,7 +38,11 @@ Every active, draft, or example Process has seven short sections:
 
 1. **Outcome** — what must be true at the end and why it matters.
 2. **When to use** — the request or condition that selects it.
-3. **Boundaries** — what is allowed, approval-required, and prohibited.
+3. **Boundaries** — what is allowed, approval-required, and prohibited. This
+   is where a Process supplies permission under
+   [AUTHORITY.md](../AUTHORITY.md); state it even when the answer is "nothing
+   beyond AUTHORITY.md", because an empty Boundaries cannot be told apart from
+   one nobody thought about.
 4. **Evidence and approvals** — what must be read and who must rule.
 5. **Steps** — the smallest useful sequence.
 6. **Done when** — observable success, including a valid no-op.

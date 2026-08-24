@@ -33,14 +33,18 @@ Before approving new or materially changed Standing Knowledge:
 2. Name the operation: create, correct, improve, merge, rename, or retire.
 3. Confirm every material claim matches cited evidence and that removed rules
    or exceptions are named explicitly.
-4. Confirm Organizational Memory remains truthful; supersede history instead
+4. Confirm it contradicts no other governed file — AUTHORITY.md, ORG.md, a Role,
+   a standing Decision, a Record, or another Process covering the same outcome.
+   A Process that instructs an Operator to perform a reserved power reads as
+   clean in its own diff; only this check catches it.
+5. Confirm Organizational Memory remains truthful; supersede history instead
    of rewriting it.
-5. Confirm the governed candidate names its complete target set and exact
+6. Confirm the governed candidate names its complete target set and exact
    before/after bytes. Power-expanding and non-expanding changes use the same
    exact-candidate Founder Decision contract; Authority effect never lowers the
    receipt standard.
-6. Run the mechanical checks and review the exact Git diff.
-7. In an Instance, confirm the exact change carries the Founder ruling required
+7. Run the mechanical checks and review the exact Git diff.
+8. In an Instance, confirm the exact change carries the Founder ruling required
    by `ORG.md` and `AUTHORITY.md`. In the Seed source, confirm the branch or
    pull request received the repository's required maintainer review.
 
@@ -54,7 +58,10 @@ Before approving a new or materially changed Process:
 2. Confirm that no existing Process already owns the outcome.
 3. Confirm that the change preserves every prior boundary or explicitly names
    what is being removed.
-4. Confirm that copied teaching was removed from its old live home.
+4. Confirm the Boundaries section states the permission this Process supplies,
+   including an explicit "nothing beyond AUTHORITY.md" where that is the answer,
+   and that it links rather than restates anything the ceiling already owns.
+5. Confirm that copied teaching was removed from its old live home.
 
 The doctor is a tripwire for obvious drift. It cannot decide whether two names
 mean the same outcome; that remains part of review.
