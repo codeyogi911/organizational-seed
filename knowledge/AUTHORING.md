@@ -44,7 +44,13 @@ Before approving new or materially changed Standing Knowledge:
    exact-candidate Founder Decision contract; Authority effect never lowers the
    receipt standard.
 7. Run the mechanical checks and review the exact Git diff.
-8. In an Instance, confirm the exact change carries the Founder ruling required
+8. Confirm each invariant the change adds or amends is **enforced or
+   advisory**: it names the check that fails when it stops being true — a
+   doctor rule, a CI check, or a per-process Check — or the rule itself states
+   that it is guidance. A rule with no checker decays
+   ([enforcement](docs/enforcement.md#a-rule-with-no-checker-decays)); a
+   checker whose failures are routinely ignored is the same defect.
+9. In an Instance, confirm the exact change carries the Founder ruling required
    by `ORG.md` and `AUTHORITY.md`. In the Seed source, confirm the branch or
    pull request received the repository's required maintainer review.
 
