@@ -9,6 +9,7 @@ access-scope: core
 - [AUTHORING.md](AUTHORING.md)
 - [AUTHORITY.md](AUTHORITY.md)
 - [CONTEXT.md](CONTEXT.md)
+- [EXECUTION.md](EXECUTION.md)
 - [KNOWLEDGE.md](KNOWLEDGE.md)
 - [ORG.md](ORG.md)
 - [decisions](decisions/)
