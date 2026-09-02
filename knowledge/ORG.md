@@ -3,6 +3,13 @@ type: Organization
 status: stable
 access-scope: core
 write-class: ruled
+boot-inline:
+  - AUTHORITY.md
+  - EXECUTION.md
+boot-name:
+  - KNOWLEDGE.md: before writing durable knowledge
+  - CONTEXT.md: when a term is unclear
+  - AUTHORING.md: before writing a Process, Record or Lesson
 ---
 # {Organization Name} — the Organization
 
@@ -11,7 +18,10 @@ write-class: ruled
 > stated here once or linked from here — never mirrored.
 
 This file is the canonical entry point. If you are new here — human or agent — read
-this file top to bottom, then obey [AUTHORITY.md](AUTHORITY.md). When a scoped
+this file top to bottom, then obey [AUTHORITY.md](AUTHORITY.md) and work as
+[EXECUTION.md](EXECUTION.md) says. The frontmatter above is what a Mount serves
+every session at boot: `boot-inline` documents in that order after this file,
+`boot-name` documents named with the moment to read them. When a scoped
 Mount is in use, [ACCESS.md](ACCESS.md) limits what the current Role may
 discover; it never grants Authority. Everything else links from here. The
 glossary of terms is [CONTEXT.md](CONTEXT.md).
