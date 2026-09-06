@@ -104,10 +104,13 @@ correct). The code-graded half of an eval.
 _Avoid_: test, gate
 
 **Judgment**:
-A success criterion requiring a judge's ruling ("would I act on this?"), not a
-mechanical test. Ruled by whoever holds judgment authority for that Process — the
-Founder by default; delegable to an agent only through a governed Authority change,
-with the Founder's own rulings as the calibration set. Rejection reasoning is
+Contextual reasoning about choices, consequences, uncertainty, and attention,
+guided by [JUDGMENT.md](JUDGMENT.md). Operational judgment grants no Authority.
+A Process's formal Judgment is a success criterion requiring an authorized
+judge's ruling ("would I act on this?"), not a mechanical test. It is ruled by
+whoever holds judgment authority for that Process — the Founder by default;
+delegable to an agent only through a governed Authority change, with the
+Founder's own rulings as the calibration set. Rejection reasoning is
 first-class input to Lessons.
 _Avoid_: review, sign-off
 

@@ -8,6 +8,7 @@ boot-inline:
   - EXECUTION.md
 boot-name:
   - KNOWLEDGE.md: before writing durable knowledge
+  - JUDGMENT.md: before weighing choices or selecting what needs Founder attention
   - CONTEXT.md: when a term is unclear
   - AUTHORING.md: before writing a Process, Record or Lesson
 ---
@@ -23,8 +24,7 @@ this file top to bottom, then obey [AUTHORITY.md](AUTHORITY.md) and work as
 every session at boot: `boot-inline` documents in that order after this file,
 `boot-name` documents named with the moment to read them. When a scoped
 Mount is in use, [ACCESS.md](ACCESS.md) limits what the current Role may
-discover; it never grants Authority. Everything else links from here. The
-glossary of terms is [CONTEXT.md](CONTEXT.md).
+discover; it never grants Authority. Everything else links from here.
 
 ## Purpose
 
