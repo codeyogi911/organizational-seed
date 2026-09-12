@@ -10,7 +10,7 @@ boot-name:
   - KNOWLEDGE.md: before writing durable knowledge
   - JUDGMENT.md: before weighing choices or selecting what needs Founder attention
   - CONTEXT.md: when a term is unclear
-  - AUTHORING.md: before writing a Process, Record or Lesson
+  - AUTHORING.md: before writing durable knowledge, including Roles and the agent team
 ---
 # {Organization Name} — the Organization
 

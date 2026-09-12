@@ -24,6 +24,103 @@ extension, determines its change route.
    Knowledge node declares one `access-scope` and one `write-class`. Missing or
    unknown classification must fail closed for non-Founder readers.
 
+## Write the agent team as knowledge
+
+The team's Roles, responsibilities, reporting relationships, Process bounds and
+named channels are Standing Knowledge. The agents and host configuration that
+execute those Roles are replaceable Machinery. Keep the team in the knowledge
+bundle so another human or harness can understand it without the original chat.
+
+When a conversation establishes or changes the team, prepare the corresponding
+knowledge update without waiting for a separate request to write it down. Cite
+the instruction or Decision, reuse existing Role charters and member identities,
+and leave unresolved choices explicit. Do not invent seats, reporting lines or
+grants just because no team has been recorded.
+
+Use `roles/agent-team.md` as an index of existing Role charters, unless `ORG.md`
+names another home. Each Role owns its purpose, responsibility and boundaries;
+the index links them. Record portable names for Roles, Processes and channels.
+Keep credentials, vendor channel IDs used as the only name, and host-only setup
+outside the organizational map.
+
+For a Mainmind Mount, the following fictional example shows the index and two
+seat headers. Paths are relative to this knowledge bundle: in a checkout,
+`roles/books.md` is `knowledge/roles/books.md`; the Mount reads `roles/books.md`.
+Adapt the example to an evidenced team through the normal governed change route.
+These code blocks do not create active Roles in the Seed.
+
+Index at `roles/agent-team.md`:
+
+```yaml
+---
+kind: Role
+title: Agent team
+access-scope: core
+write-class: conserved
+agent-team:
+  - roles/chief-of-staff.md
+  - roles/books.md
+---
+```
+
+Header for the Chief of Staff's charter at `roles/chief-of-staff.md`:
+
+```yaml
+---
+kind: Role
+title: Chief of staff
+access-scope: core
+write-class: conserved
+seat: cos
+boot-order: 1
+channels:
+  - Operations
+---
+```
+
+Header for the Books charter at `roles/books.md`:
+
+```yaml
+---
+kind: Role
+title: Books
+access-scope: core
+write-class: conserved
+seat: agent
+boot-order: 2
+reports-to: chief-of-staff
+channels:
+  - Finance review
+---
+```
+
+Write each charter's body using the existing
+[Role charter template](roles/_charter-template.md). Cite the governing Processes
+rather than restating their rules. Use the organization's actual access scopes.
+The optional `member` field binds a seat to an existing live member slug; without
+it the Role basename is the seat slug. A `reports-to` value names another seat's
+slug. Optional `process-bounds` lists governing Process names or paths. The
+[Mainmind agent-team reference](https://mainmind.app/docs/agent-team) gives the
+full reader contract and limits; the organization's Authority still governs use.
+
+A nonempty Mainmind team names exactly one `cos`, unique seat slugs and unique
+positive `boot-order` values. Put the Chief of Staff first. An empty index does
+not define a team. A scoped Mount may hide an existing index or Role: verify
+source and access before proposing a replacement. Recording a seat does not
+invite a member, grant access or start an agent.
+
+Prepare one exact candidate covering the index and affected Roles, and `ORG.md`
+when its team declaration changes. Follow
+[Change Standing Knowledge](processes/change-standing-knowledge.md) for the
+required Instance ruling. Preparing the update does not approve it. After an
+approved change lands, verify it through the normal reading route; with Mainmind,
+a fresh `boot` should return the intended team at the serving commit.
+
+This authoring trigger is guidance for writers and reviewers, not a mechanical
+check that detects every conversation or creates a team automatically. Existing
+Instances adopt Seed changes only through their own review; this Seed never
+updates their authoring rules on their behalf.
+
 ## Standing Knowledge review
 
 Before approving new or materially changed Standing Knowledge:
