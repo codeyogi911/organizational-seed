@@ -173,7 +173,7 @@ human or an agent can occupy. The Role is org state; whoever occupies it is not.
 _Avoid_: person, agent, user
 
 **Mount**:
-A thin harness-specific binding (a skill, an agent file, a CLAUDE.md/AGENTS.md
+A thin harness-specific binding (a skill, an agent file, an `AGENTS.md`
 pointer, a connector) that connects a harness to durable state it does not own.
 Mounts may be regenerated or deleted freely; deleting every Mount leaves the
 organization intact.
