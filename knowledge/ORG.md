@@ -149,10 +149,10 @@ Ordinary work may therefore:
 | `lessons/` | Organizational Memory naming its source Process and proposed Standing Knowledge home |
 | `docs/adr/` | design decisions about the pattern itself |
 | `tools/` | machinery — replaceable check scripts |
-| `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.mainmind.json` | Mounts — harness bindings, disposable |
+| `AGENTS.md`, `.claude/`, `.mainmind.json` | Mounts — harness bindings, disposable |
 
 ## For harnesses
 
-`AGENTS.md`, `CLAUDE.md`, and any agent config are Mounts: thin pointers into this
+`AGENTS.md` and any agent config are Mounts: thin pointers into this
 file. Deleting every Mount leaves the organization fully operable by a human with a
 text editor. Never put organizational state in a Mount.

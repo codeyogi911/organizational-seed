@@ -137,8 +137,8 @@ runtime rules become live when the Seed is instantiated.
    output → Checks → your Judgment → Lesson. Link a Goal only when relevant.
    Review the Lesson when its evidence warrants it; do not create a governed
    candidate merely because a Lesson exists.
-7. **Point your agent at it.** Any coding agent that reads `AGENTS.md` (or
-   `CLAUDE.md`) lands in `knowledge/ORG.md` and can find the organization, its
+7. **Point your agent at it.** Any coding agent that reads `AGENTS.md` lands
+   in `knowledge/ORG.md` and can find the organization, its
    Authority, Goals, Tasks, and Processes. Switch harnesses any time — the
    folder is the organization.
 
@@ -185,7 +185,7 @@ knowledge/KNOWLEDGE.md                ← three Knowledge classes, Machinery bou
 knowledge/AUTHORITY.md                ← the rulebook (template; reserved powers ready)
 knowledge/CONTEXT.md                  ← the glossary of seed terms (keep it)
 knowledge/goals/_kind.md              ← Goal definition; Instances create their own Goals
-AGENTS.md / CLAUDE.md       ← thin mounts for any coding agent
+AGENTS.md                   ← the thin mount every coding agent reads
 .mainmind.json              ← optional scoped MCP Mount over knowledge/
 knowledge/processes/example-weekly-review.md   ← a worked example process
 knowledge/processes/handle-uncovered-work.md    ← safe route when no Process fits

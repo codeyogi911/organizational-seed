@@ -36,5 +36,5 @@ reusable starting pattern, not operating an Instance.
 4. Perform bounded work as Tasks under one Process, optionally linking a Goal,
    and cite Records as evidence for material claims.
 
-This file and everything harness-specific (`.claude/`, `CLAUDE.md`) are
+This file and everything harness-specific (`.claude/`) are
 disposable Mounts. Never store organizational state in them.
