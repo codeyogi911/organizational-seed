@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch)",
+      "Bash(git fetch origin *)",
+      "Bash(tools/doctor)",
+      "Bash(tools/doctor *)",
+      "Bash(python3 tools/doctor *)",
+      "Bash(pytest tests/*)",
+      "Bash(python3 -m pytest tests/*)",
+      "WebFetch(domain:claude.ai)",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:docs.claude.com)",
+      "WebFetch(domain:platform.claude.com)",
+      "WebFetch(domain:support.claude.com)",
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:modelcontextprotocol.io)",
+      "WebFetch(domain:docs.x.ai)",
+      "WebFetch(domain:cursor.com)",
+      "WebFetch(domain:www.cursor.com)",
+      "WebFetch(domain:developers.openai.com)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:mainmind.app)"
+    ]
+  }
+}
