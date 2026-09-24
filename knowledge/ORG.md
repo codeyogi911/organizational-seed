@@ -15,7 +15,9 @@ boot-name:
 # {Organization Name} — the Organization
 
 > **Template note:** this file is your organization's front door. Replace every
-> `{placeholder}`, then delete this note. Rule of thumb: anything live is either
+> `{placeholder}`, then delete this note. "Organization" here means whatever
+> you run in this repository: a company, a job hunt, a research project or
+> anything else. Rule of thumb: anything live is either
 > stated here once or linked from here — never mirrored.
 
 This file is the canonical entry point. If you are new here — human or agent — read

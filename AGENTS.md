@@ -22,7 +22,8 @@ reusable starting pattern, not operating an Instance.
 
 ## If this is an Instance
 
-`knowledge/ORG.md` names a real organization. You are entering an
+`knowledge/ORG.md` names a real organization: a company, a job hunt, a
+project or anything else someone runs here. You are entering an
 **organization, not a codebase**.
 
 1. Read [ORG.md](knowledge/ORG.md) first, then
