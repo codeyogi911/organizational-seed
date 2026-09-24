@@ -1,20 +1,23 @@
 # Organizational Seed
 
-Run an organization as a folder of plain files — operable by a human with a text
-editor, accelerated by any AI coding agent, owned by neither.
+Run a company, a job hunt, a research project or anything else you keep working
+at as a folder of plain files — operable by a human with a text editor,
+accelerated by any AI coding agent, owned by neither. The files call whatever
+you run here "the organization"; it does not have to be a business.
 
-Traditional software freezes an organization's workflows into applications. Now that
+Traditional software freezes workflows into applications. Now that
 software can be generated and modified by agents, the durable asset is no longer the
-app — it is the organization's own state: purpose, authority, processes, work,
+app — it is your own state: purpose, authority, processes, work,
 evidence, decisions, and lessons. This seed keeps all of that as Markdown + YAML in a
 git repo, and treats every agent, model, script, and scheduler as replaceable
 machinery.
 
 ## The pitch
 
-**Your business, as a folder any AI agent can run — and none can run away
-with.** Software used to freeze your workflows into apps; now agents can
-generate software, so the durable asset is your organization itself: purpose,
+**Your work, as a folder any AI agent can run — and none can run away
+with.** A business, a job hunt, a sales pipeline: software used to freeze
+your workflows into apps; now agents can generate software, so the durable
+asset is what you are running itself: purpose,
 authority, processes, evidence, decisions. The seed keeps all of it in plain
 files under git. Agents are hired like staff — chartered roles with narrow
 grants, hard boundaries, probation — and fired by deleting a file. You stay
