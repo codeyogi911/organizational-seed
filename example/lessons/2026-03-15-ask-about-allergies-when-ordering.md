@@ -3,7 +3,7 @@ id: 2026-03-15-ask-about-allergies-when-ordering
 type: lesson
 date: 2026-03-15
 source: work/2026-03-14-birthday-cake-almond-sponge.md
-applies-to: processes/take-a-custom-cake-order.md
+applies-to: skills/take-a-custom-cake-order/SKILL.md
 state: folded-in
 updated: 2026-03-18
 ---
@@ -20,8 +20,8 @@ two hours and we gave it at the same price
 and write the answer down, even when it is "no". The parent knew; we just
 didn't ask.
 
-**Where it belongs.** [Take a custom cake order](../processes/take-a-custom-cake-order.md),
+**Where it belongs.** [Take a custom cake order](../skills/take-a-custom-cake-order/SKILL.md),
 as a step between agreeing the flavour and taking the deposit.
 
 **Folded in.** On 2026-03-18 the assistant suggested the new step and Mira
-said yes. It is now step 3 of the process.
+said yes. It is now step 3 of the skill.

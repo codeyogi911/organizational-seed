@@ -9,7 +9,7 @@ follow them.
 
 | Rule | What it means |
 |---|---|
-| **One thing per page** | Each page holds one fact, lesson or way of working. Link to a page instead of copying it. |
+| **One thing per page** | Each page holds one fact, lesson or skill. Link to a page instead of copying it. |
 | **Say where it came from** | A page names its source and date. A fact with no source counts as unchecked. |
 | **Add, don't erase** | To correct something, add a newer page that replaces the old one. The history stays, so you can see why it changed. |
 | **Turn work into lessons** | When work teaches something, write it down as a lesson and name the page it should improve. When it comes up again, fold it into that page. |
@@ -23,7 +23,7 @@ id: 2026-03-15-ask-about-allergies-when-ordering
 type: lesson
 date: 2026-03-15
 source: work/2026-03-14-birthday-cake-almond-sponge.md
-applies-to: processes/take-a-custom-cake-order.md
+applies-to: skills/take-a-custom-cake-order/SKILL.md
 state: open
 ---
 
@@ -59,15 +59,41 @@ work note is its own source, so it has none.
 | Type | Holds | States | Where it lives |
 |---|---|---|---|
 | `about` | What this space is, who the owner is, what matters. One per space. | `current` | `about.md` |
-| `process` | How one kind of work is done, step by step. | `draft`, `current`, `replaced` | `processes/` |
+| `skill` | How one kind of work is done, step by step. | `draft`, `current`, `replaced` | `skills/<name>/SKILL.md` (see below) |
 | `decision` | Something the owner decided, and why. | `current`, `replaced` | `decisions/` |
 | `fact` | Something true about the world: a price, a supplier, an account. | `current`, `replaced` | `facts/` |
 | `lesson` | What a piece of work taught, and which page it should improve. | `open`, `folded-in`, `closed` | `lessons/` |
 | `work` | A note on one piece of work: what was asked, what was done, what happened. | `open`, `done` | `work/` |
 
+## Skills
+
+A skill is written in the [Agent Skills](https://agentskills.io) format, so
+Claude, Codex, Cursor and other AI apps that read skills can use it as it is.
+Each skill is a folder named for it, holding one `SKILL.md`:
+
+```markdown
+---
+name: take-a-custom-cake-order
+description: "Take a custom cake order: agree the date, size and flavour, ask about allergies, and take the deposit. Use when a customer asks for a cake made to order."
+metadata:
+  type: skill
+  date: "2026-02-03"
+  source: Mira and Tom
+  state: current
+---
+
+# Take a custom cake order
+```
+
+`name` is the folder's name: lower-case letters, digits and hyphens.
+`description` says what the skill does and when to use it; that is how an AI
+app knows to pick it, so name the moment. The other lines at the top go under
+`metadata`, as the Agent Skills format asks. Keep a skill's scripts,
+templates or longer notes in the same folder.
+
 Name lesson and work files with their date first, such as
 `2026-03-15-ask-about-allergies-when-ordering.md`, so they sort in order.
-Name the others for what they are, such as `take-a-custom-cake-order.md`.
+Name the others for what they are, such as `deposit-for-custom-cakes.md`.
 Make a folder only when its first page arrives.
 
 ## How the rules play out
@@ -84,13 +110,13 @@ page, link back to the lesson, and set the lesson to `folded-in`. A lesson
 that turns out not to matter becomes `closed`, with a line saying why. A
 lesson that isn't clear yet stays `open`; that is fine.
 
-**Work with no process yet.** Do the work and keep a work note. If the same
-kind of work comes up again, write a process for it as `draft` and ask the
+**Work with no skill yet.** Do the work and keep a work note. If the same
+kind of work comes up again, write a skill for it as `draft` and ask the
 owner to make it `current`.
 
 **What steers, and what doesn't.** Work notes, lessons and facts are added
 freely by anyone working in the space, including an AI. The about page,
-processes, decisions and the instructions an AI follows (`AGENTS.md`) steer
+skills, decisions and the instructions an AI follows (`AGENTS.md`) steer
 future work, so the owner says yes before they change.
 
 **What never goes in.** Passwords, keys, card numbers and other secrets.
@@ -99,9 +125,9 @@ Name where a secret is kept, never the secret itself.
 ## A worked example
 
 [example/](example/about.md) is a small invented bakery. Its lesson came from
-a work note, applies to a process, and was folded into it; the process
+a work note, applies to a skill, and was folded into it; the skill
 follows a decision the owners made. Read it in that order:
 [work note](example/work/2026-03-14-birthday-cake-almond-sponge.md),
 [lesson](example/lessons/2026-03-15-ask-about-allergies-when-ordering.md),
-[process](example/processes/take-a-custom-cake-order.md),
+[skill](example/skills/take-a-custom-cake-order/SKILL.md),
 [decision](example/decisions/deposit-for-custom-cakes.md).

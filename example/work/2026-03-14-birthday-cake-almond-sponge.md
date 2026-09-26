@@ -10,7 +10,7 @@ state: done
 **Asked.** On 10 March a parent ordered a two-layer almond sponge cake with
 raspberry filling and "Happy 7th" on top, for pickup Saturday at 10:00. Tom
 took the order and the deposit
-([as usual](../processes/take-a-custom-cake-order.md)).
+([as usual](../skills/take-a-custom-cake-order/SKILL.md)).
 
 **Done.** Mira baked it on Friday.
 
