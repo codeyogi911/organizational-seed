@@ -23,8 +23,8 @@ copy it with git. Keep `AGENTS.md` and `FORMAT.md`. Then either:
 ## Use it with any AI app
 
 Many apps that work in a folder, such as Codex and Cursor, read `AGENTS.md`
-on their own. If yours doesn't (Claude Code looks for `CLAUDE.md`), tell it
-to read `AGENTS.md` first. In a chat app such as
+on their own, and `CLAUDE.md` points Claude Code to it. If yours reads
+neither, tell it to read `AGENTS.md` first. In a chat app such as
 ChatGPT, Claude or Grok, add `AGENTS.md`, `FORMAT.md` and your space's pages
 to the chat, then paste:
 
