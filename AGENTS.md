@@ -1,41 +1,29 @@
-# For any coding agent entering this repo
+# For any AI working in this folder
 
-First determine which repo you are in.
+This folder keeps knowledge in the open format described in
+[FORMAT.md](FORMAT.md). Follow it whenever you read or write here.
 
-## If this is the Seed source
-
-`knowledge/ORG.md` still begins with `# {Organization Name}`. You are maintaining the
-reusable starting pattern, not operating an Instance.
-
-1. Read [README.md](README.md), [KNOWLEDGE.md](knowledge/KNOWLEDGE.md),
-   [CONTEXT.md](knowledge/CONTEXT.md), and
-   [AUTHORING.md](knowledge/AUTHORING.md).
-2. Make changes on a branch, review the exact diff, and use the repository's PR
-   approval rules. Do not create an organizational Decision merely to change
-   the Seed source; runtime Decisions belong to Instances.
-3. Keep the Seed general. It must contain no tenant facts and must never update
-   an Instance automatically.
-4. Do not store live Goals, Tasks, Lessons, or organizational
-   Decisions in the Seed source. Seed-maintenance evidence lives in issues,
-   reviewed PRs, Git history, and ADRs; the runtime folders are content for
-   Instances.
-
-## If this is an Instance
-
-`knowledge/ORG.md` names a real organization: a company, a job hunt, a
-project or anything else someone runs here. You are entering an
-**organization, not a codebase**.
-
-1. Read [ORG.md](knowledge/ORG.md) first, then
-   [KNOWLEDGE.md](knowledge/KNOWLEDGE.md), and obey
-   [AUTHORITY.md](knowledge/AUTHORITY.md). Tool access never grants permission.
-2. Find the relevant Process through
-   [processes/index.md](knowledge/processes/index.md).
-3. Before changing durable knowledge, read
-   [AUTHORING.md](knowledge/AUTHORING.md). Never change Standing Knowledge
-   without the approval required by the Instance.
-4. Perform bounded work as Tasks under one Process, optionally linking a Goal,
-   and cite Records as evidence for material claims.
-
-This file and everything harness-specific (`.claude/`) are
-disposable Mounts. Never store organizational state in them.
+1. **Find the space.** A space is a folder with an `about.md` at its top.
+   [example/](example/about.md) is an invented one; the person you are
+   helping may have their own. Read its `about.md` first. It says what the
+   space is for and who the owner is.
+2. **Read before you work.** Look for a process in `processes/` that fits the
+   task, and the decisions and facts it links to. Follow the process.
+3. **Keep a work note.** For any real piece of work, write a page in `work/`:
+   what was asked, what you did, what happened.
+4. **Write lessons.** When the work taught something, write a lesson in
+   `lessons/` that names the work note as its `source` and the page it should
+   improve as `applies-to`. Suggest folding it in; don't fold it in yourself
+   unless the owner says yes.
+5. **Say where facts came from.** Every page you write has a `source` (except
+   work notes) and a `date`. If you can't say where something came from, say
+   it is unchecked.
+6. **Add, don't erase.** Don't delete or overwrite pages. To correct one,
+   write a newer page that replaces it, as FORMAT.md describes.
+7. **Ask before changing what steers.** Work notes, lessons and facts you may
+   add freely. Ask the owner before you change `about.md`, a process, a
+   decision or this file.
+8. **Never store secrets.** No passwords, keys, card numbers or private
+   access codes in any page. Write where a secret is kept, never the secret.
+9. **Ask before acting outside the folder.** Don't send, pay, sign or publish
+   anything on the owner's behalf unless they asked for that exact thing.
