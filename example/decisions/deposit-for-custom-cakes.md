@@ -16,4 +16,4 @@ cancelled less than two days before pickup.
 three hours of Mira's time and the ingredients, and neither could be sold.
 
 **What it changes.** Step 4 of
-[take a custom cake order](../processes/take-a-custom-cake-order.md).
+[take a custom cake order](../skills/take-a-custom-cake-order/SKILL.md).

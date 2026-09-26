@@ -28,7 +28,7 @@ Both are owners. Either one can say yes to a change in how work is done.
 
 ## Where things are
 
-- How we take a custom cake order: [processes/take-a-custom-cake-order.md](processes/take-a-custom-cake-order.md)
+- How we take a custom cake order: [skills/take-a-custom-cake-order](skills/take-a-custom-cake-order/SKILL.md)
 - Why we take a deposit: [decisions/deposit-for-custom-cakes.md](decisions/deposit-for-custom-cakes.md)
 - Lessons from our work: [lessons/](lessons/2026-03-15-ask-about-allergies-when-ordering.md)
 - Notes on past work: [work/](work/2026-03-14-birthday-cake-almond-sponge.md)

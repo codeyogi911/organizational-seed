@@ -7,8 +7,9 @@ This folder keeps knowledge in the open format described in
    [example/](example/about.md) is an invented one; the person you are
    helping may have their own. Read its `about.md` first. It says what the
    space is for and who the owner is.
-2. **Read before you work.** Look for a process in `processes/` that fits the
-   task, and the decisions and facts it links to. Follow the process.
+2. **Read before you work.** Look for a skill in `skills/` that fits the
+   task (its `description` says when to use it), and the decisions and facts
+   it links to. Follow the skill.
 3. **Keep a work note.** For any real piece of work, write a page in `work/`:
    what was asked, what you did, what happened.
 4. **Write lessons.** When the work taught something, write a lesson in
@@ -21,7 +22,7 @@ This folder keeps knowledge in the open format described in
 6. **Add, don't erase.** Don't delete or overwrite pages. To correct one,
    write a newer page that replaces it, as FORMAT.md describes.
 7. **Ask before changing what steers.** Work notes, lessons and facts you may
-   add freely. Ask the owner before you change `about.md`, a process, a
+   add freely. Ask the owner before you change `about.md`, a skill, a
    decision or this file.
 8. **Never store secrets.** No passwords, keys, card numbers or private
    access codes in any page. Write where a secret is kept, never the secret.
