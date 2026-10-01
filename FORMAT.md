@@ -96,6 +96,49 @@ Name lesson and work files with their date first, such as
 Name the others for what they are, such as `deposit-for-custom-cakes.md`.
 Make a folder only when its first page arrives.
 
+## Decisions
+
+A decision answers "what did we decide, and why?", so it says that first,
+the way you would explain it to a new teammate:
+
+```markdown
+---
+id: deposit-for-custom-cakes
+type: decision
+date: 2026-02-02
+source: Mira and Tom
+state: current
+---
+
+# Should we take a deposit on custom cakes?
+
+## What we decided
+
+Yes. We take half the price when a custom cake is ordered, and start baking
+once it is paid.
+
+## Why
+
+In January two custom cakes were never collected, and neither could be sold.
+
+## What changes
+
+Step 4 of taking a custom cake order asks for the deposit.
+
+## The details
+
+- The deposit is not returned if the cake is cancelled less than two days
+  before pickup.
+```
+
+- **The title is the question**, in everyday words.
+- **What we decided** is the answer in one or two sentences, 35 words or
+  fewer, with no codes or abbreviations. Say what a number means.
+- **Why** is one or two sentences.
+- **Until when** or **What changes** says how long it holds, or what anyone
+  now does differently.
+- **The details** keep every code, rate, source and link, exactly.
+
 ## How the rules play out
 
 **Adding and correcting.** Adding to a page is fine; set `updated`. When

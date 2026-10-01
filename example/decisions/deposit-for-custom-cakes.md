@@ -6,14 +6,24 @@ source: Mira and Tom, talking it over after two cakes were never collected in Ja
 state: current
 ---
 
-# Take half the price as a deposit on every custom cake
+# Should we take a deposit on custom cakes?
 
-**Decision.** We ask for half the price when a custom cake is ordered. We
-start baking only once it is paid. The deposit is not returned if the cake is
-cancelled less than two days before pickup.
+## What we decided
 
-**Why.** In January two custom cakes were never collected. Each cost about
-three hours of Mira's time and the ingredients, and neither could be sold.
+Yes. We take half the price when a custom cake is ordered, and start baking
+once it is paid.
 
-**What it changes.** Step 4 of
-[take a custom cake order](../skills/take-a-custom-cake-order/SKILL.md).
+## Why
+
+In January two custom cakes were never collected. Each cost about three hours
+of Mira's time and the ingredients, and neither could be sold.
+
+## What changes
+
+Step 4 of [take a custom cake order](../skills/take-a-custom-cake-order/SKILL.md)
+asks for the deposit.
+
+## The details
+
+- The deposit is not returned if the cake is cancelled less than two days
+  before pickup.
