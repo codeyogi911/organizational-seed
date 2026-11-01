@@ -3,6 +3,9 @@ id: 2026-03-14-birthday-cake-almond-sponge
 type: work
 date: 2026-03-14
 state: done
+skill: take-a-custom-cake-order
+result: miss
+missed: Everyone it is for can eat it safely.
 ---
 
 # Birthday cake with almond sponge, collected Saturday 14 March

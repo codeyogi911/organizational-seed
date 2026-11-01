@@ -9,13 +9,16 @@ This folder keeps knowledge in the open format described in
    space is for and who the owner is.
 2. **Read before you work.** Look for a skill in `skills/` that fits the
    task (its `description` says when to use it), and the decisions and facts
-   it links to. Follow the skill.
+   it links to. Read its "What good looks like" first, then follow the
+   skill. When a step doesn't fit the case, aim for what good looks like.
 3. **Keep a work note.** For any real piece of work, write a page in `work/`:
-   what was asked, what you did, what happened.
-4. **Write lessons.** When the work taught something, write a lesson in
-   `lessons/` that names the work note as its `source` and the page it should
-   improve as `applies-to`. Suggest folding it in; don't fold it in yourself
-   unless the owner says yes.
+   what was asked, what you did, what happened. Name the `skill` you
+   followed, and say whether the `result` was good or a miss against its
+   "What good looks like".
+4. **Write lessons.** When the work missed or taught something, write a
+   lesson in `lessons/` that names the work note as its `source` and the page
+   it should improve as `applies-to`. Suggest folding it in; don't fold it in
+   yourself unless the owner says yes.
 5. **Say where facts came from.** Every page you write has a `source` (except
    work notes) and a `date`. If you can't say where something came from, say
    it is unchecked.
