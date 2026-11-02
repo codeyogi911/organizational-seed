@@ -12,7 +12,7 @@ follow them.
 | **One thing per page** | Each page holds one fact, lesson or skill. Link to a page instead of copying it. |
 | **Say where it came from** | A page names its source and date. A fact with no source counts as unchecked. |
 | **Add, don't erase** | To correct something, add a newer page that replaces the old one. The history stays, so you can see why it changed. |
-| **Turn work into lessons** | When work teaches something, write it down as a lesson and name the page it should improve. When it comes up again, fold it into that page. |
+| **Turn work into lessons** | Every skill says what good looks like. When a result misses it, or work teaches something else, write it down as a lesson and name the page it should improve. Fold it in before the same miss can happen twice. |
 | **Ask only for what steers** | Notes, lessons and facts are added freely. Changes to how work is done, what an AI is told to do, or who may do what ask the owner first. |
 
 ## One page looks like this
@@ -48,6 +48,9 @@ ordinary writing. Pages are Markdown, so any editor or app can open them.
 | `source` | every page except work notes | Where it came from: another page in the space, a web address, or plain words such as `Tom, by phone`. |
 | `state` | every page | One of the states listed for its type. |
 | `applies-to` | lessons | The page this lesson should improve, or `unknown` if nobody knows yet. |
+| `skill` | work notes | The skill the work followed, by its `name`, or `none` if no skill fit. |
+| `result` | work notes | `good` if the result met the skill's "What good looks like", `miss` if a line did not hold, or `unknown` until it can be checked. |
+| `missed` | work notes with `result: miss` | The line that did not hold, copied from the skill. |
 | `updated` | optional | The day something was last added to the page. |
 | `replaces` / `replaced-by` | optional | The page this one replaces, or the newer page that replaced it. |
 
@@ -83,6 +86,12 @@ metadata:
 ---
 
 # Take a custom cake order
+
+## What good looks like
+
+- The cake is ready by the agreed pickup time. *(at pickup)*
+- Everyone it is for can eat it safely. *(at pickup)*
+- The deposit was paid before baking started. *(before baking)*
 ```
 
 `name` is the folder's name: lower-case letters, digits and hyphens.
@@ -90,6 +99,23 @@ metadata:
 app knows to pick it, so name the moment. The other lines at the top go under
 `metadata`, as the Agent Skills format asks. Keep a skill's scripts,
 templates or longer notes in the same folder.
+
+**What good looks like** comes first in every skill, before the steps. It is
+two to five lines describing a good result, so whoever does the work can
+still do the right thing when the steps don't fit the case in front of them.
+
+- Describe the result, not the steps: "Everyone it is for can eat it
+  safely", not "use the allergy checklist".
+- Make each line something a person who didn't do the work can check, and
+  say when: right away, when the owner decides, or after a wait.
+- Tie each line to what matters: money, the customer, time, or a mistake
+  avoided.
+- Keep it to five lines or fewer. More means the skill is doing two jobs.
+- If the work ends with the owner deciding, include "the owner takes it as
+  proposed".
+
+"Done when" can stay too: it says the work is finished. What good looks like
+says the work was right.
 
 Name lesson and work files with their date first, such as
 `2026-03-15-ask-about-allergies-when-ordering.md`, so they sort in order.
@@ -146,16 +172,32 @@ something a page says turns out to be wrong, write a new page with
 `replaces:` naming the old one, and set the old page to `state: replaced`
 with `replaced-by:` naming the new one. Don't delete it.
 
-**The lesson loop.** Work leaves a work note. When the work taught something,
-write a lesson with `source:` naming the work note and `applies-to:` naming
-the page it should improve. Once the owner agrees, add the teaching to that
-page, link back to the lesson, and set the lesson to `folded-in`. A lesson
-that turns out not to matter becomes `closed`, with a line saying why. A
-lesson that isn't clear yet stays `open`; that is fine.
+**The lesson loop.** Work leaves a work note that names its `skill` and says
+whether the `result` was good. A miss counts most when the owner says no to
+the result or changes it. When the work missed or taught something, write a
+lesson with `source:` naming the work note and `applies-to:` naming the page
+it should improve. Once the owner agrees, add the teaching to that page, link
+back to the lesson, and set the lesson to `folded-in`. Fold it in within a
+week, so the same miss can't happen twice. A lesson that turns out not to
+matter becomes `closed`, with a line saying why. A lesson that isn't clear
+yet stays `open`; that is fine.
 
-**Work with no skill yet.** Do the work and keep a work note. If the same
-kind of work comes up again, write a skill for it as `draft` and ask the
-owner to make it `current`.
+**Healthy knowledge.** Good knowledge makes the next piece of work go right
+the first time, so you judge it by results, not by how tidy the pages are.
+Look at the last month of work notes:
+
+- **A skill is healthy** when its recent results met what good looks like,
+  and every miss has already changed the skill.
+- **The whole space is healthy** when every skill says what good looks like,
+  no miss has happened twice, and no lesson has waited more than a week.
+
+A skill with no recent work, or with work notes that don't say a result, is
+not known yet. It is not healthy until its results show it.
+
+**Work with no skill yet.** Do the work and keep a work note with
+`skill: none`. If the same kind of work comes up again, write a skill for it
+as `draft`, starting with what good looks like, and ask the owner to make it
+`current`.
 
 **What steers, and what doesn't.** Work notes, lessons and facts are added
 freely by anyone working in the space, including an AI. The about page,
@@ -167,9 +209,10 @@ Name where a secret is kept, never the secret itself.
 
 ## A worked example
 
-[example/](example/about.md) is a small invented bakery. Its lesson came from
-a work note, applies to a skill, and was folded into it; the skill
-follows a decision the owners made. Read it in that order:
+[example/](example/about.md) is a small invented bakery. Its work note
+records a miss against the skill's "What good looks like"; the lesson it
+led to applies to that skill and was folded into it; the skill follows a
+decision the owners made. Read it in that order:
 [work note](example/work/2026-03-14-birthday-cake-almond-sponge.md),
 [lesson](example/lessons/2026-03-15-ask-about-allergies-when-ordering.md),
 [skill](example/skills/take-a-custom-cake-order/SKILL.md),

@@ -11,6 +11,12 @@ metadata:
 
 # Take a custom cake order
 
+## What good looks like
+
+- The cake is ready by the agreed pickup time. *(at pickup)*
+- Everyone it is for can eat it safely. *(at pickup)*
+- The deposit was paid before baking started. *(before baking)*
+
 **Done when** the order slip is pinned on the board with everything Mira
 needs to bake, and the deposit is paid.
 
